@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sci-Fi Radar Widget</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #111;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Main Widget Container */
+        .widget-container {
+            position: relative;
+            width: 320px;
+            height: 480px;
+            background: linear-gradient(180deg, #2c2927 0%, #17120f 100%);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5), inset 0 2px 5px rgba(255,255,255,0.1);
+            overflow: hidden;
+            color: #dcb383;
+            padding: 20px;
+        }
+
+        /* Abstract bottom waves */
+        .widget-container::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            right: -20px;
+            width: 200px;
+            height: 100px;
+            background: radial-gradient(ellipse at bottom right, rgba(220, 179, 131, 0.1) 0%, transparent 70%);
+            border-top-left-radius: 100px;
+            z-index: 0;
+        }
+
+        /* Top Text placeholders */
+        .header-text {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #f1efeb;
+            opacity: 0.9;
+            margin-bottom: 25px;
+        }
+
+        .sub-text {
+            font-size: 18px;
+            color: #dcb383;
+            text-shadow: 0 0 8px rgba(220, 179, 131, 0.5);
+            margin-bottom: 30px;
+        }
+
+        /* Center Radar Display */
+        .radar-wrapper {
+            position: relative;
+            width: 220px;
+            height: 220px;
+            margin: 0 auto;
+            z-index: 1;
+        }
+
+        .crosshair-v, .crosshair-h {
+            position: absolute;
+            background: rgba(220, 179, 131, 0.3);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .crosshair-v { width: 1px; height: 100%; }
+        .crosshair-h { width: 100%; height: 1px; }
+
+        /* Rotating Outer Ring */
+        .orbit-ring {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 2px solid rgba(220, 179, 131, 0.5);
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(220, 179, 131, 0.2);
+            animation: spin 15s linear infinite;
+        }
+
+        /* Orbital Nodes */
+        .node {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #dcb383;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #dcb383;
+        }
+        .node.top { top: -5px; left: calc(50% - 4px); }
+        .node.bottom { bottom: -5px; left: calc(50% - 4px); }
+        .node.left { left: -5px; top: calc(50% - 4px); }
+        .node.right { right: -5px; top: calc(50% - 4px); }
+
+        /* Inner Glass Sphere */
+        .glass-sphere {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1), rgba(0,0,0,0.4));
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(220, 179, 131, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: pulse 4s infinite ease-in-out;
+            box-shadow: inset 0 0 20px rgba(220, 179, 131, 0.1);
+        }
+
+        .inner-rune {
+            font-size: 24px;
+            color: #dcb383;
+            text-shadow: 0 0 10px #dcb383;
+            opacity: 0.8;
+        }
+
+        /* Bottom Controls */
+        .controls {
+            position: absolute;
+            bottom: 30px;
+            left: 20px;
+            width: calc(100% - 40px);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 1;
+        }
+
+        .control-icon {
+            font-size: 12px;
+            color: #dcb383;
+        }
+
+        /* Styled Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 0 10px #fff, 0 0 20px #dcb383;
+            cursor: pointer;
+            margin-top: -5px;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 2px;
+            cursor: pointer;
+            background: rgba(220, 179, 131, 0.5);
+            border-radius: 2px;
+        }
+
+        /* Animations */
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: inset 0 0 20px rgba(220, 179, 131, 0.1), 0 0 15px rgba(220, 179, 131, 0.05); }
+            50% { box-shadow: inset 0 0 40px rgba(220, 179, 131, 0.3), 0 0 30px rgba(220, 179, 131, 0.2); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="widget-container">
+        <!-- Top Texts -->
+        <div class="header-text">temeiemtguies</div>
+        <div class="sub-text">Makaekaay</div>
+
+        <!-- Center Radar -->
+        <div class="radar-wrapper">
+            <div class="crosshair-v"></div>
+            <div class="crosshair-h"></div>
+            
+            <div class="orbit-ring">
+                <div class="node top"></div>
+                <div class="node bottom"></div>
+                <div class="node left"></div>
+                <div class="node right"></div>
+            </div>
+
+            <div class="glass-sphere">
+                <div class="inner-rune">6a9</div>
+            </div>
+        </div>
+
+        <!-- Side decorative text (like the image) -->
+        <div style="position: absolute; top: 120px; left: 15px; font-size: 10px; opacity: 0.6;">
+            9n<br>3G
+        </div>
+        <div style="position: absolute; bottom: 100px; left: 15px; font-size: 10px; opacity: 0.6;">
+            qnv<br>nVO
+        </div>
+
+        <!-- Bottom Slider -->
+        <div class="controls">
+            <div class="control-icon">U!m</div>
+            <input type="range" min="0" max="100" value="30" id="power-slider">
+        </div>
+    </div>
+
+    <script>
+        // Add interactivity to the slider to change the inner sphere's glow based on value
+        const slider = document.getElementById('power-slider');
+        const sphere = document.querySelector('.glass-sphere');
+
+        slider.addEventListener('input', function() {
+            const intensity = this.value / 100;
+            sphere.style.boxShadow = `inset 0 0 ${20 + (intensity * 40)}px rgba(220, 179, 131, ${0.1 + intensity * 0.4})`;
+        });
+    </script>
+
+</body>
+</html>
