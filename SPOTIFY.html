@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exquisite Vertical Spotify Widget</title>
+    
+    <!-- STRICTLY ONLY SAIL FONT -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sail&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-notion: #191919; 
+            --glass-base: rgba(25, 25, 25, 0.78); 
+            --white-shiny: #ffffff;
+            --white-glow: 0 0 20px rgba(255, 255, 255, 0.2);
+            --gold-text: #f3c877;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Sail', cursive !important;
+        }
+
+        body {
+            background-color: var(--bg-notion);
+            color: var(--white-shiny);
+            display: flex;
+            justify-content: center; 
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px; 
+            overflow: hidden; 
+        }
+
+        /* Animated white shiny border pulse */
+        @keyframes borderShine {
+            0% { border-color: rgba(255, 255, 255, 0.2); box-shadow: 0 0 12px rgba(255, 255, 255, 0.1); }
+            50% { border-color: rgba(255, 255, 255, 0.55); box-shadow: 0 0 28px rgba(255, 255, 255, 0.3); }
+            100% { border-color: rgba(255, 255, 255, 0.2); box-shadow: 0 0 12px rgba(255, 255, 255, 0.1); }
+        }
+
+        .spotify-container {
+            width: 100%;
+            max-width: 340px; 
+            background: var(--glass-base);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1.5px solid rgba(255, 255, 255, 0.25);
+            border-radius: 22px;
+            padding: 16px; 
+            animation: borderShine 4s infinite ease-in-out;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Shiny light sweep overlay animation */
+        .spotify-container::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                0deg,
+                transparent,
+                rgba(255, 255, 255, 0.035),
+                transparent
+            );
+            transform: rotate(45deg);
+            animation: shineSweep 6s infinite linear;
+            pointer-events: none;
+        }
+
+        @keyframes shineSweep {
+            0% { transform: translateY(-100%) rotate(45deg); }
+            100% { transform: translateY(100%) rotate(45deg); }
+        }
+
+        /* Widget Header */
+        .spotify-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1;
+        }
+
+        .spotify-title {
+            font-size: 1.45rem; 
+            color: var(--white-shiny);
+            text-shadow: var(--white-glow);
+            letter-spacing: 1px;
+            font-weight: normal;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .settings-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--white-shiny);
+            font-size: 0.9rem;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .settings-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--white-shiny);
+            transform: scale(1.1);
+        }
+
+        .spotify-dot {
+            width: 8px; 
+            height: 8px;
+            border-radius: 50%;
+            background: var(--white-shiny);
+            box-shadow: var(--white-glow);
+        }
+
+        /* Interactive In-Widget Selector Panel */
+        .settings-panel {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.55);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            z-index: 2;
+        }
+
+        .settings-panel.active {
+            display: flex;
+        }
+
+        .preset-label {
+            font-size: 0.95rem;
+            color: var(--gold-text);
+            letter-spacing: 0.5px;
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .preset-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--white-shiny);
+            padding: 6px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-align: center;
+        }
+
+        .preset-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: var(--white-shiny);
+        }
+
+        .divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 2px 0;
+        }
+
+        .settings-panel input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: var(--white-shiny);
+            padding: 6px 8px;
+            font-size: 0.88rem;
+            outline: none;
+        }
+
+        .settings-panel input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .apply-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: var(--white-shiny);
+            padding: 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .apply-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
+
+        /* Iframe Wrapper */
+        .iframe-wrapper {
+            width: 100%;
+            border-radius: 14px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            z-index: 1;
+        }
+
+        iframe {
+            width: 100%;
+            height: 640px; /* Extended vertical length for maximum content view */
+            border: none;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="spotify-container">
+        
+        <!-- Header -->
+        <div class="spotify-header">
+            <div class="spotify-title">Aura Melodies 🎧</div>
+            <div class="header-controls">
+                <button class="settings-btn" onclick="toggleSettings()" title="Choose Playlist">⚙️</button>
+                <div class="spotify-dot"></div>
+            </div>
+        </div>
+
+        <!-- Interactive Settings Panel (Choose presets or paste link inside Notion) -->
+        <div class="settings-panel" id="settingsPanel">
+            <div class="preset-label">Quick Vibe Presets:</div>
+            <div class="preset-grid">
+                <button class="preset-btn" onclick="setPreset('37i9dQZF1DXcBWIGoYBM5M')">Today's Top 🌟</button>
+                <button class="preset-btn" onclick="setPreset('37i9dQZF1DWZeKCadgRdKQ')">Lo-Fi Beats 🌿</button>
+                <button class="preset-btn" onclick="setPreset('37i9dQZF1DX8Uebhn9wzrS')">Soft Piano 🎹</button>
+                <button class="preset-btn" onclick="setPreset('37i9dQZF1DX4WYTNICININ')">Night Drive 🌙</button>
+            </div>
+            <div class="divider"></div>
+            <div class="preset-label">Or Paste Playlist Link:</div>
+            <input type="text" id="playlistInput" placeholder="Paste Spotify Playlist URL...">
+            <button class="apply-btn" onclick="saveCustomPlaylist()">Apply Custom Link</button>
+        </div>
+
+        <!-- Embedded Spotify Player -->
+        <div class="iframe-wrapper">
+            <iframe id="spotifyIframe" src="" 
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+                    loading="lazy">
+            </iframe>
+        </div>
+
+    </div>
+
+    <script>
+        const defaultPlaylistId = "37i9dQZF1DXcBWIGoYBM5M";
+
+        function getStoredPlaylistId() {
+            return localStorage.getItem('custom_spotify_playlist_id') || defaultPlaylistId;
+        }
+
+        function updateIframeSource() {
+            const playlistId = getStoredPlaylistId();
+            const iframe = document.getElementById('spotifyIframe');
+            iframe.src = `https://open.spotify.com/embed/playlist/${playlistId}?utm_name=generator&theme=1`;
+        }
+
+        function toggleSettings() {
+            const panel = document.getElementById('settingsPanel');
+            panel.classList.toggle('active');
+        }
+
+        function setPreset(playlistId) {
+            localStorage.setItem('custom_spotify_playlist_id', playlistId);
+            updateIframeSource();
+            toggleSettings();
+        }
+
+        function saveCustomPlaylist() {
+            const input = document.getElementById('playlistInput').value.trim();
+            if (!input) return;
+
+            const match = input.match(/playlist\/([a-zA-Z0-9]+)/);
+            let playlistId = match ? match[1] : input;
+
+            localStorage.setItem('custom_spotify_playlist_id', playlistId);
+            updateIframeSource();
+            toggleSettings();
+            document.getElementById('playlistInput').value = '';
+        }
+
+        // Initialize player on load
+        updateIframeSource();
+    </script>
+</body>
+</html>
