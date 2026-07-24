@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exams & Assessments - Minimal Editable</title>
+    
+    <!-- STRICTLY ONLY SAIL FONT -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sail&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-notion: #191919; 
+            --glass-base: rgba(15, 15, 15, 0.5);
+            --glass-hover: rgba(25, 25, 25, 0.8);
+            
+            --gold-bright: #f3c877;
+            --gold-mid: #d4a15c;
+            --gold-dark: #7a5f37;
+            --gold-glow: rgba(243, 200, 119, 0.2);
+            
+            --text-main: #fcf8f2;
+            --text-muted: #9e9589;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            /* Enforcing Sail font everywhere */
+            font-family: 'Sail', cursive !important;
+        }
+
+        body {
+            background-color: var(--bg-notion);
+            color: var(--text-main);
+            display: flex;
+            justify-content: flex-end; /* Aligns widget to the right */
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 30px;
+        }
+
+        /* Minimal Glass Container */
+        .widget-container {
+            width: 100%;
+            max-width: 950px;
+            background: var(--glass-base);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(243, 200, 119, 0.1);
+            border-radius: 16px;
+            padding: 24px 32px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(243, 200, 119, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: var(--gold-bright);
+            font-weight: normal;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px var(--gold-glow);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+        }
+
+        .btn-add {
+            background: transparent;
+            border: 1px solid var(--gold-mid);
+            color: var(--gold-bright);
+            font-size: 1.2rem;
+            padding: 4px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-add:hover {
+            background: rgba(243, 200, 119, 0.1);
+            box-shadow: 0 0 10px var(--gold-glow);
+        }
+
+        /* Minimal Grid Layout */
+        .grid-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1.2fr 1.2fr 1fr 40px;
+            padding: 0 16px 12px 16px;
+            color: var(--gold-mid);
+            font-size: 1.3rem;
+            opacity: 0.8;
+        }
+
+        .grid-body {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1.2fr 1.2fr 1fr 40px;
+            align-items: center;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+            font-size: 1.3rem;
+        }
+
+        .row:hover {
+            background: var(--glass-hover);
+            border-color: rgba(243, 200, 119, 0.15);
+        }
+
+        /* Editable Text Fields */
+        .editable {
+            outline: none;
+            padding: 2px 6px;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.3s ease, color 0.3s ease;
+            cursor: text;
+        }
+
+        .editable:focus {
+            border-bottom: 1px solid var(--gold-bright);
+            color: var(--gold-bright);
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        /* Custom Colors for Columns to separate data visually */
+        .col-days { color: var(--gold-bright); }
+        .col-date { color: var(--text-muted); }
+
+        /* Minimal Checkbox */
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            border: 1px solid var(--gold-dark);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .checkbox:hover {
+            border-color: var(--gold-bright);
+        }
+
+        .checkbox.checked {
+            background: var(--gold-bright);
+            border-color: var(--gold-bright);
+        }
+
+        .checkbox.checked::after {
+            content: "✓";
+            color: #191919;
+            font-size: 1rem;
+        }
+
+        .row.completed .editable {
+            text-decoration: line-through;
+            opacity: 0.4;
+        }
+
+        /* Delete Button */
+        .btn-delete {
+            color: var(--gold-dark);
+            cursor: pointer;
+            font-size: 1rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .row:hover .btn-delete {
+            opacity: 1;
+        }
+        
+        .btn-delete:hover {
+            color: #e86d6d;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="widget-container">
+        
+        <div class="header">
+            <div>
+                <h1>Exams & Assessments</h1>
+                <p>Click any text to edit • Automatically saves your changes</p>
+            </div>
+            <button class="btn-add" onclick="addNewRow()">+ Add</button>
+        </div>
+
+        <div class="grid-header">
+            <div>Exam Name</div>
+            <div>Days Left</div>
+            <div>Date</div>
+            <div>Subject</div>
+            <div>Type</div>
+            <div>Status</div>
+            <div></div>
+        </div>
+
+        <div class="grid-body" id="tableBody">
+            <!-- Rows injected by JS -->
+        </div>
+
+    </div>
+
+    <script>
+        // Default data if nothing is saved in local storage
+        const defaultData = [
+            { id: 1, name: "Math Final Exam", days: "304", date: "May 25, 2027", subject: "Mathematics", type: "Final Exam", status: "On Track", done: false },
+            { id: 2, name: "Chemistry Final Exam", days: "294", date: "May 15, 2027", subject: "Chemistry", type: "Final Exam", status: "On Track", done: false },
+            { id: 3, name: "English Reading Mock", days: "16", date: "August 10, 2026", subject: "English ESL", type: "Mock Test", status: "On Track", done: false },
+            { id: 4, name: "Physics Final Exam", days: "299", date: "May 20, 2027", subject: "Physics", type: "Final Exam", status: "On Track", done: false },
+            { id: 5, name: "Biology Topical", days: "14", date: "August 8, 2026", subject: "Biology", type: "Mock Test", status: "Approaching", done: false }
+        ];
+
+        // Load from LocalStorage or use default
+        let exams = JSON.parse(localStorage.getItem('notion_exams_data')) || defaultData;
+
+        function saveToData() {
+            localStorage.setItem('notion_exams_data', JSON.stringify(exams));
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            exams.forEach((exam, index) => {
+                const row = document.createElement('div');
+                row.className = `row ${exam.done ? 'completed' : ''}`;
+                
+                row.innerHTML = `
+                    <div class="editable" contenteditable="true" onblur="updateData(${index}, 'name', this.innerText)">${exam.name}</div>
+                    <div class="editable col-days" contenteditable="true" onblur="updateData(${index}, 'days', this.innerText)">${exam.days}</div>
+                    <div class="editable col-date" contenteditable="true" onblur="updateData(${index}, 'date', this.innerText)">${exam.date}</div>
+                    <div class="editable" contenteditable="true" onblur="updateData(${index}, 'subject', this.innerText)">${exam.subject}</div>
+                    <div class="editable" contenteditable="true" onblur="updateData(${index}, 'type', this.innerText)">${exam.type}</div>
+                    <div class="editable" contenteditable="true" onblur="updateData(${index}, 'status', this.innerText)">${exam.status}</div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <div class="checkbox ${exam.done ? 'checked' : ''}" onclick="toggleDone(${index})"></div>
+                        <span class="btn-delete" onclick="deleteRow(${index})">x</span>
+                    </div>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateData(index, field, value) {
+            exams[index][field] = value;
+            saveToData();
+        }
+
+        function toggleDone(index) {
+            exams[index].done = !exams[index].done;
+            saveToData();
+            renderTable();
+        }
+
+        function addNewRow() {
+            exams.push({
+                id: Date.now(),
+                name: "New Assessment",
+                days: "0",
+                date: "Jan 1, 2027",
+                subject: "Subject",
+                type: "Type",
+                status: "Status",
+                done: false
+            });
+            saveToData();
+            renderTable();
+        }
+
+        function deleteRow(index) {
+            exams.splice(index, 1);
+            saveToData();
+            renderTable();
+        }
+
+        // Initial Render
+        renderTable();
+    </script>
+</body>
+</html>
