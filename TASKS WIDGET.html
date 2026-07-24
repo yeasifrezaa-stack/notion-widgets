@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Golden Graph Dashboard</title>
+    
+    <!-- DM Sans Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Core Theme */
+            --notion-dark: #191919;
+            --panel-bg: rgba(22, 22, 26, 0.75);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.5);
+            
+            /* Golden/White Aesthetics */
+            --gold-primary: #f59e0b;
+            --gold-glow: 0 0 35px rgba(245, 158, 11, 0.15);
+            --white-glow: 0 0 20px rgba(255, 255, 255, 0.2);
+            
+            /* Customizable via JS */
+            --dropdown-bg: rgba(30, 30, 35, 0.9);
+            --dropdown-accent: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'DM Sans', sans-serif !important;
+        }
+
+        body {
+            background-color: var(--notion-dark);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* 1. Idle Glow & Float Animation */
+        @keyframes idleFloat {
+            0% { transform: translateY(0px); box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1); }
+            50% { transform: translateY(-6px); box-shadow: 0 30px 60px rgba(0,0,0,0.7), inset 0 1px 0 rgba(245,158,11,0.3), var(--gold-glow); }
+            100% { transform: translateY(0px); box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1); }
+        }
+
+        .dashboard-wrapper {
+            width: 100%;
+            max-width: 950px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid var(--border-glass);
+            border-top: 1px solid rgba(245, 158, 11, 0.4);
+            border-radius: 24px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            animation: idleFloat 7s ease-in-out infinite;
+        }
+
+        /* Top Controls: Axis Text & Color Customization */
+        .controls-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 16px;
+            border-bottom: 1px solid var(--border-glass);
+            padding-bottom: 16px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--gold-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .custom-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-glass);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .custom-input:focus {
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+        }
+
+        .color-picker {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border: 1px solid var(--border-glass);
+            border-radius: 8px;
+            cursor: pointer;
+            background: transparent;
+        }
+
+        /* Horizontal Graph Container */
+        .graph-area {
+            position: relative;
+            width: 100%;
+            height: 320px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            padding-bottom: 40px;
+            padding-top: 40px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            border-left: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .y-axis-label {
+            position: absolute;
+            left: -10px;
+            top: -15px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+        }
+
+        .x-axis-label {
+            position: absolute;
+            right: 0;
+            bottom: -25px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+        }
+
+        /* Graph Bars & Data Points */
+        .data-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            height: 100%;
+            position: relative;
+            width: 80px;
+            gap: 8px;
+        }
+
+        .due-date-tag {
+            position: absolute;
+            top: -30px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 8px;
+            border-radius: 6px;
+            color: var(--text-main);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .bars-container {
+            display: flex;
+            gap: 6px;
+            align-items: flex-end;
+            height: 100%;
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* The Vertical "Thingys" (Bars) */
+        .bar {
+            width: 22px;
+            border-radius: 6px 6px 0 0;
+            transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s ease, filter 0.2s ease;
+            position: relative;
+            cursor: pointer;
+        }
+
+        /* Priority Bar (Gold) */
+        .bar-priority {
+            background: linear-gradient(180deg, var(--gold-primary) 0%, rgba(245, 158, 11, 0.2) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.5);
+            border-bottom: none;
+        }
+
+        /* Status Bar (Shiny White/Grey) */
+        .bar-status {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.1) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-bottom: none;
+        }
+
+        /* 2. Hover Animations */
+        .data-group:hover .due-date-tag {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .bar:hover {
+            transform: scaleY(1.03) scaleX(1.1);
+            filter: brightness(1.3);
+            box-shadow: var(--white-glow);
+        }
+        
+        .bar-priority:hover { box-shadow: var(--gold-glow); }
+
+        /* X-Axis Bottom Labels */
+        .x-labels {
+            position: absolute;
+            bottom: -35px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            width: 120px;
+            text-align: center;
+        }
+        
+        .x-priority { font-size: 0.75rem; font-weight: 700; color: var(--gold-primary); }
+        .x-type { font-size: 0.7rem; color: var(--text-muted); }
+
+        /* Interactive Task Editor (Dropdowns) */
+        .editor-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid var(--border-glass);
+        }
+
+        /* 3. Dropdown Selection Animations */
+        @keyframes selectPop {
+            0% { transform: scale(1); box-shadow: 0 0 0 rgba(0,0,0,0); }
+            50% { transform: scale(1.05); box-shadow: 0 0 15px var(--dropdown-accent); border-color: var(--dropdown-accent); }
+            100% { transform: scale(1); box-shadow: 0 0 0 rgba(0,0,0,0); }
+        }
+
+        .interactive-select {
+            width: 100%;
+            background: var(--dropdown-bg);
+            color: var(--text-main);
+            border: 1px solid var(--border-glass);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            appearance: none;
+        }
+
+        .interactive-select.animating {
+            animation: selectPop 0.4s ease-out;
+        }
+
+        .interactive-select:hover {
+            border-color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-wrapper" role="region" aria-label="Dynamic Task Graph Dashboard">
+        
+        <!-- Customization Header -->
+        <div class="controls-header">
+            <div class="input-group">
+                <label class="input-label" for="yAxisName">Y-Axis Label</label>
+                <input type="text" id="yAxisName" class="custom-input" value="Impact & Progress" oninput="updateLabels()" aria-label="Customize Y Axis">
+            </div>
+            
+            <div class="input-group">
+                <label class="input-label" for="xAxisName">X-Axis Label</label>
+                <input type="text" id="xAxisName" class="custom-input" value="Task Categories" oninput="updateLabels()" aria-label="Customize X Axis">
+            </div>
+
+            <div class="input-group">
+                <label class="input-label" for="dropdownColor">Dropdown Accent Color</label>
+                <input type="color" id="dropdownColor" class="color-picker" value="#f59e0b" oninput="updateThemeColor()" aria-label="Choose dropdown color">
+            </div>
+        </div>
+
+        <!-- Horizontal Graph Area -->
+        <div class="graph-area" id="graphArea" aria-live="polite">
+            <span class="y-axis-label" id="yLabelDisplay">Impact & Progress</span>
+            <span class="x-axis-label" id="xLabelDisplay">Task Categories</span>
+            <!-- Bars rendered via JS -->
+        </div>
+
+        <!-- Task Editor Area (Dropdowns) -->
+        <div class="editor-section" id="editorArea">
+            <!-- Dropdowns rendered via JS -->
+        </div>
+
+    </div>
+
+    <script>
+        // Initial Dataset
+        let tasks = [
+            { id: 0, name: "Genetics Rev", dueDate: "Jul 26", priority: "High", status: "Not Started", type: "Revision" },
+            { id: 1, name: "Notion Store", dueDate: "Jul 28", priority: "Low", status: "Not Started", type: "Chore" },
+            { id: 2, name: "Algebra Paper", dueDate: "Jul 25", priority: "High", status: "In Progress", type: "Revision" },
+            { id: 3, name: "Essay Practice", dueDate: "Jul 23", priority: "Medium", status: "Done", type: "Homework" },
+            { id: 4, name: "Chem Sheet", dueDate: "Jul 27", priority: "Medium", status: "Not Started", type: "Homework" }
+        ];
+
+        // Height Mapping logic
+        const priorityHeights = { "High": "95%", "Medium": "60%", "Low": "25%" };
+        const statusHeights = { "Done": "95%", "In Progress": "55%", "Not Started": "15%" };
+
+        function initGraph() {
+            renderGraph();
+            renderEditors();
+        }
+
+        // Render the Graph Bars
+        function renderGraph() {
+            const graphArea = document.getElementById('graphArea');
+            // Keep labels, clear old bars
+            const bars = graphArea.querySelectorAll('.data-group');
+            bars.forEach(b => b.remove());
+
+            tasks.forEach(task => {
+                const group = document.createElement('div');
+                group.className = 'data-group';
+                group.setAttribute('aria-label', `${task.name}. Priority: ${task.priority}, Status: ${task.status}`);
+                
+                const pHeight = priorityHeights[task.priority] || "10%";
+                const sHeight = statusHeights[task.status] || "10%";
+
+                group.innerHTML = `
+                    <div class="due-date-tag">📅 ${task.dueDate}</div>
+                    <div class="bars-container">
+                        <div class="bar bar-priority" style="height: ${pHeight};" title="Priority: ${task.priority}"></div>
+                        <div class="bar bar-status" style="height: ${sHeight};" title="Status: ${task.status}"></div>
+                    </div>
+                    <div class="x-labels">
+                        <span class="x-priority">${task.priority}</span>
+                        <span class="x-type">${task.type}</span>
+                    </div>
+                `;
+                graphArea.appendChild(group);
+            });
+        }
+
+        // Render the Edit Dropdowns below
+        function renderEditors() {
+            const editorArea = document.getElementById('editorArea');
+            editorArea.innerHTML = '';
+
+            tasks.forEach((task, index) => {
+                const col = document.createElement('div');
+                col.className = 'input-group';
+                
+                col.innerHTML = `
+                    <label class="input-label">${task.name}</label>
+                    
+                    <!-- Priority Dropdown -->
+                    <select class="interactive-select" onchange="updateTask(${index}, 'priority', this)" aria-label="Change Priority for ${task.name}">
+                        <option value="High" ${task.priority === 'High' ? 'selected' : ''}>Priority: High</option>
+                        <option value="Medium" ${task.priority === 'Medium' ? 'selected' : ''}>Priority: Medium</option>
+                        <option value="Low" ${task.priority === 'Low' ? 'selected' : ''}>Priority: Low</option>
+                    </select>
+                    
+                    <!-- Status Dropdown -->
+                    <select class="interactive-select" onchange="updateTask(${index}, 'status', this)" aria-label="Change Status for ${task.name}">
+                        <option value="Done" ${task.status === 'Done' ? 'selected' : ''}>Status: Done</option>
+                        <option value="In Progress" ${task.status === 'In Progress' ? 'selected' : ''}>Status: In Progress</option>
+                        <option value="Not Started" ${task.status === 'Not Started' ? 'selected' : ''}>Status: Not Started</option>
+                    </select>
+                `;
+                editorArea.appendChild(col);
+            });
+        }
+
+        // Handle Dropdown Updates & Animations
+        function updateTask(index, field, selectElement) {
+            // Trigger the "Pop" animation
+            selectElement.classList.remove('animating');
+            void selectElement.offsetWidth; // trigger reflow
+            selectElement.classList.add('animating');
+
+            // Update Data & re-render graph heights dynamically
+            tasks[index][field] = selectElement.value;
+            renderGraph();
+        }
+
+        // Custom Axis Name Updates
+        function updateLabels() {
+            document.getElementById('yLabelDisplay').innerText = document.getElementById('yAxisName').value;
+            document.getElementById('xLabelDisplay').innerText = document.getElementById('xAxisName').value;
+        }
+
+        // Custom Dropdown Color Updates
+        function updateThemeColor() {
+            const color = document.getElementById('dropdownColor').value;
+            document.documentElement.style.setProperty('--dropdown-accent', color);
+        }
+
+        // Run on load
+        window.onload = initGraph;
+    </script>
+</body>
+</html>
