@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Custom Graph Dashboard</title>
+    
+    <!-- DM Sans Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Core Theme */
+            --notion-dark: #191919;
+            --panel-bg: rgba(22, 22, 26, 0.85);
+            --border-glass: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.5);
+            
+            /* Dynamic Theme (Starts as Gold, perfectly updates via JS) */
+            --theme-hex: #f59e0b;
+            --theme-rgb: 245, 158, 11;
+            
+            --theme-glow: 0 0 35px rgba(var(--theme-rgb), 0.25);
+            --white-glow: 0 0 20px rgba(255, 255, 255, 0.2);
+            --dropdown-bg: rgba(20, 20, 24, 0.95);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'DM Sans', sans-serif !important;
+        }
+
+        body {
+            background-color: var(--notion-dark);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* Idle Glow & Float Animation */
+        @keyframes idleFloat {
+            0% { transform: translateY(0px); box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1); }
+            50% { transform: translateY(-6px); box-shadow: 0 30px 60px rgba(0,0,0,0.7), inset 0 1px 0 rgba(var(--theme-rgb),0.4), var(--theme-glow); }
+            100% { transform: translateY(0px); box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1); }
+        }
+
+        .dashboard-wrapper {
+            width: 100%;
+            max-width: 1050px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid var(--border-glass);
+            border-top: 2px solid var(--theme-hex);
+            border-radius: 24px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            animation: idleFloat 7s ease-in-out infinite;
+            transition: border-color 0.4s ease;
+        }
+
+        /* Top Controls */
+        .controls-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 16px;
+            border-bottom: 1px solid var(--border-glass);
+            padding-bottom: 16px;
+        }
+
+        .header-left, .header-right {
+            display: flex;
+            gap: 16px;
+            align-items: flex-end;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--theme-hex);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            transition: color 0.4s ease;
+        }
+
+        .custom-input {
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid var(--border-glass);
+            color: var(--text-main);
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .custom-input:focus {
+            border-color: var(--theme-hex);
+            box-shadow: 0 0 15px rgba(var(--theme-rgb), 0.3);
+        }
+
+        .color-picker {
+            width: 42px;
+            height: 42px;
+            padding: 0;
+            border: 2px solid var(--border-glass);
+            border-radius: 10px;
+            cursor: pointer;
+            background: transparent;
+            transition: border-color 0.3s;
+        }
+        .color-picker:hover { border-color: var(--theme-hex); }
+
+        /* ADD BUTTON */
+        .add-btn {
+            background: rgba(var(--theme-rgb), 0.15);
+            color: var(--theme-hex);
+            border: 2px solid var(--theme-hex);
+            padding: 0 20px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            height: 42px;
+            display: flex;
+            align-items: center;
+        }
+
+        .add-btn:hover {
+            background: var(--theme-hex);
+            color: #000;
+            box-shadow: 0 0 20px rgba(var(--theme-rgb), 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Horizontal Graph Container - Dynamic Squeeze applied here! */
+        .graph-area {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-evenly; /* Squeezes columns automatically */
+            gap: 15px; /* Base gap */
+            padding: 40px 10px 10px 10px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+            border-left: 2px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .y-axis-label {
+            position: absolute;
+            left: -10px;
+            top: -20px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+        }
+
+        .x-axis-label {
+            position: absolute;
+            right: 0;
+            bottom: -30px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+        }
+
+        /* Graph Bars & Data Points */
+        .data-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            height: 100%;
+            position: relative;
+            flex: 1 1 0; /* Allows them to shrink/grow */
+            max-width: 70px; /* Prevents them from getting too wide */
+            gap: 8px;
+        }
+
+        .due-date-tag {
+            position: absolute;
+            top: -35px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 10px;
+            border-radius: 8px;
+            color: var(--text-main);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .bars-container {
+            display: flex;
+            gap: 6px;
+            align-items: flex-end;
+            height: 100%;
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* The Vertical "Thingys" - Slow Fast Smooth Animation! */
+        .bar {
+            width: 100%;
+            max-width: 22px; 
+            border-radius: 6px 6px 0 0;
+            /* Slow start, fast middle, slow end animation curve */
+            transition: height 1.2s cubic-bezier(0.65, 0, 0.35, 1), transform 0.2s ease, filter 0.2s ease;
+            position: relative;
+            cursor: pointer;
+            height: 0%; /* Starts at 0 for initial pop-up animation */
+        }
+
+        /* Dynamic Priority Bar */
+        .bar-priority {
+            background: linear-gradient(180deg, var(--theme-hex) 0%, rgba(var(--theme-rgb), 0.1) 100%);
+            border: 1px solid rgba(var(--theme-rgb), 0.6);
+            border-bottom: none;
+        }
+
+        /* Status Bar (Shiny White) */
+        .bar-status {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-bottom: none;
+        }
+
+        /* Hover Animations */
+        .data-group:hover .due-date-tag { opacity: 1; transform: translateY(0); box-shadow: var(--white-glow); }
+        .bar:hover { transform: scaleY(1.02) scaleX(1.1); filter: brightness(1.3); box-shadow: var(--white-glow); z-index: 5; }
+        .bar-priority:hover { box-shadow: var(--theme-glow); }
+
+        /* X-Axis Bottom Labels */
+        .x-labels {
+            position: absolute;
+            bottom: -45px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .x-priority { font-size: 0.8rem; font-weight: 800; color: var(--theme-hex); transition: color 0.4s; }
+        .x-type { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); }
+
+        /* Interactive Task Editor */
+        .editor-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 25px;
+            border-radius: 16px;
+            border: 1px solid var(--border-glass);
+            margin-top: 15px;
+        }
+
+        .editor-card {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 16px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+            transition: border-color 0.3s;
+        }
+        .editor-card:hover { border-color: rgba(var(--theme-rgb), 0.4); }
+
+        .editor-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .task-name-edit {
+            background: transparent;
+            border: none;
+            color: var(--theme-hex); /* Matches theme color now! */
+            font-weight: 800;
+            font-size: 0.95rem;
+            width: 100%;
+            outline: none;
+            border-bottom: 2px dashed rgba(255, 255, 255, 0.2);
+            padding-bottom: 4px;
+            text-transform: uppercase;
+            transition: color 0.4s;
+        }
+
+        .task-name-edit:focus { border-bottom-color: var(--theme-hex); }
+
+        .delete-btn {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            border-radius: 8px;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .delete-btn:hover { background: #ef4444; color: white; transform: scale(1.1); }
+
+        /* BOLD, AESTHETIC DROPDOWNS */
+        .interactive-select {
+            appearance: none;
+            width: 100%;
+            background-color: var(--dropdown-bg);
+            color: var(--text-main);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 800; /* Bolded! */
+            outline: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            /* Custom glowing arrow */
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px top 50%;
+            background-size: 12px auto;
+        }
+
+        .interactive-select:hover, .interactive-select:focus {
+            border-color: var(--theme-hex);
+            background-color: rgba(var(--theme-rgb), 0.1);
+            box-shadow: 0 0 15px rgba(var(--theme-rgb), 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* LIMIT WARNING MODAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .modal-content {
+            background: var(--panel-bg);
+            border: 2px solid var(--theme-hex);
+            box-shadow: 0 0 50px rgba(var(--theme-rgb), 0.3);
+            padding: 35px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 360px;
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modal-overlay.active .modal-content { transform: scale(1); }
+
+        .modal-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--theme-hex);
+            margin-bottom: 12px;
+        }
+
+        .modal-text {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .modal-close-btn {
+            background: var(--theme-hex);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+        }
+        .modal-close-btn:hover { box-shadow: 0 0 20px rgba(var(--theme-rgb), 0.5); transform: translateY(-2px); }
+
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-wrapper" role="region" aria-label="Dynamic Task Graph Dashboard">
+        
+        <!-- Customization Header -->
+        <div class="controls-header">
+            <div class="header-left">
+                <div class="input-group">
+                    <label class="input-label" for="yAxisName">Y-Axis Name</label>
+                    <input type="text" id="yAxisName" class="custom-input" value="Impact & Progress" oninput="updateLabels()">
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label" for="xAxisName">X-Axis Name</label>
+                    <input type="text" id="xAxisName" class="custom-input" value="Task Categories" oninput="updateLabels()">
+                </div>
+            </div>
+
+            <div class="header-right">
+                <div class="input-group">
+                    <label class="input-label" for="themeColorPicker">Widget Theme</label>
+                    <input type="color" id="themeColorPicker" class="color-picker" value="#f59e0b" oninput="updateThemeColor()">
+                </div>
+                
+                <button class="add-btn" onclick="addTask()">Add Task +</button>
+            </div>
+        </div>
+
+        <!-- Horizontal Graph Area -->
+        <div class="graph-area" id="graphArea" aria-live="polite">
+            <span class="y-axis-label" id="yLabelDisplay">Impact & Progress</span>
+            <span class="x-axis-label" id="xLabelDisplay">Task Categories</span>
+            <!-- Bars rendered via JS -->
+        </div>
+
+        <!-- Task Editor Area -->
+        <div class="editor-section" id="editorArea">
+            <!-- Dropdowns & Names rendered via JS -->
+        </div>
+
+    </div>
+
+    <!-- Maximum Limit Pop-Out Modal -->
+    <div class="modal-overlay" id="limitModal">
+        <div class="modal-content">
+            <h2 class="modal-title">Limit Reached! 🛑</h2>
+            <p class="modal-text">You have reached the maximum limit of 8 tasks to keep your aesthetics perfect. Please delete an old task to add a new one.</p>
+            <button class="modal-close-btn" onclick="closeModal()">Got it!</button>
+        </div>
+    </div>
+
+    <script>
+        // Initial Dataset
+        let tasks = [
+            { id: 0, name: "Genetics Rev", dueDate: "Jul 26", priority: "High", status: "Not Started", type: "Revision" },
+            { id: 1, name: "Notion Store", dueDate: "Jul 28", priority: "Low", status: "Not Started", type: "Chore" },
+            { id: 2, name: "Algebra Paper", dueDate: "Jul 25", priority: "High", status: "In Progress", type: "Revision" },
+            { id: 3, name: "Essay Practice", dueDate: "Jul 23", priority: "Medium", status: "Done", type: "Homework" },
+            { id: 4, name: "Chem Sheet", dueDate: "Jul 27", priority: "Medium", status: "Not Started", type: "Homework" }
+        ];
+
+        // Height Mapping logic
+        const priorityHeights = { "High": "95%", "Medium": "60%", "Low": "25%" };
+        const statusHeights = { "Done": "95%", "In Progress": "55%", "Not Started": "15%" };
+
+        function initGraph() {
+            renderGraphFull();
+            renderEditors();
+        }
+
+        // 1. Render FULL Graph (Used on Load, Add, or Delete)
+        function renderGraphFull() {
+            const graphArea = document.getElementById('graphArea');
+            const bars = graphArea.querySelectorAll('.data-group');
+            bars.forEach(b => b.remove());
+
+            tasks.forEach((task, index) => {
+                const group = document.createElement('div');
+                group.className = 'data-group';
+                group.id = `bar-group-${index}`;
+                
+                group.innerHTML = `
+                    <div class="due-date-tag">📅 ${task.dueDate}</div>
+                    <div class="bars-container">
+                        <div class="bar bar-priority" id="bar-p-${index}" title="Priority: ${task.priority}"></div>
+                        <div class="bar bar-status" id="bar-s-${index}" title="Status: ${task.status}"></div>
+                    </div>
+                    <div class="x-labels">
+                        <span class="x-priority" id="label-p-${index}">${task.priority}</span>
+                        <span class="x-type">${task.type}</span>
+                    </div>
+                `;
+                graphArea.appendChild(group);
+
+                // Trigger smooth initial load animation
+                setTimeout(() => {
+                    document.getElementById(`bar-p-${index}`).style.height = priorityHeights[task.priority] || "10%";
+                    document.getElementById(`bar-s-${index}`).style.height = statusHeights[task.status] || "10%";
+                }, 50);
+            });
+        }
+
+        // 2. Render Editors
+        function renderEditors() {
+            const editorArea = document.getElementById('editorArea');
+            editorArea.innerHTML = '';
+
+            tasks.forEach((task, index) => {
+                const card = document.createElement('div');
+                card.className = 'editor-card';
+                
+                card.innerHTML = `
+                    <div class="editor-card-header">
+                        <input type="text" class="task-name-edit" value="${task.name}" onchange="updateTaskName(${index}, this.value)" placeholder="TASK NAME">
+                        <button class="delete-btn" onclick="deleteTask(${index})" title="Delete Task">✕</button>
+                    </div>
+                    
+                    <select class="interactive-select" onchange="updateTaskDropdown(${index}, 'priority', this)">
+                        <option value="High" ${task.priority === 'High' ? 'selected' : ''}>🔥 Priority: High</option>
+                        <option value="Medium" ${task.priority === 'Medium' ? 'selected' : ''}>⚡ Priority: Medium</option>
+                        <option value="Low" ${task.priority === 'Low' ? 'selected' : ''}>🧊 Priority: Low</option>
+                    </select>
+                    
+                    <select class="interactive-select" onchange="updateTaskDropdown(${index}, 'status', this)">
+                        <option value="Done" ${task.status === 'Done' ? 'selected' : ''}>✅ Status: Done</option>
+                        <option value="In Progress" ${task.status === 'In Progress' ? 'selected' : ''}>⏳ Status: In Progress</option>
+                        <option value="Not Started" ${task.status === 'Not Started' ? 'selected' : ''}>❌ Status: Not Started</option>
+                    </select>
+                `;
+                editorArea.appendChild(card);
+            });
+        }
+
+        // 3. Update INDIVIDUAL Dropdowns (Triggers Smooth CSS Transition without Redrawing!)
+        function updateTaskDropdown(index, field, selectElement) {
+            tasks[index][field] = selectElement.value;
+            
+            // Get elements
+            const barP = document.getElementById(`bar-p-${index}`);
+            const barS = document.getElementById(`bar-s-${index}`);
+            const labelP = document.getElementById(`label-p-${index}`);
+
+            if (field === 'priority') {
+                barP.style.height = priorityHeights[selectElement.value];
+                labelP.innerText = selectElement.value;
+            } else if (field === 'status') {
+                barS.style.height = statusHeights[selectElement.value];
+            }
+        }
+
+        function updateTaskName(index, value) { tasks[index].name = value; }
+
+        // 4. Add & Delete Functions
+        function addTask() {
+            if (tasks.length >= 8) {
+                document.getElementById('limitModal').classList.add('active');
+                return;
+            }
+            tasks.push({ id: Date.now(), name: "NEW TASK", dueDate: "TBD", priority: "Low", status: "Not Started", type: "Custom" });
+            initGraph(); // Redraws everything to squeeze spacing properly
+        }
+
+        function deleteTask(index) {
+            tasks.splice(index, 1);
+            initGraph(); // Redraws everything to expand spacing properly
+        }
+
+        function closeModal() { document.getElementById('limitModal').classList.remove('active'); }
+
+        // 5. Custom Labels
+        function updateLabels() {
+            document.getElementById('yLabelDisplay').innerText = document.getElementById('yAxisName').value;
+            document.getElementById('xLabelDisplay').innerText = document.getElementById('xAxisName').value;
+        }
+
+        // 6. Flawless Dynamic Theme Converter
+        function hexToRgb(hex) {
+            let bigint = parseInt(hex.replace('#', ''), 16);
+            let r = (bigint >> 16) & 255;
+            let g = (bigint >> 8) & 255;
+            let b = bigint & 255;
+            return `${r}, ${g}, ${b}`;
+        }
+
+        function updateThemeColor() {
+            const hex = document.getElementById('themeColorPicker').value;
+            const rgb = hexToRgb(hex);
+            
+            // Targets root directly - changes everything!
+            document.documentElement.style.setProperty('--theme-hex', hex);
+            document.documentElement.style.setProperty('--theme-rgb', rgb);
+        }
+
+        // Boot it up
+        window.onload = initGraph;
+    </script>
+</body>
+</html>
