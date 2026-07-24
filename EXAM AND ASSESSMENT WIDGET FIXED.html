@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exams & Assessments - Smooth Reactive</title>
+    
+    <!-- STRICTLY ONLY SAIL FONT -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sail&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-notion: #191919; 
+            --glass-base: rgba(15, 15, 15, 0.5);
+            --glass-hover: rgba(25, 25, 25, 0.8);
+            
+            --gold-bright: #f3c877;
+            --gold-mid: #d4a15c;
+            --gold-dark: #7a5f37;
+            --gold-glow: rgba(243, 200, 119, 0.2);
+            
+            --text-main: #fcf8f2;
+            --text-muted: #9e9589;
+            
+            --color-track: var(--gold-mid);
+            --color-approaching: #f3c877;
+            --color-crossed: #e86d6d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Sail', cursive !important;
+        }
+
+        body {
+            background-color: var(--bg-notion);
+            color: var(--text-main);
+            display: flex;
+            justify-content: flex-end; 
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 30px;
+        }
+
+        .widget-container {
+            width: 100%;
+            max-width: 1000px;
+            background: var(--glass-base);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(243, 200, 119, 0.1);
+            border-radius: 16px;
+            padding: 24px 32px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(243, 200, 119, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: var(--gold-bright);
+            font-weight: normal;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px var(--gold-glow);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+        }
+
+        .btn-add {
+            background: transparent;
+            border: 1px solid var(--gold-mid);
+            color: var(--gold-bright);
+            font-size: 1.2rem;
+            padding: 4px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-add:hover {
+            background: rgba(243, 200, 119, 0.1);
+            box-shadow: 0 0 10px var(--gold-glow);
+        }
+
+        .grid-header {
+            display: grid;
+            grid-template-columns: 2fr 0.9fr 1.3fr 1.2fr 1fr 1.2fr 40px;
+            padding: 0 16px 12px 16px;
+            color: var(--gold-mid);
+            font-size: 1.3rem;
+            opacity: 0.8;
+        }
+
+        .grid-body {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 2fr 0.9fr 1.3fr 1.2fr 1fr 1.2fr 40px;
+            align-items: center;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+            font-size: 1.3rem;
+        }
+
+        .row:hover {
+            background: var(--glass-hover);
+            border-color: rgba(243, 200, 119, 0.15);
+        }
+
+        .editable {
+            outline: none;
+            padding: 2px 6px;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.3s ease, color 0.3s ease;
+            cursor: text;
+        }
+
+        .editable:focus {
+            border-bottom: 1px solid var(--gold-bright);
+            color: var(--gold-bright);
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        /* Smooth Styled Native Date Input */
+        .styled-date-input {
+            color-scheme: dark; /* Forces browser native calendar to render in dark mode */
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            font-family: 'Sail', cursive !important;
+            font-size: 1.2rem;
+            padding: 4px 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .styled-date-input:hover, .styled-date-input:focus {
+            background: rgba(0, 0, 0, 0.3);
+            border-color: var(--gold-bright);
+            color: var(--gold-bright);
+            outline: none;
+            box-shadow: 0 0 10px var(--gold-glow);
+        }
+
+        /* Customizing the calendar dropdown icon to fit gold theme */
+        .styled-date-input::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            filter: invert(0.8) sepia(1) hue-rotate(5deg) saturate(400%);
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+        }
+
+        .styled-date-input::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
+        }
+
+        .readonly-field {
+            padding: 2px 6px;
+            pointer-events: none;
+        }
+
+        .status-track { color: var(--color-track); }
+        .status-approaching { color: var(--color-approaching); text-shadow: 0 0 8px rgba(243, 200, 119, 0.4); }
+        .status-crossed { color: var(--color-crossed); text-shadow: 0 0 8px rgba(232, 109, 109, 0.4); }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            border: 1px solid var(--gold-dark);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .checkbox:hover { border-color: var(--gold-bright); }
+        .checkbox.checked {
+            background: var(--gold-bright);
+            border-color: var(--gold-bright);
+        }
+        .checkbox.checked::after {
+            content: "✓";
+            color: #191919;
+            font-size: 1rem;
+        }
+
+        .row.completed .editable, .row.completed .styled-date-input, .row.completed .readonly-field {
+            text-decoration: line-through;
+            opacity: 0.4;
+        }
+
+        .btn-delete {
+            color: var(--gold-dark);
+            cursor: pointer;
+            font-size: 1rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .row:hover .btn-delete { opacity: 1; }
+        .btn-delete:hover { color: var(--color-crossed); }
+
+    </style>
+</head>
+<body>
+
+    <div class="widget-container">
+        
+        <div class="header">
+            <div>
+                <h1>Exams & Assessments</h1>
+                <p>Click the date box for a smooth calendar picker. Metrics update instantly.</p>
+            </div>
+            <button class="btn-add" onclick="addNewRow()">+ Add</button>
+        </div>
+
+        <div class="grid-header">
+            <div>Exam Name</div>
+            <div>Days Left</div>
+            <div>Deadline</div>
+            <div>Subject</div>
+            <div>Type</div>
+            <div>Status</div>
+            <div></div>
+        </div>
+
+        <div class="grid-body" id="tableBody">
+            <!-- Rows injected by JS -->
+        </div>
+
+    </div>
+
+    <script>
+        const defaultData = [
+            { id: 1, name: "Math Final Exam", date: "2027-05-25", subject: "Mathematics", type: "Final Exam", done: false },
+            { id: 2, name: "Chemistry Final", date: "2027-05-15", subject: "Chemistry", type: "Final Exam", done: false },
+            { id: 3, name: "English Reading Mock", date: "2026-08-10", subject: "English ESL", type: "Mock Test", done: false },
+            { id: 4, name: "Physics Final Exam", date: "2027-05-20", subject: "Physics", type: "Final Exam", done: false },
+            { id: 5, name: "Biology Topical", date: "2026-08-08", subject: "Biology", type: "Mock Test", done: false }
+        ];
+
+        let exams = JSON.parse(localStorage.getItem('reactive_exams_data_v2')) || defaultData;
+
+        function calculateMetrics(dateString) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); 
+            
+            const targetDate = new Date(dateString);
+            targetDate.setHours(0, 0, 0, 0);
+
+            const diffTime = targetDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            let status = "On Track";
+            let statusClass = "status-track";
+            let displayDays = `${diffDays}`;
+
+            if (diffDays < 0) {
+                status = "Deadline Crossed";
+                statusClass = "status-crossed";
+                displayDays = `+${Math.abs(diffDays)} past`;
+            } else if (diffDays <= 14) {
+                status = "Approaching";
+                statusClass = "status-approaching";
+            }
+
+            return { displayDays, status, statusClass };
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            exams.forEach((exam, index) => {
+                const metrics = calculateMetrics(exam.date);
+
+                const row = document.createElement('div');
+                row.className = `row ${exam.done ? 'completed' : ''}`;
+                
+                row.innerHTML = `
+                    <div class="editable" contenteditable="true" onblur="updateTextData(${index}, 'name', this.innerText)">${exam.name}</div>
+                    
+                    <div class="readonly-field ${metrics.statusClass}">${metrics.displayDays}</div>
+                    
+                    <!-- Clean Styled Native Date Picker -->
+                    <div>
+                        <input type="date" class="styled-date-input" value="${exam.date}" onchange="updateDate(${index}, this.value)">
+                    </div>
+                    
+                    <div class="editable" contenteditable="true" onblur="updateTextData(${index}, 'subject', this.innerText)">${exam.subject}</div>
+                    <div class="editable" contenteditable="true" onblur="updateTextData(${index}, 'type', this.innerText)">${exam.type}</div>
+                    
+                    <div class="readonly-field ${metrics.statusClass}">${metrics.status}</div>
+                    
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <div class="checkbox ${exam.done ? 'checked' : ''}" onclick="toggleDone(${index})"></div>
+                        <span class="btn-delete" onclick="deleteRow(${index})">x</span>
+                    </div>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateTextData(index, field, value) {
+            exams[index][field] = value;
+            saveData();
+        }
+
+        function updateDate(index, newDateValue) {
+            if (!newDateValue) return;
+            exams[index].date = newDateValue;
+            saveData();
+            renderTable();
+        }
+
+        function toggleDone(index) {
+            exams[index].done = !exams[index].done;
+            saveData();
+            renderTable();
+        }
+
+        function addNewRow() {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const isoDate = tomorrow.toISOString().split('T')[0];
+
+            exams.push({
+                id: Date.now(),
+                name: "New Assessment",
+                date: isoDate,
+                subject: "Subject",
+                type: "Type",
+                done: false
+            });
+            saveData();
+            renderTable();
+        }
+
+        function deleteRow(index) {
+            exams.splice(index, 1);
+            saveData();
+            renderTable();
+        }
+
+        function saveData() {
+            localStorage.setItem('reactive_exams_data_v2', JSON.stringify(exams));
+        }
+
+        renderTable();
+    </script>
+</body>
+</html>
