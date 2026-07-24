@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exquisite Month Calendar</title>
+    
+    <!-- STRICTLY ONLY SAIL FONT -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sail&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-notion: #121212;
+            --glass-base: rgba(16, 16, 16, 0.85);
+            --glass-cell: rgba(22, 22, 22, 0.65);
+            --glass-cell-hover: rgba(30, 30, 30, 0.9);
+            
+            --gold-edge: rgba(243, 200, 119, 0.25);
+            --gold-glow: rgba(243, 200, 119, 0.4);
+            --gold-text: #f3c877;
+            
+            --white-shiny: #ffffff;
+            --white-glow: 0 0 10px rgba(255, 255, 255, 0.3);
+            --text-muted: #9e9589;
+            
+            --reset-hover: #e86d6d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Sail', cursive !important;
+        }
+
+        body {
+            background-color: var(--bg-notion);
+            color: var(--white-shiny);
+            display: flex;
+            justify-content: center; 
+            align-items: flex-start;
+            padding: 5px; /* Minimal padding */
+            overflow-x: hidden; 
+        }
+
+        .calendar-container {
+            width: 100%;
+            max-width: 480px; /* Standard compact widget size */
+            background: var(--glass-base);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--gold-edge);
+            border-radius: 12px;
+            padding: 12px; /* Tighter padding around the edges */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.85),
+                        inset 0 0 10px rgba(243, 200, 119, 0.05);
+        }
+
+        /* Header & Navigation Controls */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(243, 200, 119, 0.15);
+        }
+
+        .month-title {
+            font-size: 1.5rem; /* Scaled down */
+            color: var(--gold-text);
+            text-shadow: 0 0 8px var(--gold-glow);
+            letter-spacing: 1px;
+            font-weight: normal;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 6px;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--white-shiny);
+            font-size: 0.85rem; /* Smaller text */
+            padding: 2px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--white-shiny);
+            box-shadow: var(--white-glow);
+            transform: translateY(-1px);
+        }
+
+        .reset-btn:hover {
+            border-color: var(--reset-hover);
+            color: var(--reset-hover);
+            box-shadow: 0 0 8px rgba(232, 109, 109, 0.3);
+        }
+
+        /* Weekday Labels */
+        .weekdays-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr)); 
+            gap: 4px;
+            margin-bottom: 6px;
+            text-align: center;
+            font-size: 0.9rem; /* Scaled down */
+            color: var(--gold-text);
+        }
+
+        /* Month Days Grid */
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr)); 
+            gap: 4px; /* Tighter gap */
+        }
+
+        .day-cell {
+            background: var(--glass-cell);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 8px;
+            min-height: 60px; /* Standard square calendar cell height */
+            padding: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden; 
+        }
+
+        .day-cell:hover {
+            background: var(--glass-cell-hover);
+            border-color: var(--white-shiny);
+            transform: translateY(-1px) scale(1.02);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.8),
+                        0 0 8px rgba(255, 255, 255, 0.2);
+            z-index: 10;
+        }
+
+        .day-cell.inactive {
+            opacity: 0.35;
+            background: rgba(10, 10, 10, 0.4);
+        }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2px;
+        }
+
+        .day-number {
+            font-size: 0.9rem; /* Scaled down */
+            color: var(--white-shiny);
+        }
+
+        /* Status Mark */
+        .status-dot {
+            width: 5px; /* Tiny dot to save space */
+            height: 5px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .status-dot:hover {
+            transform: scale(1.4);
+        }
+
+        .status-dot.active {
+            background: var(--gold-text);
+            box-shadow: 0 0 6px var(--gold-glow);
+        }
+
+        /* Daily Notes & Tasks Textarea */
+        .day-notes {
+            flex-grow: 1;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid transparent;
+            border-radius: 4px;
+            color: var(--white-shiny);
+            font-size: 0.75rem; /* Small enough to fit notes in 60px height */
+            padding: 2px 4px;
+            margin-top: 2px;
+            resize: none; 
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .day-notes::placeholder {
+            color: var(--text-muted);
+            opacity: 0.6;
+        }
+
+        .day-notes:focus {
+            background: rgba(0, 0, 0, 0.7);
+            border-color: var(--white-shiny);
+        }
+        
+        /* Custom scrollbar for text areas */
+        .day-notes::-webkit-scrollbar {
+            width: 2px;
+        }
+        .day-notes::-webkit-scrollbar-thumb {
+            background: var(--gold-edge);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calendar-container">
+        
+        <!-- Header Controls -->
+        <div class="calendar-header">
+            <div class="month-title" id="monthYearDisplay">August 2026</div>
+            <div class="nav-buttons">
+                <button class="nav-btn" type="button" onclick="changeMonth(-1)">Prev</button>
+                <button class="nav-btn" type="button" onclick="goToToday()">Today</button>
+                <button class="nav-btn" type="button" onclick="changeMonth(1)">Next</button>
+                <button class="nav-btn reset-btn" type="button" onclick="resetCalendar()">Reset</button>
+            </div>
+        </div>
+
+        <!-- Days of the Week -->
+        <div class="weekdays-grid">
+            <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+        </div>
+
+        <!-- Month Grid Cells -->
+        <div class="days-grid" id="daysGrid"></div>
+
+    </div>
+
+    <script>
+        let viewDate = new Date();
+        let resetStep = 0;
+        let resetTimer = null;
+        
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+        function renderCalendar() {
+            const display = document.getElementById('monthYearDisplay');
+            const grid = document.getElementById('daysGrid');
+            if (!display || !grid) return;
+            
+            grid.innerHTML = '';
+
+            let currentMonth = viewDate.getMonth();
+            let currentYear = viewDate.getFullYear();
+
+            display.innerText = `${monthNames[currentMonth]} ${currentYear}`;
+
+            const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+            const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const prevTotalDays = new Date(currentYear, currentMonth, 0).getDate();
+
+            for (let i = firstDayIndex; i > 0; i--) {
+                const dayNum = prevTotalDays - i + 1;
+                let prevMonth = currentMonth - 1;
+                let prevYear = currentYear;
+                if (prevMonth < 0) { prevMonth = 11; prevYear--; }
+                grid.appendChild(createCell(dayNum, prevMonth, prevYear, true));
+            }
+
+            for (let i = 1; i <= totalDays; i++) {
+                grid.appendChild(createCell(i, currentMonth, currentYear, false));
+            }
+
+            const totalCellsSoFar = firstDayIndex + totalDays;
+            const nextDaysCount = totalCellsSoFar <= 35 ? 35 - totalCellsSoFar : 42 - totalCellsSoFar;
+            for (let i = 1; i <= nextDaysCount; i++) {
+                let nextMonth = currentMonth + 1;
+                let nextYear = currentYear;
+                if (nextMonth > 11) { nextMonth = 0; nextYear++; }
+                grid.appendChild(createCell(i, nextMonth, nextYear, true));
+            }
+        }
+
+        function createCell(dayNum, month, year, isInactive) {
+            const cell = document.createElement('div');
+            cell.className = `day-cell ${isInactive ? 'inactive' : ''}`;
+
+            const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+            
+            let calendarData = JSON.parse(localStorage.getItem('notion_shiny_calendar_data')) || {};
+            let dayData = calendarData[dateKey] || { note: '', status: false };
+
+            cell.innerHTML = `
+                <div class="day-header">
+                    <span class="day-number">${dayNum}</span>
+                    <div class="status-dot ${dayData.status ? 'active' : ''}" onclick="toggleStatus('${dateKey}')" title="Click to toggle status mark"></div>
+                </div>
+                <textarea class="day-notes" placeholder="Notes..." oninput="saveNote('${dateKey}', this.value)">${dayData.note}</textarea>
+            `;
+
+            return cell;
+        }
+
+        function saveNote(dateKey, text) {
+            let calendarData = JSON.parse(localStorage.getItem('notion_shiny_calendar_data')) || {};
+            if (!calendarData[dateKey]) calendarData[dateKey] = { note: '', status: false };
+            calendarData[dateKey].note = text;
+            localStorage.setItem('notion_shiny_calendar_data', JSON.stringify(calendarData));
+        }
+
+        function toggleStatus(dateKey) {
+            let calendarData = JSON.parse(localStorage.getItem('notion_shiny_calendar_data')) || {};
+            if (!calendarData[dateKey]) calendarData[dateKey] = { note: '', status: false };
+            calendarData[dateKey].status = !calendarData[dateKey].status;
+            localStorage.setItem('notion_shiny_calendar_data', JSON.stringify(calendarData));
+            renderCalendar();
+        }
+
+        function resetCalendar() {
+            const btn = document.querySelector('.reset-btn');
+            if (resetStep === 0) {
+                resetStep = 1;
+                btn.innerText = "Confirm?";
+                resetTimer = setTimeout(() => {
+                    resetStep = 0;
+                    btn.innerText = "Reset";
+                }, 3000);
+            } else {
+                clearTimeout(resetTimer);
+                localStorage.removeItem('notion_shiny_calendar_data');
+                resetStep = 0;
+                btn.innerText = "Reset";
+                renderCalendar();
+            }
+        }
+
+        function changeMonth(direction) {
+            viewDate.setMonth(viewDate.getMonth() + direction);
+            renderCalendar();
+        }
+
+        function goToToday() {
+            viewDate = new Date();
+            renderCalendar();
+        }
+
+        renderCalendar();
+    </script>
+</body>
+</html>
