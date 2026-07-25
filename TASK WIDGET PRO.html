@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Luxurious Productivity Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+@font-face{font-family:'QUARTZO';src:local('QUARTZO'),local('Quartzo');}
+:root{--bg-base:#141414;--bg-panel:#1a1a1a;--theme-color:#e6b95c;--theme-rgb:230,185,92;--theme-secondary:#ff8c42;--text-main:#f5f5f5;--text-muted:#8c8c8c;--border-radius:12px;--panel-border:rgba(230,185,92,0.15);--transition-smooth:all 0.4s cubic-bezier(0.25,0.8,0.25,1);}
+body{font-family:'QUARTZO',system-ui,sans-serif;background-color:var(--bg-base);background-image:radial-gradient(circle at 50% 0%,#202020 0%,var(--bg-base) 70%);color:var(--text-main);margin:0;padding:1rem;display:flex;justify-content:center;min-height:100vh;}
+@keyframes idleGlow{0%{box-shadow:0 0 10px rgba(var(--theme-rgb),0.1),inset 0 0 6px rgba(var(--theme-rgb),0.05);}50%{box-shadow:0 0 20px rgba(var(--theme-rgb),0.2),inset 0 0 12px rgba(var(--theme-rgb),0.1);}100%{box-shadow:0 0 10px rgba(var(--theme-rgb),0.1),inset 0 0 6px rgba(var(--theme-rgb),0.05);}}
+.dashboard-container{width:100%;max-width:1450px;background:rgba(26,26,26,0.7);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--panel-border);border-radius:var(--border-radius);padding:1.2rem;animation:idleGlow 4s infinite alternate ease-in-out;transition:var(--transition-smooth);}
+.dashboard-container:hover{box-shadow:0 0 30px rgba(var(--theme-rgb),0.35),inset 0 0 15px rgba(var(--theme-rgb),0.15);border-color:rgba(var(--theme-rgb),0.4);animation:none;}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:1rem;}
+.controls-group{display:flex;gap:1rem;align-items:center;}
+.input-group{display:flex;flex-direction:column;gap:0.2rem;}
+label{font-size:0.7rem;color:var(--theme-color);letter-spacing:2px;text-transform:uppercase;text-shadow:0 0 5px rgba(var(--theme-rgb),0.5);}
+input[type="text"]{background:rgba(0,0,0,0.3);border:1px solid var(--panel-border);color:var(--text-main);padding:0.4rem 0.7rem;border-radius:5px;font-family:inherit;font-size:0.85rem;outline:none;transition:var(--transition-smooth);width:170px;}
+input[type="text"]:focus{border-color:var(--theme-color);box-shadow:0 0 10px rgba(var(--theme-rgb),0.3);}
+input[type="color"]{-webkit-appearance:none;border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;background:transparent;padding:0;box-shadow:0 0 10px rgba(var(--theme-rgb),0.5);transition:var(--transition-smooth);}
+input[type="color"]:hover{transform:scale(1.1);}
+input[type="color"]::-webkit-color-swatch-wrapper{padding:0;}
+input[type="color"]::-webkit-color-swatch{border:2px solid var(--text-main);border-radius:50%;}
+button.primary-btn{background:linear-gradient(135deg,var(--theme-color),var(--theme-secondary));color:#000;border:none;padding:0.5rem 1.2rem;border-radius:20px;cursor:pointer;font-family:inherit;font-size:0.85rem;font-weight:bold;letter-spacing:1px;text-transform:uppercase;box-shadow:0 0 12px rgba(var(--theme-rgb),0.4);transition:var(--transition-smooth);}
+button.primary-btn:hover{transform:translateY(-2px) scale(1.05);box-shadow:0 0 25px rgba(var(--theme-rgb),0.7);}
+.analytics-layout{display:grid;grid-template-columns:2.6fr 1.4fr;gap:1rem;margin-bottom:1.2rem;}
+.chart-panel{background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.03);border-radius:var(--border-radius);padding:0.8rem;position:relative;}
+.main-radar-chart{height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.side-pies{display:flex;flex-direction:column;gap:0.6rem;height:260px;}
+.pie-container{flex:1;position:relative;background:rgba(0,0,0,0.15);border:1px solid rgba(255,255,255,0.02);border-radius:6px;padding:0.3rem;min-height:0;}
+.tasks-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0.8rem;}
+.task-card{background:linear-gradient(145deg,rgba(30,30,30,0.8),rgba(20,20,20,0.9));border:1px solid var(--panel-border);border-radius:6px;padding:0.8rem;transition:var(--transition-smooth);position:relative;overflow:hidden;}
+.task-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,transparent,var(--theme-color),transparent);opacity:0.3;transition:var(--transition-smooth);}
+.task-card:hover{transform:translateY(-3px);border-color:rgba(var(--theme-rgb),0.5);box-shadow:0 6px 15px rgba(0,0,0,0.5),0 0 10px rgba(var(--theme-rgb),0.15);}
+.task-card:hover::before{opacity:1;box-shadow:0 0 6px var(--theme-color);}
+.task-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.7rem;}
+.task-title-input{background:transparent;border:none;color:var(--text-main);font-size:0.95rem;font-weight:bold;font-family:inherit;outline:none;width:80%;text-shadow:0 0 3px rgba(255,255,255,0.2);}
+.btn-delete{background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:0.9rem;transition:var(--transition-smooth);}
+.btn-delete:hover{color:#ff4757;text-shadow:0 0 6px rgba(255,71,87,0.8);transform:scale(1.2);}
+.task-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem;background:rgba(0,0,0,0.3);padding:0.25rem 0.5rem;border-radius:4px;border:1px solid rgba(255,255,255,0.02);}
+.task-row span{font-size:0.7rem;color:var(--text-muted);}
+select,input[type="date"]{background:transparent;border:none;color:var(--theme-color);font-family:inherit;font-size:0.75rem;outline:none;cursor:pointer;text-align:right;text-shadow:0 0 3px rgba(var(--theme-rgb),0.3);}
+select option{background:var(--bg-panel);color:var(--text-main);}
+@media (max-width:1100px){.analytics-layout{grid-template-columns:1fr;}.side-pies{flex-direction:row;height:200px;}}
+@media (max-width:768px){.side-pies{flex-direction:column;height:400px;}}
+</style>
+</head>
+<body>
+<div class="dashboard-container">
+    <div class="header">
+        <div class="controls-group">
+            <div class="input-group">
+                <label for="dataset1Name">Dataset 1 Label</label>
+                <input type="text" id="dataset1Name" value="Impact (Priority)">
+            </div>
+            <div class="input-group">
+                <label for="dataset2Name">Dataset 2 Label</label>
+                <input type="text" id="dataset2Name" value="Progress (Status)">
+            </div>
+        </div>
+        <div class="controls-group">
+            <div class="input-group" style="align-items: center;">
+                <label for="themeColorPicker">Glow</label>
+                <input type="color" id="themeColorPicker" value="#e6b95c" aria-label="Widget Theme Color">
+            </div>
+            <button class="primary-btn" id="addTaskBtn">+ Add Task</button>
+        </div>
+    </div>
+    <div class="analytics-layout">
+        <div class="chart-panel main-radar-chart"><canvas id="radarChart"></canvas></div>
+        <div class="side-pies">
+            <div class="pie-container"><canvas id="statusPie"></canvas></div>
+            <div class="pie-container"><canvas id="priorityPie"></canvas></div>
+        </div>
+    </div>
+    <div class="tasks-grid" id="tasksContainer"></div>
+</div>
+<script>
+let tasks=[
+    {id:1,title:'Genetics Rev',date:'2026-07-26',priority:'high',status:'not-start'},
+    {id:2,title:'Notion Store',date:'2026-07-28',priority:'low',status:'not-start'},
+    {id:3,title:'Algebra Paper',date:'2026-07-25',priority:'high',status:'in-progress'},
+    {id:4,title:'Essay Practice',date:'2026-07-23',priority:'medium',status:'done'},
+    {id:5,title:'Chem Sheet',date:'2026-07-27',priority:'medium',status:'not-start'}
+];
+let radarChart,statusPieChart,priorityPieChart;
+const priorityValues={'high':3,'medium':2,'low':1};
+const statusValues={'done':3,'in-progress':2,'not-start':1};
+function hexToRgb(hex){let res=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);return res?`${parseInt(res[1],16)}, ${parseInt(res[2],16)}, ${parseInt(res[3],16)}`:'230, 185, 92';}
+function getThemeRgb(){return getComputedStyle(document.documentElement).getPropertyValue('--theme-rgb').trim();}
+const glowPlugin={id:'glowPlugin',beforeDatasetsDraw(chart){const ctx=chart.ctx;ctx.save();ctx.shadowColor=`rgba(${getThemeRgb()}, 0.6)`;ctx.shadowBlur=10;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;},afterDatasetsDraw(chart){chart.ctx.restore();}};
+function init(){Chart.register(glowPlugin);Chart.defaults.color='#8c8c8c';Chart.defaults.font.family="'QUARTZO', sans-serif";renderTasks();initCharts();setupEvents();}
+function renderTasks(){
+    const container=document.getElementById('tasksContainer');container.innerHTML='';
+    tasks.forEach(t=>{
+        container.innerHTML+=`
+        <div class="task-card">
+            <div class="task-header">
+                <input type="text" class="task-title-input" value="${t.title}" onchange="updateTask(${t.id}, 'title', this.value)">
+                <button class="btn-delete" onclick="deleteTask(${t.id})" title="Delete Task">✖</button>
+            </div>
+            <div class="task-row"><span>📅 Date</span><input type="date" value="${t.date}" onchange="updateTask(${t.id}, 'date', this.value)"></div>
+            <div class="task-row"><span>⚡ Priority</span><select onchange="updateTask(${t.id}, 'priority', this.value)"><option value="high" ${t.priority==='high'?'selected':''}>High</option><option value="medium" ${t.priority==='medium'?'selected':''}>Medium</option><option value="low" ${t.priority==='low'?'selected':''}>Low</option></select></div>
+            <div class="task-row"><span>📊 Status</span><select onchange="updateTask(${t.id}, 'status', this.value)"><option value="not-start" ${t.status==='not-start'?'selected':''}>Not Started</option><option value="in-progress" ${t.status==='in-progress'?'selected':''}>In Progress</option><option value="done" ${t.status==='done'?'selected':''}>Done</option></select></div>
+        </div>`;
+    });
+}
+function initCharts(){
+    radarChart=new Chart(document.getElementById('radarChart').getContext('2d'),{
+        type:'radar',data:getRadarData(),
+        options:{responsive:true,maintainAspectRatio:false,animation:{duration:800},
+        elements:{line:{tension:0,borderWidth:2},point:{radius:3.5,hoverRadius:6,backgroundColor:'#141414',borderWidth:2,pointStyle:'rectRot'}},
+        plugins:{legend:{labels:{color:'#f5f5f5',font:{size:11}},position:'top'}},
+        scales:{r:{grid:{color:'rgba(255,255,255,0.1)',circular:false},angleLines:{color:'rgba(255,255,255,0.12)'},pointLabels:{color:'#f5f5f5',font:{size:10,family:"'QUARTZO', sans-serif"}},ticks:{display:false,min:0,max:4}}}}
+    });
+    const pieOpts=t=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{boxWidth:6,font:{size:7.5},padding:4}},title:{display:true,text:t,color:'#f5f5f5',font:{size:9.5},padding:{bottom:1}}},cutout:'45%'});
+    statusPieChart=new Chart(document.getElementById('statusPie').getContext('2d'),{type:'doughnut',data:getStatusData(),options:pieOpts('Task Status')});
+    priorityPieChart=new Chart(document.getElementById('priorityPie').getContext('2d'),{type:'doughnut',data:getPriorityData(),options:pieOpts('Task Priority')});
+}
+function getRadarData(){
+    const rgb=getThemeRgb();
+    return{labels:tasks.map(t=>t.title),datasets:[
+        {label:document.getElementById('dataset1Name').value,data:tasks.map(t=>priorityValues[t.priority]),borderColor:`rgba(${rgb}, 1)`,backgroundColor:`rgba(${rgb}, 0.2)`,pointBorderColor:`rgba(${rgb}, 1)`,fill:true},
+        {label:document.getElementById('dataset2Name').value,data:tasks.map(t=>statusValues[t.status]),borderColor:'rgba(200,200,200,0.9)',backgroundColor:'rgba(255,255,255,0.1)',pointBorderColor:'rgba(200,200,200,1)',fill:true}
+    ]};
+}
+function getStatusData(){
+    const rgb=getThemeRgb(),c={'done':0,'in-progress':0,'not-start':0};tasks.forEach(t=>c[t.status]++);
+    return{labels:['Done','In Prog','To Do'],datasets:[{data:[c['done'],c['in-progress'],c['not-start']],backgroundColor:[`rgba(${rgb}, 1)`,`, rgba(${rgb}, 0.5)`.replace(',',''),'rgba(255,255,255,0.1)'],borderWidth:1,borderColor:'#1a1a1a'}]};
+}
+function getPriorityData(){
+    const rgb=getThemeRgb(),c={'high':0,'medium':0,'low':0};tasks.forEach(t=>c[t.priority]++);
+    return{labels:['High','Med','Low'],datasets:[{data:[c['high'],c['medium'],c['low']],backgroundColor:['#ff4757',`rgba(${rgb}, 0.8)`,'rgba(255,255,255,0.2)'],borderWidth:1,borderColor:'#1a1a1a'}]};
+}
+function updateAllCharts(){radarChart.data=getRadarData();radarChart.update();statusPieChart.data=getStatusData();statusPieChart.update();priorityPieChart.data=getPriorityData();priorityPieChart.update();}
+function setupEvents(){
+    document.getElementById('themeColorPicker').addEventListener('input',e=>{
+        const hex=e.target.value,rgb=hexToRgb(hex);
+        document.documentElement.style.setProperty('--theme-color',hex);
+        document.documentElement.style.setProperty('--theme-rgb',rgb);
+        updateAllCharts();
+    });
+    document.getElementById('addTaskBtn').addEventListener('click',()=>{
+        const id=tasks.length>0?Math.max(...tasks.map(t=>t.id))+1:1;
+        tasks.push({id,title:`Task ${id}`,date:new Date().toISOString().split('T')[0],priority:'medium',status:'not-start'});
+        renderTasks();updateAllCharts();
+    });
+    document.getElementById('dataset1Name').addEventListener('input',e=>{radarChart.data.datasets[0].label=e.target.value;radarChart.update('none');});
+    document.getElementById('dataset2Name').addEventListener('input',e=>{radarChart.data.datasets[1].label=e.target.value;radarChart.update('none');});
+}
+window.updateTask=(id,field,val)=>{const t=tasks.find(x=>x.id===id);if(t){t[field]=val;updateAllCharts();}};
+window.deleteTask=id=>{tasks=tasks.filter(x=>x.id!==id);renderTasks();updateAllCharts();};
+init();
+</script>
+</body>
+</html>
