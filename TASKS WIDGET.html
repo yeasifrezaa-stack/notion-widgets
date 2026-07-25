@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Glow Widget</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @font-face {
+            font-family: 'Corptic';
+            src: local('Corptic'), local('Arial');
+        }
+
+        :root {
+            --notion-bg: #191919;
+            --glass-bg: rgba(30, 30, 30, 0.55);
+            --theme-color: #D4AF37; 
+            --theme-glow: rgba(212, 175, 55, 0.6);
+            --text-main: #ffffff;
+            --text-muted: #aaaaaa;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Corptic', sans-serif;
+            transition: text-shadow 0.3s, box-shadow 0.3s, border-color 0.3s;
+        }
+
+        body {
+            margin: 0;
+            padding: 40px 20px;
+            background-color: var(--notion-bg);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .glow-text {
+            text-shadow: 0 0 8px var(--theme-glow), 0 0 15px var(--theme-glow);
+        }
+
+        /* Standard Glass Panel for interior elements */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--theme-color);
+            border-radius: 12px;
+            box-shadow: 0 0 15px var(--theme-glow), inset 0 0 10px var(--theme-glow);
+        }
+
+        /* Widget Container Glass Effect */
+        .widget-container {
+            width: 100%;
+            max-width: 1400px;
+            min-height: 800px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            
+            /* Full Widget Glass Temper */
+            background: rgba(25, 25, 25, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.03);
+        }
+
+        /* Top Bar */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 20px;
+        }
+
+        .controls-left, .controls-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .color-picker-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--theme-color);
+        }
+
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            background: none;
+            box-shadow: 0 0 15px var(--theme-glow);
+        }
+        
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        
+        input[type="color"]::-webkit-color-swatch {
+            border: 2px solid #fff;
+            border-radius: 50%;
+        }
+
+        .add-task-btn {
+            background: transparent;
+            color: var(--theme-color);
+            border: 2px solid var(--theme-color);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--theme-glow);
+            text-shadow: 0 0 5px var(--theme-glow);
+            transition: all 0.3s;
+        }
+
+        .add-task-btn:hover {
+            background: var(--theme-color);
+            color: #000;
+            box-shadow: 0 0 25px var(--theme-glow);
+            text-shadow: none;
+        }
+
+        /* Charts Area */
+        .charts-area {
+            display: flex;
+            gap: 30px;
+            height: 400px;
+        }
+
+        .chart-box {
+            flex: 1;
+            padding: 20px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Cards Area */
+        .cards-area {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .task-card {
+            width: calc(20% - 20px);
+            min-width: 220px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .task-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 25px var(--theme-glow), inset 0 0 15px var(--theme-glow);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 16px;
+            border-bottom: 1px solid var(--theme-color);
+            padding-bottom: 10px;
+            box-shadow: 0 2px 5px -2px var(--theme-glow);
+        }
+
+        .card-header input {
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-weight: bold;
+            font-size: 16px;
+            outline: none;
+            width: 80%;
+            text-shadow: 0 0 5px var(--theme-glow);
+        }
+
+        .delete-btn {
+            color: var(--theme-color);
+            cursor: pointer;
+            font-size: 18px;
+            text-shadow: 0 0 8px var(--theme-glow);
+            transition: color 0.3s;
+        }
+
+        .delete-btn:hover {
+            color: #ff4c4c;
+            text-shadow: 0 0 10px #ff4c4c;
+        }
+
+        .card-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .card-label {
+            color: var(--text-main);
+            text-shadow: 0 0 4px var(--theme-glow);
+        }
+
+        /* Dropdown and Input Specific Styling */
+        select, input[type="date"] {
+            background: #333333; /* Greyish background */
+            color: #ffffff;      /* White text */
+            border: 1px solid var(--theme-color);
+            padding: 6px 8px;
+            border-radius: 6px;
+            outline: none;
+            cursor: pointer;
+            box-shadow: 0 0 8px var(--theme-glow);
+            font-weight: bold;
+        }
+
+        select option {
+            background: #2a2a2a; 
+            color: #ffffff;
+        }
+
+        select:focus, input[type="date"]:focus {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px var(--theme-glow);
+            border-color: #ffffff;
+        }
+        
+        .doughnut-info {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+        
+        .doughnut-info span:first-child {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--text-main);
+        }
+
+        @media (max-width: 1024px) {
+            .task-card { width: calc(33.3% - 20px); }
+            .charts-area { flex-direction: column; height: auto; }
+            .chart-box { height: 400px; }
+        }
+        @media (max-width: 768px) {
+            .task-card { width: calc(50% - 20px); }
+            .widget-container { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="widget-container">
+    
+    <div class="top-bar">
+        <div class="controls-left glow-text">
+            <h2>Study Analytics Dashboard</h2>
+        </div>
+        <div class="controls-right">
+            <div class="color-picker-container glow-text">
+                THEME COLOR 
+                <input type="color" id="themeColorPicker" value="#D4AF37">
+            </div>
+            <button class="add-task-btn" id="addTaskBtn">+ ADD TOPIC</button>
+        </div>
+    </div>
+
+    <div class="charts-area">
+        <div class="chart-box glass-panel">
+            <canvas id="radarChart"></canvas>
+        </div>
+        <div class="chart-box glass-panel">
+            <canvas id="doughnutChart"></canvas>
+            <div class="doughnut-info glow-text" id="doughnutInfo">
+                <span id="totalTasksCount">5</span>
+                <span>Total Topics</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="cards-area" id="cardsContainer">
+        <!-- Cards injected via JS -->
+    </div>
+
+</div>
+
+<script>
+    Chart.defaults.font.family = 'Corptic, sans-serif';
+    Chart.defaults.color = '#ffffff';
+
+    // State Management
+    let tasks = [
+        { id: 1, name: 'Genetics Rev', date: '2026-07-26', priority: 'High', status: 'Not Started' },
+        { id: 2, name: 'Notion Store', date: '2026-07-28', priority: 'Low', status: 'Not Started' },
+        { id: 3, name: 'Algebra Paper', date: '2026-07-25', priority: 'High', status: 'In Progress' },
+        { id: 4, name: 'Essay Practice', date: '2026-07-23', priority: 'Medium', status: 'Done' },
+        { id: 5, name: 'Chem Sheet', date: '2026-07-27', priority: 'Medium', status: 'Not Started' }
+    ];
+
+    const priorityMap = { 'Low': 1, 'Medium': 3, 'High': 5 };
+    const statusMap = { 'Not Started': 1, 'In Progress': 3, 'Done': 5 };
+
+    const cardsContainer = document.getElementById('cardsContainer');
+    const colorPicker = document.getElementById('themeColorPicker');
+    const addTaskBtn = document.getElementById('addTaskBtn');
+    
+    let currentThemeColor = '#D4AF37';
+    
+    function hexToRgba(hex, alpha) {
+        let r = parseInt(hex.slice(1, 3), 16),
+            g = parseInt(hex.slice(3, 5), 16),
+            b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    // Chart Global Plugin for Canvas Glow
+    const glowPlugin = {
+        id: 'glowPlugin',
+        beforeDatasetsDraw: function (chart) {
+            let ctx = chart.ctx;
+            ctx.shadowColor = currentThemeColor;
+            ctx.shadowBlur = 18; // Increased blur for better glow
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+        },
+        afterDatasetsDraw: function (chart) {
+            chart.ctx.shadowBlur = 0;
+        }
+    };
+
+    Chart.register(glowPlugin);
+
+    let radarChart, doughnutChart;
+
+    function initCharts() {
+        const ctxRadar = document.getElementById('radarChart').getContext('2d');
+        radarChart = new Chart(ctxRadar, {
+            type: 'radar',
+            data: { labels: [], datasets: [] },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                animation: { duration: 800, easing: 'easeOutQuart' },
+                scales: {
+                    r: {
+                        angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
+                        grid: { color: 'rgba(255, 255, 255, 0.2)' },
+                        pointLabels: { color: '#ffffff', font: { size: 14 } },
+                        ticks: { display: false, min: 0, max: 5 }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'top', labels: { color: '#ffffff', font: { size: 14 } } }
+                }
+            }
+        });
+
+        const ctxDoughnut = document.getElementById('doughnutChart').getContext('2d');
+        doughnutChart = new Chart(ctxDoughnut, {
+            type: 'doughnut',
+            data: { labels: ['Done', 'In Progress', 'Not Started'], datasets: [] },
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '75%',
+                animation: { duration: 800, easing: 'easeOutBounce' },
+                layout: { padding: 15 }, // Extra padding so glow isn't cut off by canvas edge
+                plugins: {
+                    legend: { position: 'right', labels: { color: '#ffffff', font: { size: 14 } } }
+                }
+            }
+        });
+    }
+
+    function updateCharts() {
+        // Radar Data Update
+        const labels = tasks.map(t => t.name || 'Untitled');
+        const priorities = tasks.map(t => priorityMap[t.priority]);
+        const statuses = tasks.map(t => statusMap[t.status]);
+
+        radarChart.data.labels = labels;
+        radarChart.data.datasets = [
+            {
+                label: 'Priority (Impact)',
+                data: priorities,
+                backgroundColor: hexToRgba(currentThemeColor, 0.4),
+                borderColor: currentThemeColor,
+                pointBackgroundColor: currentThemeColor,
+                borderWidth: 2,
+            },
+            {
+                label: 'Status (Progress)',
+                data: statuses,
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                borderColor: '#ffffff',
+                pointBackgroundColor: '#ffffff',
+                borderWidth: 2,
+            }
+        ];
+        radarChart.update();
+
+        // Doughnut Data Update (Removed Border)
+        let doneCount = tasks.filter(t => t.status === 'Done').length;
+        let inProgCount = tasks.filter(t => t.status === 'In Progress').length;
+        let notStartCount = tasks.filter(t => t.status === 'Not Started').length;
+
+        document.getElementById('totalTasksCount').innerText = tasks.length;
+
+        doughnutChart.data.datasets = [{
+            data: [doneCount, inProgCount, notStartCount],
+            backgroundColor: [
+                currentThemeColor, 
+                hexToRgba(currentThemeColor, 0.5), 
+                '#666666' // Lighter grey so it doesn't completely blend into dark background
+            ],
+            borderColor: 'transparent', // Removed black border for clean glow
+            borderWidth: 0,
+            hoverOffset: 10
+        }];
+        doughnutChart.update();
+    }
+
+    function renderCards() {
+        cardsContainer.innerHTML = '';
+        tasks.forEach((task, index) => {
+            const card = document.createElement('div');
+            card.className = 'task-card glass-panel glow-text';
+            
+            card.innerHTML = `
+                <div class="card-header">
+                    <input type="text" value="${task.name}" onchange="updateTask(${index}, 'name', this.value)" placeholder="Topic Name">
+                    <span class="delete-btn" onclick="deleteTask(${index})">&#10005;</span>
+                </div>
+                <div class="card-row">
+                    <div class="card-label">📅 Date</div>
+                    <input type="date" value="${task.date}" onchange="updateTask(${index}, 'date', this.value)">
+                </div>
+                <div class="card-row">
+                    <div class="card-label">⚡ Priority</div>
+                    <select onchange="updateTask(${index}, 'priority', this.value)">
+                        <option ${task.priority === 'High' ? 'selected' : ''}>High</option>
+                        <option ${task.priority === 'Medium' ? 'selected' : ''}>Medium</option>
+                        <option ${task.priority === 'Low' ? 'selected' : ''}>Low</option>
+                    </select>
+                </div>
+                <div class="card-row">
+                    <div class="card-label">📊 Status</div>
+                    <select onchange="updateTask(${index}, 'status', this.value)">
+                        <option ${task.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
+                        <option ${task.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                        <option ${task.status === 'Done' ? 'selected' : ''}>Done</option>
+                    </select>
+                </div>
+            `;
+            cardsContainer.appendChild(card);
+        });
+    }
+
+    // Interactivity 
+    window.updateTask = function(index, field, value) {
+        tasks[index][field] = value;
+        updateCharts(); 
+    };
+
+    window.deleteTask = function(index) {
+        tasks.splice(index, 1);
+        renderCards();
+        updateCharts();
+    };
+
+    addTaskBtn.addEventListener('click', () => {
+        const today = new Date().toISOString().split('T')[0];
+        tasks.push({
+            id: Date.now(),
+            name: 'New Topic',
+            date: today,
+            priority: 'Medium',
+            status: 'Not Started'
+        });
+        renderCards();
+        updateCharts();
+    });
+
+    colorPicker.addEventListener('input', (e) => {
+        currentThemeColor = e.target.value;
+        const glowColor = hexToRgba(currentThemeColor, 0.6);
+        
+        document.documentElement.style.setProperty('--theme-color', currentThemeColor);
+        document.documentElement.style.setProperty('--theme-glow', glowColor);
+        
+        updateCharts();
+    });
+
+    // Boot Up
+    initCharts();
+    renderCards();
+    updateCharts();
+</script>
+</body>
+</html>
