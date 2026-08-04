@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Glowing Time Progress Widget</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: #050505;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Outer Widget Card with Ambient Glow */
+    .widget-container {
+      position: relative;
+      background: rgba(18, 18, 18, 0.85);
+      backdrop-filter: blur(12px);
+      padding: 28px;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 320px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 0 35px rgba(255, 255, 255, 0.08), 
+                  inset 0 0 15px rgba(255, 255, 255, 0.03);
+      animation: float 6s ease-in-out infinite;
+    }
+
+    /* Floating Ambient Animation */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
+    }
+
+    .progress-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* Glowing Bar Outer Border Frame */
+    .bar-container {
+      position: relative;
+      flex: 1;
+      height: 48px;
+      border: 2px solid rgba(255, 255, 255, 0.8);
+      border-radius: 12px;
+      padding: 3px;
+      background-color: #000000;
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+      overflow: hidden;
+      animation: borderPulse 3s infinite alternate;
+    }
+
+    @keyframes borderPulse {
+      0% { box-shadow: 0 0 8px rgba(255, 255, 255, 0.2); }
+      100% { box-shadow: 0 0 18px rgba(255, 255, 255, 0.5); }
+    }
+
+    /* Filled Inner Progress Area with White Glow */
+    .bar-fill {
+      position: relative;
+      height: 100%;
+      width: 0%;
+      background-color: #ffffff;
+      border-radius: 6px;
+      box-shadow: 0 0 15px #ffffff, 0 0 30px rgba(255, 255, 255, 0.8);
+      transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+      overflow: hidden;
+    }
+
+    /* Moving Shimmer/Light Beam Effect */
+    .bar-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.9), 
+        transparent
+      );
+      animation: shimmer 2.5s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { left: -100%; }
+      100% { left: 200%; }
+    }
+
+    /* White Glowing Typography */
+    .label {
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 600;
+      min-width: 95px;
+      white-space: nowrap;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="widget-container">
+    <!-- Year Row -->
+    <div class="progress-row">
+      <div class="bar-container">
+        <div class="bar-fill" id="year-bar"></div>
+      </div>
+      <div class="label" id="year-label">Year: 0%</div>
+    </div>
+
+    <!-- Month Row -->
+    <div class="progress-row">
+      <div class="bar-container">
+        <div class="bar-fill" id="month-bar"></div>
+      </div>
+      <div class="label" id="month-label">Month: 0%</div>
+    </div>
+
+    <!-- Week Row -->
+    <div class="progress-row">
+      <div class="bar-container">
+        <div class="bar-fill" id="week-bar"></div>
+      </div>
+      <div class="label" id="week-label">Week: 0%</div>
+    </div>
+  </div>
+
+  <script>
+    function updateProgress() {
+      const now = new Date();
+
+      // 1. YEAR PROGRESS
+      const startOfYear = new Date(now.getFullYear(), 0, 1);
+      const endOfYear = new Date(now.getFullYear() + 1, 0, 1);
+      const yearProgress = ((now - startOfYear) / (endOfYear - startOfYear)) * 100;
+
+      // 2. MONTH PROGRESS
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      const monthProgress = ((now - startOfMonth) / (endOfMonth - startOfMonth)) * 100;
+
+      // 3. WEEK PROGRESS (Starts Monday)
+      const dayOfWeek = now.getDay();
+      const distanceToMonday = (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
+      
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - distanceToMonday);
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 7);
+
+      const weekProgress = ((now - startOfWeek) / (endOfWeek - startOfWeek)) * 100;
+
+      // UPDATE UI
+      updateUI('year', yearProgress);
+      updateUI('month', monthProgress);
+      updateUI('week', weekProgress);
+    }
+
+    function updateUI(type, value) {
+      const clampedValue = Math.min(Math.max(value, 0), 100);
+      const bar = document.getElementById(`${type}-bar`);
+      const label = document.getElementById(`${type}-label`);
+
+      bar.style.width = `${clampedValue}%`;
+      label.textContent = `${type.charAt(0).toUpperCase() + type.slice(1)}: ${clampedValue.toFixed(0)}%`;
+    }
+
+    // Initialize and run continuously every second
+    updateProgress();
+    setInterval(updateProgress, 1000);
+  </script>
+
+</body>
+</html>
