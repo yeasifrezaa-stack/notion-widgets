@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zenith Project Reflection</title>
+    <link href="https://fonts.cdnfonts.com/css/browni" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --notion-dark-bg: #191919;
+            --main-bg: #163832;
+            --glass-bg: rgba(22, 56, 50, 0.65);
+            --border-glass: rgba(74, 222, 128, 0.15);
+            --border-glow: rgba(52, 211, 153, 0.4);
+            --text-primary: #ECFDF5;
+            --text-secondary: #99F6E4;
+            --accent-glow: rgba(52, 211, 153, 0.25);
+            --accent-color: #34d399;
+            --card-bg: rgba(16, 42, 38, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'BROWNI', 'Plus Jakarta Sans', sans-serif;
+            letter-spacing: 0.5px;
+        }
+
+        body {
+            background-color: var(--notion-dark-bg);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .widget-container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--main-bg);
+            background: linear-gradient(135deg, rgba(22, 56, 50, 0.95), rgba(12, 34, 30, 0.95));
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 16px 48px 0 rgba(0, 0, 0, 0.7), 
+                        0 0 30px var(--accent-glow);
+            animation: serenePulse 9s ease-in-out infinite alternate;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes serenePulse {
+            0% {
+                box-shadow: 0 16px 48px 0 rgba(0, 0, 0, 0.7), 0 0 15px rgba(52, 211, 153, 0.15);
+                border-color: rgba(74, 222, 128, 0.12);
+            }
+            100% {
+                box-shadow: 0 16px 48px 0 rgba(0, 0, 0, 0.7), 0 0 35px rgba(52, 211, 153, 0.35);
+                border-color: rgba(52, 211, 153, 0.35);
+            }
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+            border-bottom: 1px solid rgba(153, 246, 228, 0.1);
+            padding-bottom: 14px;
+        }
+
+        .title-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .title-icon {
+            font-size: 16px;
+            background: rgba(52, 211, 153, 0.15);
+            padding: 8px;
+            border-radius: 12px;
+            border: 1px solid rgba(52, 211, 153, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 12px rgba(52, 211, 153, 0.2);
+        }
+
+        .widget-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .config-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(153, 246, 228, 0.15);
+            color: var(--text-secondary);
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .config-btn:hover {
+            color: var(--text-primary);
+            background: rgba(52, 211, 153, 0.2);
+            border-color: var(--accent-color);
+            transform: rotate(45deg);
+        }
+
+        .reflection-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 440px; /* Increased length to fully display opened dropdowns */
+            overflow-y: auto;
+            padding-right: 6px;
+            padding-bottom: 6px;
+        }
+
+        .reflection-list::-webkit-scrollbar {
+            width: 5px;
+        }
+        .reflection-list::-webkit-scrollbar-track {
+            background: rgba(10, 30, 26, 0.3);
+            border-radius: 4px;
+        }
+        .reflection-list::-webkit-scrollbar-thumb {
+            background: rgba(52, 211, 153, 0.3);
+            border-radius: 4px;
+        }
+        .reflection-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(52, 211, 153, 0.5);
+        }
+
+        .reflection-item {
+            font-size: 13px;
+            color: var(--text-secondary);
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: var(--card-bg);
+            border: 1px solid rgba(153, 246, 228, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .reflection-item::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, rgba(52, 211, 153, 0.1), transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .reflection-item:hover {
+            background: rgba(22, 56, 50, 0.85);
+            color: var(--text-primary);
+            border-color: rgba(52, 211, 153, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 15px rgba(52, 211, 153, 0.15);
+        }
+
+        .reflection-item:hover::after {
+            opacity: 1;
+        }
+
+        .question-text {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            z-index: 2;
+            gap: 10px;
+        }
+
+        .dropdown-icon {
+            font-size: 11px;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            color: var(--accent-color);
+            background: rgba(52, 211, 153, 0.1);
+            width: 22px;
+            height: 22px;
+            min-width: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .reflection-item.open .dropdown-icon {
+            transform: rotate(180deg);
+            background: var(--accent-color);
+            color: #163832;
+        }
+
+        .answer-area {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+            opacity: 0;
+            font-size: 12px;
+            color: var(--text-primary);
+            background: rgba(10, 30, 26, 0.8);
+            padding: 0 12px;
+            border-radius: 8px;
+            position: relative;
+            z-index: 2;
+            border: 1px solid transparent;
+        }
+
+        .reflection-item.open .answer-area {
+            max-height: 220px;
+            opacity: 1;
+            padding: 12px;
+            margin-top: 6px;
+            border-color: rgba(52, 211, 153, 0.2);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+        }
+
+        /* Config Panel Overlay */
+        .config-panel {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(14, 38, 34, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 28px;
+            flex-direction: column;
+            gap: 14px;
+            z-index: 10;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .config-panel.active {
+            display: flex;
+        }
+
+        .config-panel h3 {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-primary);
+            letter-spacing: 0.5px;
+        }
+
+        .config-panel textarea {
+            width: 100%;
+            height: 200px;
+            background: rgba(10, 30, 26, 0.8);
+            border: 1px solid rgba(52, 211, 153, 0.2);
+            border-radius: 12px;
+            color: var(--text-primary);
+            padding: 14px;
+            font-size: 12px;
+            resize: none;
+            outline: none;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.4);
+        }
+
+        .config-panel textarea:focus {
+            border-color: var(--accent-color);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.4), 0 0 10px rgba(52, 211, 153, 0.2);
+        }
+
+        .config-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(153, 246, 228, 0.15);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: #163832;
+            font-weight: 600;
+            border: none;
+            box-shadow: 0 4px 15px rgba(52, 211, 153, 0.3);
+        }
+
+        .btn:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(52, 211, 153, 0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="widget-container" id="widgetContainer">
+        <div class="header-row">
+            <div class="title-group">
+                <span class="title-icon">🌿</span>
+                <h2 class="widget-title">Project Reflection</h2>
+            </div>
+            <button class="config-btn" onclick="toggleConfig()" title="Customize">⚙️</button>
+        </div>
+
+        <ul class="reflection-list" id="reflectionList">
+            <!-- Dynamically injected items -->
+        </ul>
+
+        <!-- Customization Panel -->
+        <div class="config-panel" id="configPanel">
+            <h3>Customize Reflection Prompts</h3>
+            <p style="font-size: 11px; color: var(--text-secondary);">Enter reflection prompts line by line:</p>
+            <textarea id="itemInput"></textarea>
+            <div class="config-actions">
+                <button class="btn" onclick="toggleConfig()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveConfig()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let reflections = [
+            { question: "What did this project teach me that a textbook could not?", answer: "Embracing real-world friction and discovering creative problem-solving routes through continuous trial and refinement." },
+            { question: "What skill improved the most?", answer: "Deep structural intuition and clean execution rhythm under tight constraints." },
+            { question: "What would I do differently next time?", answer: "Build more breathing room into the timeline early on and modularize components better." },
+            { question: "What am I most proud of?", answer: "Maintaining absolute focus, resilience, and inner calm through unexpected architectural blocks." },
+            { question: "What should I carry into my next project?", answer: "This exact mindset of clarity, peace, structured patience, and deliberate execution." }
+        ];
+
+        function renderReflections() {
+            const list = document.getElementById('reflectionList');
+            list.innerHTML = '';
+            reflections.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.className = 'reflection-item';
+                li.innerHTML = `
+                    <div class="question-text" onclick="toggleDropdown(${index})">
+                        <span>${item.question}</span>
+                        <span class="dropdown-icon">▼</span>
+                    </div>
+                    <div class="answer-area">
+                        <span style="color: var(--text-secondary); display:block; margin-bottom: 2px;">Serene Insight:</span> ${item.answer}
+                    </div>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function toggleDropdown(index) {
+            const items = document.querySelectorAll('.reflection-item');
+            const targetItem = items[index];
+            
+            items.forEach((item, idx) => {
+                if (idx !== index) item.classList.remove('open');
+            });
+
+            targetItem.classList.toggle('open');
+            
+            if (targetItem.classList.contains('open')) {
+                setTimeout(() => {
+                    targetItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 150);
+            }
+        }
+
+        function toggleConfig() {
+            const panel = document.getElementById('configPanel');
+            if (!panel.classList.contains('active')) {
+                const textVal = reflections.map(r => r.question).join('\n');
+                document.getElementById('itemInput').value = textVal;
+            }
+            panel.classList.toggle('active');
+        }
+
+        function saveConfig() {
+            const rawText = document.getElementById('itemInput').value;
+            const lines = rawText.split('\n');
+            reflections = [];
+            lines.forEach(line => {
+                if(line.trim() !== '') {
+                    reflections.push({
+                        question: line.trim(),
+                        answer: "Click to write or reflect on this point with calm clarity..."
+                    });
+                }
+            });
+            renderReflections();
+            toggleConfig();
+        }
+
+        renderReflections();
+    </script>
+</body>
+</html>
