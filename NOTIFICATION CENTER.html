@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aesthetic Notification Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Notion dark mode background color to blend completely */
+            --notion-dark-bg: #191919;
+            --widget-bg: #000000;
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --text-primary: #EDEDED;
+            --text-secondary: #9B9B9B;
+            --accent-glow: rgba(99, 102, 241, 0.25);
+            --accent-color: #818cf8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--notion-dark-bg);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .widget-container {
+            width: 100%;
+            max-width: 380px;
+            background: var(--widget-bg);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), 
+                        0 0 20px var(--accent-glow);
+            animation: breatheGlow 6s ease-in-out infinite alternate;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        @keyframes breatheGlow {
+            0% {
+                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 10px rgba(99, 102, 241, 0.15);
+                border-color: rgba(255, 255, 255, 0.05);
+            }
+            100% {
+                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 25px rgba(129, 140, 248, 0.35);
+                border-color: rgba(129, 140, 248, 0.25);
+            }
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .greeting {
+            font-size: 15px;
+            font-weight: 500;
+            letter-spacing: -0.2px;
+            color: var(--text-primary);
+        }
+
+        .config-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .config-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .notification-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 320px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .notification-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .notification-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .notification-item {
+            font-size: 13px;
+            font-weight: 400;
+            color: var(--text-secondary);
+            padding: 8px 10px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .notification-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            transform: translateX(2px);
+        }
+
+        .notification-item.alert {
+            color: #fca5a5;
+        }
+
+        .icon {
+            font-size: 12px;
+        }
+
+        /* Edit Overlay / Modal inside Widget */
+        .config-panel {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 10, 0.98);
+            border-radius: 16px;
+            padding: 20px;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 10;
+        }
+
+        .config-panel.active {
+            display: flex;
+        }
+
+        .config-panel h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .config-panel textarea {
+            width: 100%;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: var(--text-primary);
+            padding: 10px;
+            font-size: 12px;
+            resize: none;
+        }
+
+        .config-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: #1e1e1e;
+            font-weight: 500;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="widget-container" id="widgetContainer">
+        <div class="header-row">
+            <h2 class="greeting" id="greetingText">Good evening! Here's where things stand.</h2>
+            <button class="config-btn" onclick="toggleConfig()" title="Customize">⚙️</button>
+        </div>
+
+        <ul class="notification-list" id="notificationList">
+            <!-- Items dynamically injected -->
+        </ul>
+
+        <!-- Customization Panel -->
+        <div class="config-panel" id="configPanel">
+            <h3>Customize Notifications</h3>
+            <p style="font-size: 11px; color: var(--text-secondary);">Enter items line by line (format: icon | text | isAlert)</p>
+            <textarea id="itemInput"></textarea>
+            <div class="config-actions">
+                <button class="btn" onclick="toggleConfig()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveConfig()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let notifications = [
+            { icon: "📌", text: "2 milestones due this week", alert: true },
+            { icon: "📌", text: "1 assessment awaiting submission", alert: false },
+            { icon: "📌", text: "3 research tasks unfinished", alert: false },
+            { icon: "📌", text: "1 project has entered its deadline-warning period", alert: true },
+            { icon: "⚠️", text: "Overdue — 5 tasks need attention, oldest from Aug 3", alert: true },
+            { icon: "📅", text: "Upcoming — Engineering Design final presentation leads the next 5 deadlines", alert: false },
+            { icon: "⭐", text: "Next Milestone — Frontend Development (CS Capstone), due Sep 15", alert: false }
+        ];
+
+        function renderNotifications() {
+            const list = document.getElementById('notificationList');
+            list.innerHTML = '';
+            notifications.forEach(item => {
+                const li = document.createElement('li');
+                li.className = `notification-item ${item.alert ? 'alert' : ''}`;
+                li.innerHTML = `<span class="icon">${item.icon}</span><span>${item.text}</span>`;
+                list.appendChild(li);
+            });
+        }
+
+        function toggleConfig() {
+            const panel = document.getElementById('configPanel');
+            if (!panel.classList.contains('active')) {
+                const textVal = notifications.map(n => `${n.icon} | ${n.text} | ${n.alert}`).join('\n');
+                document.getElementById('itemInput').value = textVal;
+            }
+            panel.classList.toggle('active');
+        }
+
+        function saveConfig() {
+            const rawText = document.getElementById('itemInput').value;
+            const lines = rawText.split('\n');
+            notifications = [];
+            lines.forEach(line => {
+                if(line.trim() !== '') {
+                    const parts = line.split('|');
+                    if(parts.length >= 2) {
+                        notifications.push({
+                            icon: parts[0].trim(),
+                            text: parts[1].trim(),
+                            alert: parts[2] ? parts[2].trim() === 'true' : false
+                        });
+                    }
+                }
+            });
+            renderNotifications();
+            toggleConfig();
+        }
+
+        renderNotifications();
+    </script>
+</body>
+</html>
