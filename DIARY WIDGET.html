@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ethereal Selfcare Diary Widget</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Caveat:wght@400;600&family=Great+Vibes&family=Montserrat:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+
+  <style>
+    @font-face {
+      font-family: 'Autumn Flowers';
+      src: local('Autumn Flowers'), local('AutumnFlowers');
+    }
+    @font-face {
+      font-family: 'Beautiful People';
+      src: local('Beautiful People'), local('BeautifulPeople');
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Outer Notion Page Background */
+    body {
+      background-color: #191919;
+      font-family: 'Beautiful People', 'Caveat', 'Alex Brush', cursive;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 15px;
+      overflow-x: hidden;
+    }
+
+    /* Widget Box */
+    .widget-container {
+      width: 100%;
+      max-width: 480px;
+      height: 720px;
+      perspective: 1500px;
+      position: relative;
+    }
+
+    /* Main Diary Background (#505D4D) */
+    .diary-wrapper {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      background: #505d4d;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6),
+                  inset 0 0 20px rgba(255, 255, 255, 0.1);
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* Ring Binder Spine */
+    .ring-spine {
+      width: 45px;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.2);
+      border-right: 1px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      align-items: center;
+      padding: 25px 0;
+      z-index: 10;
+    }
+
+    .ring-hole {
+      width: 12px;
+      height: 12px;
+      background: #191919;
+      border-radius: 50%;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.9), 0 0 2px rgba(255,255,255,0.3);
+      position: relative;
+    }
+
+    .ring-clip {
+      position: absolute;
+      left: -10px;
+      top: -3px;
+      width: 28px;
+      height: 18px;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      border-top-color: #ffffff;
+      border-right-color: #d0d0d0;
+      border-bottom-color: #777777;
+      filter: drop-shadow(2px 3px 4px rgba(0,0,0,0.6));
+    }
+
+    /* Book Pages Container */
+    .book-pages {
+      flex: 1;
+      position: relative;
+      height: 100%;
+      transform-style: preserve-3d;
+    }
+
+    .page {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      padding: 25px 22px 75px 18px;
+      overflow-y: auto;
+      backface-visibility: hidden;
+      transform-origin: left center;
+      transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1), opacity 0.6s ease;
+      background-size: 20px 20px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      opacity: 0;
+      pointer-events: none;
+      transform: rotateY(90deg);
+    }
+
+    .page.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: rotateY(0deg);
+      z-index: 5;
+    }
+
+    .page.flipped {
+      transform: rotateY(-180deg);
+      opacity: 0;
+      z-index: 1;
+    }
+
+    /* Ethereal Arcs */
+    .page-1-arc {
+      background: radial-gradient(circle at 85% 10%, rgba(255, 215, 0, 0.25) 0%, rgba(255, 223, 137, 0.08) 50%, transparent 75%);
+    }
+
+    .page-2-arc {
+      background: radial-gradient(circle at 85% 10%, rgba(255, 253, 208, 0.28) 0%, rgba(245, 245, 220, 0.08) 50%, transparent 75%);
+    }
+
+    .page-3-arc {
+      background: radial-gradient(circle at 85% 10%, rgba(200, 130, 140, 0.35) 0%, rgba(183, 110, 121, 0.1) 50%, transparent 75%);
+    }
+
+    /* Glow Headers & Text */
+    .page-title {
+      font-family: 'Autumn Flowers', 'Great Vibes', 'Alex Brush', cursive;
+      font-size: 2.6rem;
+      color: #ffffff;
+      text-align: center;
+      margin-bottom: 12px;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.9),
+                   0 0 20px rgba(255, 255, 255, 0.6),
+                   0 0 30px rgba(255, 255, 255, 0.3);
+      letter-spacing: 1px;
+    }
+
+    .ethereal-text {
+      color: #ffffff;
+      text-shadow: 0 0 6px rgba(255, 255, 255, 0.8),
+                   0 0 12px rgba(255, 255, 255, 0.4);
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      width: 100%;
+      margin-bottom: 18px;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      overflow: hidden;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #ffffff, 0 0 18px rgba(255, 255, 255, 0.8);
+      transition: width 0.4s ease;
+    }
+
+    /* Checklist & Sections */
+    .section-block {
+      margin-bottom: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(4px);
+    }
+
+    .checklist-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .checklist-item label {
+      font-size: 1.4rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .checklist-item input[type="checkbox"] {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 1.5px solid rgba(255, 255, 255, 0.8);
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .checklist-item input[type="checkbox"]:checked {
+      background: #ffffff;
+      box-shadow: 0 0 10px #ffffff;
+    }
+
+    .checklist-item input[type="checkbox"]:checked::after {
+      content: '✓';
+      position: absolute;
+      color: #333;
+      font-size: 13px;
+      top: -3px;
+      left: 2px;
+      font-weight: bold;
+    }
+
+    /* Input & Textareas */
+    .improve-label {
+      font-size: 1rem;
+      display: block;
+      margin-bottom: 4px;
+      opacity: 0.9;
+    }
+
+    .glass-input, .glass-textarea {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 6px 10px;
+      color: #ffffff;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.8rem;
+      outline: none;
+      transition: all 0.3s ease;
+      text-shadow: 0 0 4px rgba(255, 255, 255, 0.6);
+    }
+
+    .glass-input:focus, .glass-textarea:focus {
+      background: rgba(255, 255, 255, 0.16);
+      border-color: rgba(255, 255, 255, 0.6);
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+    }
+
+    .glass-textarea {
+      resize: vertical;
+      min-height: 40px;
+    }
+
+    .journal-favorites {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.2);
+    }
+
+    /* Animated Add Dropdown Drawer */
+    .add-section-wrapper {
+      margin-top: 12px;
+    }
+
+    .add-btn {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px dashed rgba(255, 255, 255, 0.4);
+      color: #ffffff;
+      padding: 9px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+      transition: all 0.3s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .add-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+    }
+
+    .add-dropdown {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transform: translateY(-8px) scaleY(0.95);
+      transform-origin: top;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      border-radius: 12px;
+      margin-top: 8px;
+      padding: 0 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .add-dropdown.open {
+      max-height: 120px;
+      opacity: 1;
+      transform: translateY(0) scaleY(1);
+      padding: 12px;
+      border-color: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4), 0 0 15px rgba(255, 255, 255, 0.15);
+    }
+
+    .add-dropdown-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .action-btn {
+      padding: 5px 14px;
+      border-radius: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .action-btn.confirm:hover {
+      background: rgba(255, 255, 255, 0.35);
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+    }
+
+    .action-btn.cancel {
+      background: rgba(0, 0, 0, 0.2);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .action-btn.cancel:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Page Turn Button */
+    .nav-button {
+      position: absolute;
+      bottom: 15px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      backdrop-filter: blur(8px);
+      transition: all 0.3s ease;
+      z-index: 20;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    }
+
+    .nav-button:hover {
+      background: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+      transform: translateY(-2px);
+    }
+
+    .page::-webkit-scrollbar {
+      width: 4px;
+    }
+    .page::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="widget-container">
+    <div class="diary-wrapper">
+      
+      <!-- Binder Rings -->
+      <div class="ring-spine">
+        <div class="ring-hole"><div class="ring-clip"></div></div>
+        <div class="ring-hole"><div class="ring-clip"></div></div>
+        <div class="ring-hole"><div class="ring-clip"></div></div>
+        <div class="ring-hole"><div class="ring-clip"></div></div>
+        <div class="ring-hole"><div class="ring-clip"></div></div>
+        <div class="ring-hole"><div class="ring-clip"></div></div>
+      </div>
+
+      <!-- Book Pages Engine -->
+      <div class="book-pages">
+        
+        <!-- PART 1: BODY -->
+        <div class="page page-1-arc active" id="page-1">
+          <h1 class="page-title">Body</h1>
+          
+          <div class="progress-container">
+            <div class="progress-header ethereal-text">
+              <span>Progress</span>
+              <span id="p1-percent">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="p1-bar"></div>
+            </div>
+          </div>
+
+          <div class="list-container" id="list-page-1">
+            <div class="section-block">
+              <div class="checklist-item">
+                <input type="checkbox" id="sleep-check" class="page-cb">
+                <label for="sleep-check" class="ethereal-text">Sleep</label>
+              </div>
+              <span class="improve-label ethereal-text">What needs to be improved:</span>
+              <input type="text" class="glass-input" id="sleep-improve" placeholder="e.g. Sleep by 11 PM...">
+            </div>
+
+            <div class="section-block">
+              <div class="checklist-item">
+                <input type="checkbox" id="water-check" class="page-cb">
+                <label for="water-check" class="ethereal-text">Water</label>
+              </div>
+              <span class="improve-label ethereal-text">What needs to be improved:</span>
+              <input type="text" class="glass-input" id="water-improve" placeholder="e.g. Drink 3L daily...">
+            </div>
+
+            <div class="section-block">
+              <div class="checklist-item">
+                <input type="checkbox" id="exercise-check" class="page-cb">
+                <label for="exercise-check" class="ethereal-text">Exercise</label>
+              </div>
+              <span class="improve-label ethereal-text">What needs to be improved:</span>
+              <input type="text" class="glass-input" id="exercise-improve" placeholder="e.g. 30 mins core workout...">
+            </div>
+
+            <div class="section-block">
+              <div class="checklist-item">
+                <input type="checkbox" id="stretch-check" class="page-cb">
+                <label for="stretch-check" class="ethereal-text">Stretch</label>
+              </div>
+              <span class="improve-label ethereal-text">What needs to be improved:</span>
+              <input type="text" class="glass-input" id="stretch-improve" placeholder="e.g. Posture stretches...">
+            </div>
+          </div>
+
+          <!-- Interactive Add Dropdown -->
+          <div class="add-section-wrapper">
+            <button class="add-btn ethereal-text" onclick="toggleAddDropdown(1)">+ ADD</button>
+            <div class="add-dropdown" id="add-dropdown-1">
+              <span class="improve-label ethereal-text">Habit Name:</span>
+              <input type="text" class="glass-input" id="new-input-1" placeholder="e.g. Hydrate...">
+              <div class="add-dropdown-actions">
+                <button class="action-btn cancel ethereal-text" onclick="toggleAddDropdown(1)">Cancel</button>
+                <button class="action-btn confirm ethereal-text" onclick="confirmAddHabit(1)">Add</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PART 2: MIND -->
+        <div class="page page-2-arc" id="page-2">
+          <h1 class="page-title">Mind</h1>
+
+          <div class="progress-container">
+            <div class="progress-header ethereal-text">
+              <span>Progress</span>
+              <span id="p2-percent">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="p2-bar"></div>
+            </div>
+          </div>
+
+          <div class="list-container" id="list-page-2">
+            <div class="section-block">
+              <div class="checklist-item">
+                <input type="checkbox" id="meditate-check" class="page-cb">
+                <label for="meditate-check" class="ethereal-text">Meditate</label>
+              </div>
+              <span class="improve-label ethereal-text">What needs to be improved:</span>
+              <input type="text" class="glass-input" id="meditate-improve" placeholder="e.g. 10 mins deep breathing...">
+            </div>
+
+            <div class="section-block">
+              <div class="checklist-item">
+                <input type="checkbox" id="journal-check" class="page-cb">
+                <label for="journal-check" class="ethereal-text">Journal</label>
+              </div>
+              <span class="improve-label ethereal-text">What needs to be improved:</span>
+              <input type="text" class="glass-input" id="journal-improve" placeholder="e.g. Morning reflections...">
+              
+              <div class="journal-favorites">
+                <span class="improve-label ethereal-text">Favorite Journals / Books:</span>
+                <textarea class="glass-textarea" id="fav-journals" placeholder="List your favorite journals..."></textarea>
+              </div>
+            </div>
+
+            <div class="section-block">
+              <div class="checklist-item">
+                <input type="checkbox" id="read-check" class="page-cb">
+                <label for="read-check" class="ethereal-text">Read</label>
+              </div>
+              <span class="improve-label ethereal-text">What needs to be improved:</span>
+              <input type="text" class="glass-input" id="read-improve" placeholder="e.g. Read 15 pages...">
+            </div>
+
+            <div class="section-block">
+              <div class="checklist-item">
+                <input type="checkbox" id="detox-check" class="page-cb">
+                <label for="detox-check" class="ethereal-text">Digital Detox</label>
+              </div>
+              <span class="improve-label ethereal-text">What needs to be improved:</span>
+              <input type="text" class="glass-input" id="detox-improve" placeholder="e.g. Screen-free after 9 PM...">
+            </div>
+          </div>
+
+          <!-- Interactive Add Dropdown -->
+          <div class="add-section-wrapper">
+            <button class="add-btn ethereal-text" onclick="toggleAddDropdown(2)">+ ADD</button>
+            <div class="add-dropdown" id="add-dropdown-2">
+              <span class="improve-label ethereal-text">Habit Name:</span>
+              <input type="text" class="glass-input" id="new-input-2" placeholder="e.g. Gratitude log...">
+              <div class="add-dropdown-actions">
+                <button class="action-btn cancel ethereal-text" onclick="toggleAddDropdown(2)">Cancel</button>
+                <button class="action-btn confirm ethereal-text" onclick="confirmAddHabit(2)">Add</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PART 3: SELF -->
+        <div class="page page-3-arc" id="page-3">
+          <h1 class="page-title">Self</h1>
+
+          <div class="progress-container">
+            <div class="progress-header ethereal-text">
+              <span>Progress</span>
+              <span id="p3-percent">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="p3-bar"></div>
+            </div>
+          </div>
+
+          <div class="list-container" id="list-page-3">
+            <div class="section-block">
+              <div class="checklist-item">
+                <input type="checkbox" id="skincare-check" class="page-cb">
+                <label for="skincare-check" class="ethereal-text">Skincare</label>
+              </div>
+              <span class="improve-label ethereal-text">What needs to be improved:</span>
+              <input type="text" class="glass-input" id="skincare-improve" placeholder="e.g. PM routine consistency...">
+            </div>
+
+            <div class="section-block">
+              <div class="checklist-item">
+                <input type="checkbox" id="walk-check" class="page-cb">
+                <label for="walk-check" class="ethereal-text">Walk Outside</label>
+              </div>
+              <span class="improve-label ethereal-text">What needs to be improved:</span>
+              <input type="text" class="glass-input" id="walk-improve" placeholder="e.g. Sunset walk session...">
+            </div>
+
+            <div class="section-block">
+              <div class="checklist-item">
+                <input type="checkbox" id="tidy-check" class="page-cb">
+                <label for="tidy-check" class="ethereal-text">Tidy Room</label>
+              </div>
+              <span class="improve-label ethereal-text">What needs to be improved:</span>
+              <input type="text" class="glass-input" id="tidy-improve" placeholder="e.g. Desk organization...">
+            </div>
+
+            <div class="section-block">
+              <div class="checklist-item">
+                <input type="checkbox" id="scrolling-check" class="page-cb">
+                <label for="scrolling-check" class="ethereal-text">No Late-Night Scrolling</label>
+              </div>
+              <span class="improve-label ethereal-text">What needs to be improved:</span>
+              <input type="text" class="glass-input" id="scrolling-improve" placeholder="e.g. Phone across the room...">
+            </div>
+          </div>
+
+          <!-- Interactive Add Dropdown -->
+          <div class="add-section-wrapper">
+            <button class="add-btn ethereal-text" onclick="toggleAddDropdown(3)">+ ADD</button>
+            <div class="add-dropdown" id="add-dropdown-3">
+              <span class="improve-label ethereal-text">Habit Name:</span>
+              <input type="text" class="glass-input" id="new-input-3" placeholder="e.g. Herbal Tea...">
+              <div class="add-dropdown-actions">
+                <button class="action-btn cancel ethereal-text" onclick="toggleAddDropdown(3)">Cancel</button>
+                <button class="action-btn confirm ethereal-text" onclick="confirmAddHabit(3)">Add</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <button class="nav-button ethereal-text" id="turnPageBtn">TURN PAGE ➔</button>
+
+    </div>
+  </div>
+
+  <script>
+    // 3D Page Turning
+    let currentPage = 1;
+    const totalPages = 3;
+    const turnBtn = document.getElementById('turnPageBtn');
+
+    turnBtn.addEventListener('click', () => {
+      const activePage = document.getElementById(`page-${currentPage}`);
+      activePage.classList.remove('active');
+      activePage.classList.add('flipped');
+
+      currentPage = currentPage >= totalPages ? 1 : currentPage + 1;
+      const nextPage = document.getElementById(`page-${currentPage}`);
+      
+      setTimeout(() => {
+        if (currentPage === 1) {
+          for (let i = 1; i <= totalPages; i++) {
+            document.getElementById(`page-${i}`).classList.remove('flipped');
+          }
+        }
+        nextPage.classList.add('active');
+      }, 300);
+    });
+
+    // Toggle Dynamic Animated Dropdown Drawer
+    function toggleAddDropdown(pageId) {
+      const dropdown = document.getElementById(`add-dropdown-${pageId}`);
+      dropdown.classList.toggle('open');
+      if (dropdown.classList.contains('open')) {
+        document.getElementById(`new-input-${pageId}`).focus();
+      }
+    }
+
+    // Submit New Habit from Dropdown
+    function confirmAddHabit(pageId) {
+      const inputEl = document.getElementById(`new-input-${pageId}`);
+      const habitName = inputEl.value.trim();
+      if (!habitName) return;
+
+      addNewHabit(pageId, habitName);
+      inputEl.value = '';
+      toggleAddDropdown(pageId);
+    }
+
+    // Progress Bar Calculations
+    function updateProgress(pageId) {
+      const pageEl = document.getElementById(`page-${pageId}`);
+      const checkboxes = pageEl.querySelectorAll('.page-cb');
+      const checkedCount = pageEl.querySelectorAll('.page-cb:checked').length;
+      
+      const total = checkboxes.length;
+      const percentage = total === 0 ? 0 : Math.round((checkedCount / total) * 100);
+
+      document.getElementById(`p${pageId}-bar`).style.width = `${percentage}%`;
+      document.getElementById(`p${pageId}-percent`).innerText = `${percentage}%`;
+    }
+
+    // Add Habit Dynamic Block Builder
+    function addNewHabit(pageId, name, idKey = null) {
+      const uniqueId = idKey || `custom_${Date.now()}`;
+      const container = document.getElementById(`list-page-${pageId}`);
+
+      const block = document.createElement('div');
+      block.className = 'section-block';
+      block.innerHTML = `
+        <div class="checklist-item">
+          <input type="checkbox" id="${uniqueId}-check" class="page-cb">
+          <label for="${uniqueId}-check" class="ethereal-text">${name}</label>
+        </div>
+        <span class="improve-label ethereal-text">What needs to be improved:</span>
+        <input type="text" class="glass-input" id="${uniqueId}-improve" placeholder="e.g. Improvement goal...">
+      `;
+
+      container.appendChild(block);
+      attachInputListeners(block);
+      updateProgress(pageId);
+
+      // Save custom item to LocalStorage
+      if (!idKey) {
+        let storedCustom = JSON.parse(localStorage.getItem(`custom_habits_p${pageId}`) || '[]');
+        storedCustom.push({ id: uniqueId, name: name });
+        localStorage.setItem(`custom_habits_p${pageId}`, JSON.stringify(storedCustom));
+      }
+    }
+
+    // Load & Restore LocalStorage Data
+    function attachInputListeners(parent = document) {
+      const inputs = parent.querySelectorAll('input, textarea');
+      inputs.forEach(input => {
+        const savedVal = localStorage.getItem(`notion_selfcare_${input.id}`);
+        if (savedVal !== null) {
+          if (input.type === 'checkbox') input.checked = savedVal === 'true';
+          else input.value = savedVal;
+        }
+
+        input.addEventListener('change', () => {
+          const val = input.type === 'checkbox' ? input.checked : input.value;
+          localStorage.setItem(`notion_selfcare_${input.id}`, val);
+          
+          const page = input.closest('.page');
+          if (page) {
+            const pageId = page.id.replace('page-', '');
+            updateProgress(pageId);
+          }
+        });
+      });
+    }
+
+    // Initialize Widget Data
+    window.addEventListener('DOMContentLoaded', () => {
+      [1, 2, 3].forEach(pageId => {
+        const storedCustom = JSON.parse(localStorage.getItem(`custom_habits_p${pageId}`) || '[]');
+        storedCustom.forEach(item => addNewHabit(pageId, item.name, item.id));
+      });
+
+      attachInputListeners();
+      [1, 2, 3].forEach(pageId => updateProgress(pageId));
+    });
+  </script>
+</body>
+</html>
