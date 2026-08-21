@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cafe Research Sources Workspace</title>
+    <link href="https://fonts.cdnfonts.com/css/perandory" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Great+Vibes&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --notion-dark-bg: #121212;
+            --mocha-base: #3B261C;
+            --mocha-glass: rgba(59, 38, 28, 0.45);
+            --mocha-card: rgba(22, 14, 10, 0.82);
+            --mocha-card-hover: rgba(33, 21, 15, 0.92);
+            --warm-accent: #E8D3C5;
+            --coffee-glow: rgba(180, 125, 85, 0.22);
+            --border-glass: rgba(232, 211, 197, 0.12);
+            --border-glow: rgba(215, 160, 115, 0.28);
+            --text-primary: #FAF5F0;
+            --text-secondary: #D4C3B7;
+            --text-muted: #8F7B6E;
+            
+            /* Pure Mocha & Cream Palette for Badges */
+            --tag-book: #3B2418;       /* Dark Roasted Mocha */
+            --tag-paper: #4E3222;      /* Creamy Cocoa */
+            --tag-article: #5E402D;    /* Toasted Hazelnut */
+            --tag-website: #704E38;    /* Warm Milk Mocha */
+            --tag-lecture: #462D1E;    /* Dark Espresso */
+
+            --prio-high: #4D1B14;      /* Deep Mahogany Roast */
+            --prio-med: #593E1A;       /* Caramel Mocha */
+            --prio-low: #2E221B;       /* Dark Muted Mocha */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Perandory', 'Bodoni Moda', Georgia, serif;
+        }
+
+        body {
+            background-color: var(--notion-dark-bg);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 40px 20px;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphic Container with Dark Rich Mocha Tone */
+        .cafe-widget {
+            width: 100%;
+            max-width: 960px;
+            background: linear-gradient(135deg, rgba(55, 35, 26, 0.85), rgba(15, 8, 5, 0.96));
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 
+                        0 0 30px var(--coffee-glow);
+            animation: warmGlowPulse 8s ease-in-out infinite alternate;
+            position: relative;
+        }
+
+        @keyframes warmGlowPulse {
+            0% {
+                box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 15px rgba(215, 160, 115, 0.15);
+                border-color: rgba(232, 211, 197, 0.1);
+            }
+            100% {
+                box-shadow: 0 25px 60px rgba(0, 0, 0, 0.92), 0 0 35px rgba(215, 160, 115, 0.3);
+                border-color: rgba(215, 160, 115, 0.28);
+            }
+        }
+
+        /* Header Layout */
+        .widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .cafe-icon {
+            font-size: 24px;
+            background: rgba(232, 211, 197, 0.08);
+            padding: 10px;
+            border-radius: 14px;
+            border: 1px solid var(--border-glass);
+            box-shadow: 0 0 12px var(--coffee-glow);
+        }
+
+        .title-text {
+            font-family: 'Perandory', 'Bodoni Moda', Georgia, serif;
+            font-size: 34px;
+            font-weight: 400;
+            color: var(--text-primary);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .sub-text {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .btn-add {
+            background: var(--warm-accent);
+            color: #1F120B;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-family: 'Perandory', 'Bodoni Moda', Georgia, serif;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 15px var(--coffee-glow);
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            background: #FAF5F0;
+            box-shadow: 0 6px 20px rgba(232, 211, 197, 0.4);
+        }
+
+        /* Sources List */
+        .sources-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .source-card {
+            background: var(--mocha-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 16px 20px;
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), background 0.35s, border-color 0.35s;
+            position: relative;
+            z-index: 1; /* Stacking context fix */
+            overflow: visible;
+            backdrop-filter: blur(10px);
+        }
+
+        .source-card:hover {
+            background: var(--mocha-card-hover);
+            border-color: var(--border-glow);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 15px rgba(215, 160, 115, 0.12);
+        }
+
+        .card-main-row {
+            display: grid;
+            grid-template-columns: 28px 1.5fr auto auto 36px;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .checkbox-custom {
+            width: 18px;
+            height: 18px;
+            border-radius: 6px;
+            border: 2px solid var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .checkbox-custom.checked {
+            background: var(--warm-accent);
+            border-color: var(--warm-accent);
+        }
+
+        .checkbox-custom.checked::after {
+            content: '✓';
+            color: #1F120B;
+            font-size: 12px;
+            font-weight: bold;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .source-title-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-family: 'Perandory', 'Bodoni Moda', Georgia, serif;
+            font-size: 19px;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            width: 100%;
+            transition: color 0.2s ease;
+        }
+
+        .source-title-input.completed {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        /* Custom Dropdowns */
+        .dropdown-container {
+            position: relative;
+        }
+
+        .badge-btn {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-family: 'Perandory', 'Bodoni Moda', Georgia, serif;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+            color: var(--text-primary);
+            cursor: pointer;
+            border: 1px solid rgba(232, 211, 197, 0.18);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .badge-btn:hover {
+            filter: brightness(1.25);
+            transform: scale(1.03);
+            border-color: var(--warm-accent);
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 115%;
+            left: 0;
+            background: rgba(24, 15, 11, 0.98);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glow);
+            border-radius: 12px;
+            padding: 8px;
+            z-index: 1000; /* Ensured overlay placement */
+            width: 140px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.95), 0 0 20px rgba(215, 160, 115, 0.2);
+            animation: dropdownFade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes dropdownFade {
+            from { opacity: 0; transform: translateY(-8px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .dropdown-menu.active {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .dropdown-option {
+            padding: 7px 10px;
+            border-radius: 6px;
+            font-family: 'Perandory', 'Bodoni Moda', Georgia, serif;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+
+        .dropdown-option:hover {
+            background: rgba(232, 211, 197, 0.15);
+            color: var(--warm-accent);
+        }
+
+        .expand-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-glass);
+            color: var(--text-secondary);
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .expand-btn:hover {
+            background: var(--warm-accent);
+            color: #1F120B;
+            transform: rotate(180deg);
+        }
+
+        /* Expandable Notes & Project Section */
+        .card-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+            opacity: 0;
+            margin-top: 0;
+            border-top: 1px solid transparent;
+            padding-top: 0;
+        }
+
+        .source-card.open .card-details {
+            max-height: 180px;
+            opacity: 1;
+            margin-top: 14px;
+            border-top-color: rgba(232, 211, 197, 0.08);
+            padding-top: 12px;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .detail-box {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .detail-label {
+            font-family: 'Perandory', 'Bodoni Moda', Georgia, serif;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .detail-input {
+            background: rgba(10, 6, 4, 0.6);
+            border: 1px solid var(--border-glass);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .detail-input:focus {
+            border-color: var(--warm-accent);
+            box-shadow: 0 0 8px rgba(215, 160, 115, 0.2);
+        }
+
+        .delete-row-btn {
+            background: transparent;
+            border: none;
+            color: #E57373;
+            font-family: 'Perandory', 'Bodoni Moda', Georgia, serif;
+            font-size: 14px;
+            cursor: pointer;
+            align-self: flex-end;
+            margin-top: 8px;
+            opacity: 0.8;
+            transition: opacity 0.2s ease;
+        }
+
+        .delete-row-btn:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cafe-widget">
+        <!-- Header -->
+        <div class="widget-header">
+            <div class="header-title">
+                <span class="cafe-icon">☕</span>
+                <div>
+                    <h1 class="title-text">Research Sources</h1>
+                    <p class="sub-text">Cafe Study Workspace • Mocha Collection</p>
+                </div>
+            </div>
+            <button class="btn-add" onclick="addNewSource()">
+                <span>+</span> Add Source
+            </button>
+        </div>
+
+        <!-- Dynamic Sources List -->
+        <div class="sources-list" id="sourcesContainer">
+            <!-- Injected via JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        const typeColors = {
+            'Book': 'var(--tag-book)',
+            'Paper': 'var(--tag-paper)',
+            'Article': 'var(--tag-article)',
+            'Website': 'var(--tag-website)',
+            'Lecture': 'var(--tag-lecture)'
+        };
+
+        const priorityColors = {
+            'High': 'var(--prio-high)',
+            'Medium': 'var(--prio-med)',
+            'Low': 'var(--prio-low)'
+        };
+
+        let researchSources = [
+            { id: 1, title: "Sleep Research Methodology Guide", type: "Book", priority: "High", completed: false, notes: "Methodology structure reference", project: "Dissertation Proposal" },
+            { id: 2, title: "The Economics of Carbon Pricing", type: "Paper", priority: "High", completed: true, notes: "Core argument source", project: "Group Presentation: Climate Policy" },
+            { id: 3, title: "Oral History Interview Techniques", type: "Lecture", priority: "Medium", completed: false, notes: "For a potential interview component", project: "History Investigation" },
+            { id: 4, title: "Climate Policy Explainer", type: "Website", priority: "Medium", completed: true, notes: "Good visuals for the slides", project: "Group Presentation: Climate Policy" },
+            { id: 5, title: "Clean Code", type: "Book", priority: "Medium", completed: false, notes: "Structuring the backend codebase", project: "Computer Science Capstone" }
+        ];
+
+        function renderSources() {
+            const container = document.getElementById('sourcesContainer');
+            container.innerHTML = '';
+
+            researchSources.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = `source-card ${item.isOpen ? 'open' : ''}`;
+                card.id = `card-${item.id}`;
+
+                card.innerHTML = `
+                    <div class="card-main-row">
+                        <div class="checkbox-custom ${item.completed ? 'checked' : ''}" onclick="toggleCheck(${index})"></div>
+                        <input type="text" class="source-title-input ${item.completed ? 'completed' : ''}" value="${item.title}" onchange="updateTitle(${index}, this.value)">
+                        
+                        <!-- Type Dropdown -->
+                        <div class="dropdown-container">
+                            <div class="badge-btn" style="background: ${typeColors[item.type] || 'var(--tag-paper)'}" onclick="toggleDropdown('type-${index}', event)">
+                                <span>${item.type}</span> ▾
+                            </div>
+                            <div class="dropdown-menu" id="type-${index}">
+                                ${Object.keys(typeColors).map(t => `<div class="dropdown-option" onclick="selectType(${index}, '${t}')">${t}</div>`).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Priority Dropdown -->
+                        <div class="dropdown-container">
+                            <div class="badge-btn" style="background: ${priorityColors[item.priority] || 'var(--prio-low)'}" onclick="toggleDropdown('prio-${index}', event)">
+                                <span>${item.priority}</span> ▾
+                            </div>
+                            <div class="dropdown-menu" id="prio-${index}">
+                                ${Object.keys(priorityColors).map(p => `<div class="dropdown-option" onclick="selectPriority(${index}, '${p}')">${p}</div>`).join('')}
+                            </div>
+                        </div>
+
+                        <button class="expand-btn" onclick="toggleExpand(${index})" title="Toggle Details">▾</button>
+                    </div>
+
+                    <!-- Expandable Notes & Project Section -->
+                    <div class="card-details">
+                        <div class="details-grid">
+                            <div class="detail-box">
+                                <span class="detail-label">≡ Notes</span>
+                                <input type="text" class="detail-input" value="${item.notes}" placeholder="Add core note..." onchange="updateNotes(${index}, this.value)">
+                            </div>
+                            <div class="detail-box">
+                                <span class="detail-label">☵ Project</span>
+                                <input type="text" class="detail-input" value="${item.project}" placeholder="Assign project..." onchange="updateProject(${index}, this.value)">
+                            </div>
+                        </div>
+                        <button class="delete-row-btn" onclick="deleteSource(${index})">Delete Item</button>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function toggleCheck(index) {
+            researchSources[index].completed = !researchSources[index].completed;
+            renderSources();
+        }
+
+        function updateTitle(index, val) {
+            researchSources[index].title = val;
+        }
+
+        function updateNotes(index, val) {
+            researchSources[index].notes = val;
+        }
+
+        function updateProject(index, val) {
+            researchSources[index].project = val;
+        }
+
+        function toggleDropdown(id, event) {
+            if (event) event.stopPropagation();
+            const target = document.getElementById(id);
+            const parentCard = target.closest('.source-card');
+            const isActive = target.classList.contains('active');
+
+            // Close all dropdowns and reset card stacking index
+            document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('active'));
+            document.querySelectorAll('.source-card').forEach(card => card.style.zIndex = '1');
+
+            if (!isActive) {
+                target.classList.add('active');
+                if (parentCard) parentCard.style.zIndex = '100'; // Bring active card above all others
+            }
+        }
+
+        function selectType(index, typeVal) {
+            researchSources[index].type = typeVal;
+            renderSources();
+        }
+
+        function selectPriority(index, prioVal) {
+            researchSources[index].priority = prioVal;
+            renderSources();
+        }
+
+        function toggleExpand(index) {
+            researchSources[index].isOpen = !researchSources[index].isOpen;
+            renderSources();
+        }
+
+        function addNewSource() {
+            const newItem = {
+                id: Date.now(),
+                title: "New Research Source",
+                type: "Article",
+                priority: "Medium",
+                completed: false,
+                notes: "",
+                project: "",
+                isOpen: true
+            };
+            researchSources.unshift(newItem);
+            renderSources();
+        }
+
+        function deleteSource(index) {
+            researchSources.splice(index, 1);
+            renderSources();
+        }
+
+        window.onclick = function(e) {
+            if (!e.target.matches('.badge-btn') && !e.target.matches('.dropdown-option')) {
+                document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('active'));
+                document.querySelectorAll('.source-card').forEach(card => card.style.zIndex = '1');
+            }
+        };
+
+        renderSources();
+    </script>
+</body>
+</html>
