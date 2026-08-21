@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dark Productivity | Vault Command</title>
+  
+  <!-- Luxury & Editorial Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Plus+Jakarta+Sans:wght@300;500;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-void: #050505;
+      --glass-bg: rgba(20, 20, 22, 0.45);
+      --glass-border: rgba(212, 175, 55, 0.15);
+      --gold-primary: #D4AF37;
+      --gold-glow: rgba(212, 175, 55, 0.5);
+      --gold-intense: rgba(212, 175, 55, 0.8);
+      --text-main: #ffffff;
+      --text-muted: #888888;
+      --font-serif: 'Cinzel', serif;
+      --font-sans: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-sans);
+      color: var(--text-main);
+      outline: none; 
+    }
+
+    body {
+      background-color: var(--bg-void);
+      background-image: radial-gradient(circle at 50% 0%, rgba(212,175,55,0.05) 0%, transparent 60%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    .editable {
+      cursor: text;
+      border-bottom: 1px dashed transparent;
+      transition: all 0.3s;
+    }
+    .editable:focus, .editable:hover {
+      border-bottom: 1px dashed var(--gold-primary);
+      text-shadow: 0 0 15px var(--gold-glow);
+    }
+
+    .glow-text {
+      color: var(--gold-primary);
+      text-shadow: 0 0 12px var(--gold-intense), 0 0 25px var(--gold-glow);
+    }
+
+    /* Core Layout */
+    .dashboard {
+      display: grid;
+      grid-template-columns: 1fr 1.3fr;
+      gap: 24px;
+      width: 100%;
+      max-width: 1200px;
+      background: rgba(10, 10, 12, 0.6);
+      border: 1px solid var(--glass-border);
+      border-radius: 32px;
+      padding: 30px;
+      backdrop-filter: blur(30px);
+      box-shadow: 0 40px 100px rgba(0, 0, 0, 0.9), inset 0 1px 2px rgba(255, 255, 255, 0.05);
+    }
+
+    .panel {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .panel:hover {
+      border-color: rgba(212, 175, 55, 0.4);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(212, 175, 55, 0.03);
+    }
+
+    .col {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Profile / Identity */
+    .identity-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .profile-upload-wrapper {
+      position: relative;
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      border: 1px solid var(--gold-primary);
+      box-shadow: 0 0 20px var(--gold-glow);
+      cursor: pointer;
+      overflow: hidden;
+      background: linear-gradient(135deg, #1a1a1a, #000);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .profile-upload-wrapper img { width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+    .profile-upload-wrapper .placeholder-v { position: absolute; font-family: var(--font-serif); font-size: 24px; font-weight: 800; color: var(--gold-primary); z-index: 0; }
+    .profile-upload-wrapper:hover::after {
+      content: '+'; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); color: var(--gold-primary); display: flex; align-items: center; justify-content: center; font-size: 24px; z-index: 2;
+    }
+
+    .identity-text h1 { font-family: var(--font-serif); font-size: 22px; letter-spacing: 1px; }
+    .identity-text p { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; margin-top: 4px; }
+
+    /* Vault Chamber */
+    .vault-chamber { display: flex; flex-direction: column; align-items: center; }
+    .canvas-wrap { position: relative; width: 240px; height: 240px; margin: 20px 0; }
+    #vaultCanvas { width: 100%; height: 100%; filter: drop-shadow(0 0 15px var(--gold-glow)); }
+    .chamber-data { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+    .chamber-data .currency { font-family: var(--font-serif); font-size: 32px; font-weight: 800; text-shadow: 0 0 20px var(--gold-glow); }
+    .chamber-data .lbl { font-size: 10px; letter-spacing: 3px; color: var(--gold-primary); opacity: 0.8; }
+
+    .asset-row { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 12px; padding: 8px 12px; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
+    .asset-name { font-size: 12px; font-weight: 600; width: 35%; }
+    input[type=range] { -webkit-appearance: none; width: 45%; background: rgba(255,255,255,0.1); height: 4px; border-radius: 2px; outline: none; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--gold-primary); box-shadow: 0 0 10px var(--gold-intense); cursor: pointer; transition: all 0.2s; }
+    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.5); }
+    .asset-val { font-size: 12px; font-family: var(--font-serif); width: 15%; text-align: right; }
+
+    /* Customizable Citadel Lock */
+    .citadel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .citadel-title { font-family: var(--font-serif); font-size: 16px; font-weight: 700; color: var(--gold-primary); }
+    .timer-setup { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+    .time-input-group { display: flex; align-items: center; background: rgba(0,0,0,0.5); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px; padding: 4px 8px; }
+    .time-input-group input { width: 40px; background: transparent; border: none; color: var(--gold-primary); font-family: 'Courier New', Courier, monospace; font-size: 18px; font-weight: 800; text-align: center; outline: none; }
+    .time-input-group span { font-size: 10px; color: var(--text-muted); margin-left: 4px; }
+    .timer-display { font-family: 'Courier New', Courier, monospace; font-size: 42px; font-weight: 800; text-align: center; letter-spacing: 4px; margin: 16px 0; text-shadow: 0 0 15px rgba(255,255,255,0.3); }
+    
+    .btn-group { display: flex; gap: 12px; }
+    .lock-btn { flex: 1; padding: 12px; background: transparent; border: 1px solid var(--gold-primary); color: var(--gold-primary); font-family: var(--font-serif); font-weight: 700; border-radius: 12px; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px; }
+    .lock-btn:hover, .lock-btn.active { background: var(--gold-primary); color: #000; box-shadow: 0 0 20px var(--gold-glow); }
+    .reset-btn { flex: 0.5; padding: 12px; background: rgba(255, 50, 50, 0.1); border: 1px solid rgba(255, 50, 50, 0.4); color: #ff6b6b; font-family: var(--font-serif); font-weight: 700; border-radius: 12px; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px; }
+    .reset-btn:hover { background: rgba(255, 50, 50, 0.3); box-shadow: 0 0 15px rgba(255, 50, 50, 0.4); }
+
+    /* Productive Execution Matrix */
+    .execution-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; }
+    .day-labels { display: flex; gap: 8px; margin-top: 8px; }
+    .day-lbl { width: 28px; text-align: center; font-size: 10px; color: var(--text-muted); font-weight: 700; }
+    
+    .matrix-reset-btn {
+      background: rgba(255, 50, 50, 0.05); border: 1px solid rgba(255, 50, 50, 0.3); color: #ff6b6b;
+      font-family: var(--font-serif); font-size: 9px; font-weight: 700; padding: 4px 8px; border-radius: 6px; cursor: pointer; transition: all 0.3s; text-transform: uppercase;
+    }
+    .matrix-reset-btn:hover { background: rgba(255, 50, 50, 0.2); box-shadow: 0 0 10px rgba(255, 50, 50, 0.3); }
+
+    .habit-row { display: flex; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .habit-name { flex: 1; font-size: 12px; font-weight: 600; padding-right: 16px; }
+    
+    /* Progress Bar */
+    .progress-container { display: flex; align-items: center; gap: 8px; width: 110px; margin-right: 16px; }
+    .progress-bar { flex: 1; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+    .progress-fill { height: 100%; width: 0%; background: var(--gold-primary); box-shadow: 0 0 8px var(--gold-glow); transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    .progress-text { font-size: 11px; font-family: 'Courier New', Courier, monospace; color: var(--gold-primary); font-weight: 700; width: 32px; text-align: right; }
+
+    .habit-nodes { display: flex; gap: 8px; }
+    .grid-node { width: 28px; height: 28px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+    .grid-node:hover { border-color: var(--gold-primary); transform: scale(1.1); }
+    .grid-node.active { background: var(--gold-primary); border-color: #fff; box-shadow: 0 0 12px var(--gold-glow); transform: scale(1.05); }
+
+    @media (max-width: 900px) { .dashboard { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard">
+
+    <!-- COLUMN 1: Identity & Vault Core -->
+    <div class="col">
+      <div class="panel identity-header">
+        <div class="profile-upload-wrapper" onclick="document.getElementById('profilePicUpload').click()">
+          <span class="placeholder-v" id="placeholderV">V</span>
+          <img id="profileImage" src="" style="display:none;" alt="Profile">
+          <input type="file" id="profilePicUpload" accept="image/*" style="display:none;">
+        </div>
+        <div class="identity-text">
+          <h1 class="editable glow-text" contenteditable="true">DARK PRODUCTIVITY</h1>
+          <p class="editable" contenteditable="true">Vault Master Command</p>
+        </div>
+      </div>
+
+      <div class="panel vault-chamber">
+        <div style="width:100%; display:flex; justify-content:space-between;">
+          <span class="editable" contenteditable="true" style="font-size:12px; font-weight:700; color:var(--text-muted);">Empire Distribution</span>
+          <span class="glow-text" style="font-size:12px; cursor:pointer;">Live View</span>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="vaultCanvas" width="480" height="480"></canvas>
+          <div class="chamber-data">
+            <div class="currency glow-text" id="totalValueDisplay">0</div>
+            <div class="lbl editable" contenteditable="true">TOTAL ASSETS</div>
+          </div>
+        </div>
+        <div style="width: 100%;">
+          <div class="asset-row">
+            <span class="asset-name editable" contenteditable="true">Liquid Capital</span>
+            <input type="range" id="asset1" min="0" max="10000" value="4500">
+            <span class="asset-val" id="val1">4500</span>
+          </div>
+          <div class="asset-row">
+            <span class="asset-name editable" contenteditable="true">Design Revenue</span>
+            <input type="range" id="asset2" min="0" max="10000" value="2300">
+            <span class="asset-val" id="val2">2300</span>
+          </div>
+          <div class="asset-row">
+            <span class="asset-name editable" contenteditable="true">Strategic Reserve</span>
+            <input type="range" id="asset3" min="0" max="10000" value="6800">
+            <span class="asset-val" id="val3">6800</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUMN 2: Productivity & Security -->
+    <div class="col">
+      
+      <!-- Customizable Citadel Lock -->
+      <div class="panel">
+        <div class="citadel-header">
+          <span class="citadel-title glow-text editable" contenteditable="true">CITADEL IMPULSE LOCK</span>
+          <span style="font-size:18px;">⏳</span>
+        </div>
+        <p class="editable" contenteditable="true" style="font-size:11px; color:var(--text-muted);">Configure lock duration to prevent impulse withdrawals.</p>
+        <div class="timer-setup" id="timerSetup">
+          <div class="time-input-group">
+            <input type="number" id="inputHours" value="48" min="0"><span>HRS</span>
+          </div>
+          <div class="time-input-group">
+            <input type="number" id="inputMins" value="0" min="0" max="59"><span>MIN</span>
+          </div>
+        </div>
+        <div class="timer-display glow-text" id="timerDisplay">48:00:00</div>
+        <div class="btn-group">
+          <button class="lock-btn" id="lockTrigger">Engage Protocol</button>
+          <button class="reset-btn" id="resetTrigger">Reset</button>
+        </div>
+      </div>
+
+      <!-- Functional Execution Matrix -->
+      <div class="panel">
+        <div class="execution-header">
+          <div>
+            <span class="citadel-title editable glow-text" contenteditable="true">EXECUTION MATRIX</span>
+            <p class="editable" contenteditable="true" style="font-size:10px; color:var(--text-muted); margin-top:4px;">Weekly discipline log. Click to seal nodes.</p>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:flex-end;">
+            <button class="matrix-reset-btn" id="matrixResetBtn">Reset Week</button>
+            <div class="day-labels">
+              <span class="day-lbl">M</span><span class="day-lbl">T</span><span class="day-lbl">W</span>
+              <span class="day-lbl">T</span><span class="day-lbl">F</span><span class="day-lbl">S</span><span class="day-lbl">S</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Habit Rows -->
+        <div class="habit-row">
+          <span class="habit-name editable" contenteditable="true">200 Crunches (Min 100)</span>
+          <div class="progress-container">
+            <div class="progress-bar"><div class="progress-fill"></div></div>
+            <span class="progress-text">0%</span>
+          </div>
+          <div class="habit-nodes">
+            <div class="grid-node"></div><div class="grid-node"></div><div class="grid-node"></div>
+            <div class="grid-node"></div><div class="grid-node"></div><div class="grid-node"></div><div class="grid-node"></div>
+          </div>
+        </div>
+
+        <div class="habit-row">
+          <span class="habit-name editable" contenteditable="true">Rooftop Session (30m)</span>
+          <div class="progress-container">
+            <div class="progress-bar"><div class="progress-fill"></div></div>
+            <span class="progress-text">0%</span>
+          </div>
+          <div class="habit-nodes">
+            <div class="grid-node"></div><div class="grid-node"></div><div class="grid-node"></div>
+            <div class="grid-node"></div><div class="grid-node"></div><div class="grid-node"></div><div class="grid-node"></div>
+          </div>
+        </div>
+
+        <div class="habit-row">
+          <span class="habit-name editable" contenteditable="true">Blender / Krita Practice</span>
+          <div class="progress-container">
+            <div class="progress-bar"><div class="progress-fill"></div></div>
+            <span class="progress-text">0%</span>
+          </div>
+          <div class="habit-nodes">
+            <div class="grid-node"></div><div class="grid-node"></div><div class="grid-node"></div>
+            <div class="grid-node"></div><div class="grid-node"></div><div class="grid-node"></div><div class="grid-node"></div>
+          </div>
+        </div>
+
+        <div class="habit-row" style="border-bottom:none; margin-bottom:0; padding-bottom:0;">
+          <span class="habit-name editable" contenteditable="true">GRITandGLITCH Designs</span>
+          <div class="progress-container">
+            <div class="progress-bar"><div class="progress-fill"></div></div>
+            <span class="progress-text">0%</span>
+          </div>
+          <div class="habit-nodes">
+            <div class="grid-node"></div><div class="grid-node"></div><div class="grid-node"></div>
+            <div class="grid-node"></div><div class="grid-node"></div><div class="grid-node"></div><div class="grid-node"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- 1. PROFILE PHOTO UPLOAD LOGIC ---
+    document.getElementById('profilePicUpload').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          document.getElementById('placeholderV').style.display = 'none';
+          const img = document.getElementById('profileImage');
+          img.src = event.target.result;
+          img.style.display = 'block';
+        }
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // --- 2. REACTIVE VAULT CANVAS ---
+    const canvas = document.getElementById('vaultCanvas');
+    const ctx = canvas.getContext('2d');
+    const assets = [
+      { slider: document.getElementById('asset1'), display: document.getElementById('val1'), color: '#D4AF37' }, 
+      { slider: document.getElementById('asset2'), display: document.getElementById('val2'), color: '#ffffff' }, 
+      { slider: document.getElementById('asset3'), display: document.getElementById('val3'), color: '#7a5f13' }  
+    ];
+    const totalDisplay = document.getElementById('totalValueDisplay');
+
+    function drawVault() {
+      const w = canvas.width, h = canvas.height, cx = w/2, cy = h/2, radius = 180;
+      ctx.clearRect(0, 0, w, h);
+      let total = 0;
+      assets.forEach(a => total += parseInt(a.slider.value));
+      totalDisplay.innerText = total.toLocaleString();
+
+      let currentAngle = -Math.PI / 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.lineWidth = 15;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+      ctx.stroke();
+
+      assets.forEach(a => {
+        const val = parseInt(a.slider.value);
+        a.display.innerText = val.toLocaleString();
+        if (total > 0) {
+          const sliceAngle = (val / total) * (Math.PI * 2);
+          ctx.beginPath();
+          ctx.arc(cx, cy, radius, currentAngle, currentAngle + sliceAngle);
+          ctx.lineWidth = 15;
+          ctx.strokeStyle = a.color;
+          ctx.shadowBlur = 20;
+          ctx.shadowColor = a.color;
+          ctx.stroke();
+          ctx.shadowBlur = 0; 
+          currentAngle += sliceAngle;
+        }
+      });
+    }
+    assets.forEach(a => a.slider.addEventListener('input', drawVault));
+    drawVault(); 
+
+    // --- 3. CUSTOMIZABLE CITADEL TIMER ---
+    let timerInterval, totalSeconds = 0;
+    const display = document.getElementById('timerDisplay'), inputHrs = document.getElementById('inputHours'), inputMins = document.getElementById('inputMins'), setupDiv = document.getElementById('timerSetup'), btnEngage = document.getElementById('lockTrigger'), btnReset = document.getElementById('resetTrigger');
+
+    function formatTime(sec) {
+      const h = Math.floor(sec / 3600).toString().padStart(2, '0'), m = Math.floor((sec % 3600) / 60).toString().padStart(2, '0'), s = (sec % 60).toString().padStart(2, '0');
+      return `${h}:${m}:${s}`;
+    }
+
+    function syncDisplayToInputs() {
+      if(!timerInterval) {
+        const h = parseInt(inputHrs.value) || 0, m = parseInt(inputMins.value) || 0;
+        display.innerText = formatTime((h * 3600) + (m * 60));
+      }
+    }
+    inputHrs.addEventListener('input', syncDisplayToInputs);
+    inputMins.addEventListener('input', syncDisplayToInputs);
+
+    btnEngage.addEventListener('click', () => {
+      if(timerInterval) return; 
+      const h = parseInt(inputHrs.value) || 0, m = parseInt(inputMins.value) || 0;
+      totalSeconds = (h * 3600) + (m * 60);
+      if(totalSeconds <= 0) return;
+      setupDiv.style.opacity = '0.3'; setupDiv.style.pointerEvents = 'none';
+      btnEngage.innerText = "Protocol Active"; btnEngage.classList.add('active');
+
+      timerInterval = setInterval(() => {
+        totalSeconds--; display.innerText = formatTime(totalSeconds);
+        if(totalSeconds <= 0) {
+          clearInterval(timerInterval); timerInterval = null;
+          btnEngage.innerText = "Engage Protocol"; btnEngage.classList.remove('active');
+          setupDiv.style.opacity = '1'; setupDiv.style.pointerEvents = 'auto';
+        }
+      }, 1000);
+    });
+
+    btnReset.addEventListener('click', () => {
+      if(timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+      btnEngage.innerText = "Engage Protocol"; btnEngage.classList.remove('active');
+      setupDiv.style.opacity = '1'; setupDiv.style.pointerEvents = 'auto';
+      syncDisplayToInputs(); 
+    });
+
+    // --- 4. EXECUTION MATRIX LOGIC ---
+    const habitRows = document.querySelectorAll('.habit-row');
+    
+    habitRows.forEach(row => {
+      const nodes = row.querySelectorAll('.grid-node');
+      const fill = row.querySelector('.progress-fill');
+      const text = row.querySelector('.progress-text');
+      
+      function updateProgress() {
+        const activeCount = row.querySelectorAll('.grid-node.active').length;
+        const percentage = Math.round((activeCount / nodes.length) * 100);
+        fill.style.width = percentage + '%';
+        text.innerText = percentage + '%';
+      }
+
+      nodes.forEach(node => {
+        node.addEventListener('click', () => {
+          node.classList.toggle('active');
+          updateProgress();
+        });
+      });
+      updateProgress(); 
+    });
+
+    // Reset Entire Matrix
+    document.getElementById('matrixResetBtn').addEventListener('click', () => {
+      habitRows.forEach(row => {
+        const nodes = row.querySelectorAll('.grid-node');
+        const fill = row.querySelector('.progress-fill');
+        const text = row.querySelector('.progress-text');
+        
+        nodes.forEach(node => node.classList.remove('active'));
+        fill.style.width = '0%';
+        text.innerText = '0%';
+      });
+    });
+
+  </script>
+</body>
+</html>
