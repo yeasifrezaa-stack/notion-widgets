@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Citadel Wealth Command</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-notion: #191919;
+      --cinder: #24292e;
+      --chimney: #4a5156;
+      --sea-lion: #808a92;
+      --blue-dolphin: #bdc7ce;
+      --black-metal: #000000;
+      
+      /* Calm, soothing luminance colors */
+      --glow-soft: rgba(189, 199, 206, 0.12);
+      --glow-ambient: rgba(189, 199, 206, 0.35);
+      --glow-serene: rgba(255, 255, 255, 0.5);
+      
+      --font-display: 'Fraunces', serif;
+      --font-ui: 'Inter', sans-serif;
+
+      /* Ultra-smooth, unhurried easing profiles */
+      --ease-serene: cubic-bezier(0.25, 1, 0.35, 1);
+      --ease-float: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      outline: none;
+    }
+
+    body {
+      background-color: var(--bg-notion);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: var(--font-ui);
+      padding: 24px;
+      overflow-x: hidden;
+    }
+
+    /* --- DASHBOARD CANVAS --- */
+    .dashboard {
+      position: relative;
+      background: linear-gradient(150deg, rgba(30, 34, 38, 0.75), rgba(5, 5, 5, 0.96));
+      border: 1px solid rgba(74, 81, 86, 0.6);
+      border-radius: 32px;
+      padding: 48px;
+      width: 100%;
+      max-width: 980px;
+      box-shadow: 
+        0 40px 100px rgba(0, 0, 0, 0.9), 
+        0 0 80px rgba(189, 199, 206, 0.05);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 52px;
+      color: var(--blue-dolphin);
+      backdrop-filter: blur(20px);
+    }
+
+    /* Unconfined, breathing ambient aura behind canvas */
+    .dashboard::before {
+      content: '';
+      position: absolute;
+      top: 10%;
+      left: 10%;
+      width: 80%;
+      height: 80%;
+      background: radial-gradient(circle, var(--glow-ambient) 0%, transparent 70%);
+      opacity: 0.15;
+      filter: blur(100px);
+      animation: sereneBreathing 12s infinite alternate ease-in-out;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes sereneBreathing {
+      0% { opacity: 0.12; transform: scale(0.95); }
+      100% { opacity: 0.25; transform: scale(1.15); }
+    }
+
+    .dashboard > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Typography & Editables */
+    h1, h2, h3 {
+      font-family: var(--font-display);
+      font-weight: 400;
+    }
+    
+    .glow-text {
+      color: var(--blue-dolphin);
+      text-shadow: 
+        0 0 15px var(--glow-soft), 
+        0 0 35px rgba(189, 199, 206, 0.15);
+      transition: text-shadow 1.2s var(--ease-serene);
+    }
+    
+    .desc {
+      font-size: 11px;
+      color: var(--sea-lion);
+      font-style: italic;
+      margin-top: 4px;
+      letter-spacing: 0.3px;
+    }
+
+    [contenteditable="true"] {
+      border-bottom: 1px dashed transparent;
+      transition: border-color 0.4s var(--ease-serene), text-shadow 0.4s var(--ease-serene);
+    }
+    [contenteditable="true"]:hover, [contenteditable="true"]:focus {
+      border-bottom: 1px dashed var(--sea-lion);
+      text-shadow: 0 0 16px var(--glow-ambient);
+    }
+
+    /* --- LEFT PANEL: UNCONFINED RING & DIRECTIVES --- */
+    .left-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .header-group {
+      border-bottom: 1px solid rgba(74, 81, 86, 0.35);
+      padding-bottom: 18px;
+    }
+
+    /* Unconfined Ring Canvas */
+    .ring-wrapper {
+      display: flex;
+      justify-content: center;
+      position: relative;
+      padding: 20px 0;
+      margin: -10px 0;
+    }
+
+    .svg-container {
+      width: 230px;
+      height: 230px;
+      overflow: visible; /* Prevents clipping of soft light diffusion */
+      filter: drop-shadow(0 0 30px rgba(189, 199, 206, 0.12));
+      transition: filter 1.4s var(--ease-serene);
+    }
+
+    .ring-track {
+      fill: none;
+      stroke: rgba(36, 41, 46, 0.7);
+      stroke-width: 10;
+    }
+
+    /* Ultra-smooth gradual segment fill and glow */
+    .ring-segment {
+      fill: none;
+      stroke: var(--chimney);
+      stroke-width: 10;
+      stroke-linecap: round;
+      opacity: 0.4;
+      transition: 
+        stroke 1.4s var(--ease-serene), 
+        filter 1.4s var(--ease-serene),
+        opacity 1.4s var(--ease-serene);
+    }
+    .ring-segment.active {
+      stroke: var(--blue-dolphin);
+      opacity: 1;
+      filter: drop-shadow(0 0 14px var(--glow-ambient)) drop-shadow(0 0 32px var(--glow-soft));
+    }
+
+    .central-score {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      pointer-events: none;
+    }
+    .central-score h2 {
+      font-size: 46px;
+      line-height: 1;
+      animation: peacefulPulse 6s infinite alternate var(--ease-float);
+    }
+    @keyframes peacefulPulse {
+      0% { text-shadow: 0 0 15px var(--glow-soft); transform: scale(1); }
+      100% { text-shadow: 0 0 32px var(--glow-ambient); transform: scale(1.02); }
+    }
+
+    /* Directives & Smooth Checkmarks */
+    .habit-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .habit-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 12px 18px;
+      border-radius: 16px;
+      border: 1px solid rgba(74, 81, 86, 0.3);
+      cursor: pointer;
+      transition: all 0.7s var(--ease-serene);
+    }
+    .habit-item:hover {
+      border-color: rgba(128, 138, 146, 0.6);
+      background: rgba(36, 41, 46, 0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    }
+    .habit-item.completed {
+      border-color: rgba(189, 199, 206, 0.35);
+      background: rgba(36, 41, 46, 0.4);
+      box-shadow: inset 0 0 20px rgba(189, 199, 206, 0.04);
+    }
+    .checkbox {
+      width: 20px;
+      height: 20px;
+      border: 1.5px solid var(--chimney);
+      border-radius: 6px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: all 0.7s var(--ease-serene);
+    }
+    .habit-item.completed .checkbox {
+      background: var(--blue-dolphin);
+      border-color: var(--blue-dolphin);
+      box-shadow: 0 0 18px var(--glow-ambient);
+    }
+    .check-icon {
+      width: 12px;
+      height: 12px;
+      fill: var(--black-metal);
+      opacity: 0;
+      transform: scale(0.5) rotate(-10deg);
+      transition: all 0.6s var(--ease-serene);
+    }
+    .habit-item.completed .check-icon {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+    .habit-text {
+      font-size: 13px;
+      color: var(--sea-lion);
+      transition: color 0.6s var(--ease-serene);
+      flex-grow: 1;
+    }
+    .habit-item.completed .habit-text {
+      color: var(--blue-dolphin);
+      text-shadow: 0 0 10px var(--glow-soft);
+    }
+
+    /* --- RIGHT PANEL: MODULES --- */
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .module-card {
+      background: rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(74, 81, 86, 0.4);
+      border-radius: 20px;
+      padding: 24px;
+      transition: all 0.7s var(--ease-serene);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+    }
+    .module-card:hover {
+      border-color: var(--sea-lion);
+      box-shadow: 0 18px 45px rgba(0,0,0,0.6), 0 0 25px var(--glow-soft);
+    }
+
+    /* Controls & Buttons */
+    .action-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .btn-icon {
+      background: var(--cinder);
+      border: 1px solid var(--chimney);
+      color: var(--sea-lion);
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 14px;
+      transition: all 0.4s var(--ease-serene);
+    }
+    .btn-icon:hover {
+      background: var(--chimney);
+      color: var(--blue-dolphin);
+      border-color: var(--sea-lion);
+      transform: scale(1.05);
+    }
+    .btn-reset {
+      background: transparent;
+      border: 1px solid rgba(74, 81, 86, 0.5);
+      color: var(--sea-lion);
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.4s var(--ease-serene);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .btn-reset:hover {
+      border-color: var(--blue-dolphin);
+      color: var(--blue-dolphin);
+      box-shadow: 0 0 12px var(--glow-soft);
+    }
+
+    /* Impact Grid */
+    .impact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .stat-box {
+      background: rgba(36, 41, 46, 0.35);
+      border: 1px solid rgba(74, 81, 86, 0.4);
+      border-radius: 14px;
+      padding: 12px 14px;
+      transition: all 0.5s var(--ease-serene);
+    }
+    .stat-box:hover {
+      border-color: var(--sea-lion);
+      box-shadow: 0 0 18px var(--glow-soft);
+    }
+    .stat-val {
+      font-size: 20px;
+      font-family: var(--font-display);
+      margin-top: 2px;
+    }
+
+    /* Accordion Vault */
+    .accordion-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .chevron {
+      width: 20px;
+      height: 20px;
+      fill: none;
+      stroke: var(--sea-lion);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: transform 0.6s var(--ease-serene), stroke 0.4s;
+    }
+    .module-card.open .chevron {
+      transform: rotate(180deg);
+      stroke: var(--blue-dolphin);
+    }
+    .accordion-body {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.6s var(--ease-serene);
+    }
+    .module-card.open .accordion-body {
+      grid-template-rows: 1fr;
+    }
+    .accordion-content {
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity 0.5s var(--ease-serene) 0.1s;
+    }
+    .module-card.open .accordion-content {
+      opacity: 1;
+      padding-top: 18px;
+    }
+
+    .life-cost-banner {
+      background: rgba(36, 41, 46, 0.5);
+      border: 1px dashed rgba(189, 199, 206, 0.4);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+      margin-bottom: 12px;
+      box-shadow: 0 0 18px var(--glow-soft);
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    input {
+      background: var(--cinder);
+      border: 1px solid var(--chimney);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: var(--blue-dolphin);
+      font-family: var(--font-ui);
+      font-size: 13px;
+      transition: all 0.4s var(--ease-serene);
+    }
+    input::placeholder { color: var(--sea-lion); }
+    input:focus {
+      border-color: var(--blue-dolphin);
+      box-shadow: 0 0 20px var(--glow-soft);
+    }
+
+    button.primary-btn {
+      background: transparent;
+      border: 1px solid var(--blue-dolphin);
+      color: var(--blue-dolphin);
+      font-family: var(--font-display);
+      font-size: 14px;
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.5s var(--ease-serene);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    button.primary-btn:hover {
+      background: var(--blue-dolphin);
+      color: var(--black-metal);
+      box-shadow: 0 0 25px var(--glow-ambient);
+      transform: translateY(-1px);
+    }
+
+    .timer-display {
+      display: none;
+      text-align: center;
+      background: var(--cinder);
+      padding: 22px;
+      border-radius: 14px;
+      border: 1px solid rgba(189, 199, 206, 0.3);
+      box-shadow: inset 0 0 25px rgba(0,0,0,0.8), 0 0 25px var(--glow-soft);
+    }
+    .timer-display h2 {
+      font-family: 'Inter', monospace;
+      font-size: 32px;
+      letter-spacing: 2px;
+      margin: 8px 0;
+    }
+
+    @media (max-width: 820px) {
+      .dashboard { grid-template-columns: 1fr; gap: 40px; padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard">
+    
+    <!-- LEFT PANEL -->
+    <div class="left-panel">
+      
+      <div class="header-group">
+        <h1 class="glow-text" contenteditable="true" id="db-title">Citadel Command</h1>
+        <p class="desc">(Your calm central hub for daily financial discipline)</p>
+      </div>
+
+      <!-- UNCONFINED CALM RING -->
+      <div class="ring-wrapper">
+        <svg class="svg-container" viewBox="0 0 200 200" id="ring-svg">
+          <circle class="ring-track" cx="100" cy="100" r="85"></circle>
+        </svg>
+        <div class="central-score">
+          <h2 class="glow-text" id="score-text">0%</h2>
+          <p class="desc" style="margin-top:0;">(Integrity Score)</p>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="glow-text" style="font-size: 18px; margin-bottom: 2px;" contenteditable="true">Daily Directives</h3>
+        <p class="desc" style="margin-bottom: 14px;">(Clicking actions gently illuminates your progress ring above)</p>
+        
+        <div class="habit-list" id="habit-container"></div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel">
+      
+      <!-- NO-SPEND IMPACT ENGINE -->
+      <div class="module-card">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h3 class="glow-text" style="font-size: 20px;" contenteditable="true">No-Spend Impact Engine</h3>
+            <p class="desc">(Tracks retained wealth & compounds your financial goals)</p>
+          </div>
+          <div class="action-bar">
+            <button class="btn-icon" id="streak-minus">−</button>
+            <button class="btn-icon" id="streak-plus">+</button>
+            <button class="btn-reset" id="reset-streak-btn">Reset</button>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 14px;">
+          <h2 class="glow-text" style="font-size: 36px;" contenteditable="true" id="streak-val">0</h2>
+          <span style="color: var(--sea-lion); font-size: 14px;">Days Retained</span>
+        </div>
+
+        <!-- Customizable Savings Input -->
+        <div style="margin-top: 14px;">
+          <label class="desc" style="display: block; margin-bottom: 4px;">(Target Daily Saved Amount)</label>
+          <input type="number" id="dailySavingsInput" placeholder="15" value="15" style="width: 100%;">
+        </div>
+
+        <div class="impact-grid">
+          <div class="stat-box">
+            <p class="desc" style="margin:0;">(Saved Cash)</p>
+            <div class="stat-val glow-text" id="cash-saved">$0</div>
+          </div>
+          <div class="stat-box">
+            <p class="desc" style="margin:0;">(1-Yr Invested Growth)</p>
+            <div class="stat-val glow-text" id="compound-val" style="font-size: 18px;">$0</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 14px; background: rgba(0,0,0,0.4); padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(74,81,86,0.4); display: flex; justify-content: space-between; align-items: center;">
+          <span class="desc" style="margin:0;">(Current Citadel Rank)</span>
+          <span class="glow-text" id="reward-rank" style="font-size: 12px; font-weight: 600;">Initiate</span>
+        </div>
+      </div>
+
+      <!-- IMPULSE BRAIN VAULT -->
+      <div class="module-card" id="vault-card">
+        <div class="accordion-header" id="vault-header">
+          <div>
+            <h3 class="glow-text" style="font-size: 20px;" contenteditable="true">Impulse Brain Vault</h3>
+            <p class="desc">(A 48-hour calming lock that converts price into hours of life spent)</p>
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        
+        <div class="accordion-body">
+          <div class="accordion-content">
+            
+            <div id="vault-input-view" class="input-group">
+              <input type="text" id="itemName" placeholder="Desired Purchase (e.g. Wireless Headphones)">
+              <div style="display: flex; gap: 8px;">
+                <input type="number" id="itemCost" placeholder="Price ($)" style="flex: 1;">
+                <input type="number" id="hourlyRate" placeholder="Hourly Wage ($)" style="flex: 1;" value="15">
+              </div>
+
+              <div class="life-cost-banner" id="life-banner" style="display:none;">
+                <p class="desc" style="margin:0; color: var(--blue-dolphin);">(Mindful Life Effort)</p>
+                <div style="font-size: 22px; font-family: var(--font-display); color: var(--blue-dolphin);" id="hours-needed">0.0 Hours</div>
+                <p class="desc" style="margin-top: 2px;">(of your life/work required to pay for this item)</p>
+              </div>
+
+              <button class="primary-btn" id="engageLockBtn">Engage Calm Lock</button>
+            </div>
+            
+            <div id="vault-timer-view" class="timer-display">
+              <p class="desc" style="color: var(--blue-dolphin);">(Cooling-off protocol actively enforcing lock)</p>
+              <h2 class="glow-text" id="countdown">00:00:00</h2>
+              <p id="lockedItemDisplay" style="font-size: 13px; color: var(--blue-dolphin); opacity: 0.9; margin-top: 4px;"></p>
+              <button class="btn-reset" id="resetVaultBtn" style="margin-top: 14px;">Override Vault Lock</button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // --- LOCAL STORAGE STATE ---
+    const STORAGE_KEY = 'citadel_wealth_v3';
+    const defaultHabits = [
+      "Bring lunch instead of buying",
+      "Track every expense same-day",
+      "Check budget before big purchase",
+      "Avoid impulse purchases",
+      "No unnecessary delivery orders",
+      "Save something daily"
+    ];
+
+    let state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+      habits: defaultHabits.map(name => ({ name, completed: false })),
+      streak: 0,
+      dailySavingsEst: 15,
+      vaultActive: false,
+      vaultEndTime: null,
+      vaultItem: '',
+      vaultCost: 0
+    };
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    // --- GRADUAL SCORE ANIMATION ---
+    let displayedScore = 0;
+    let scoreAnimId = null;
+
+    function animateScoreTo(targetScore) {
+      const startScore = displayedScore;
+      const startTime = performance.now();
+      const duration = 1400; // Peaceful 1.4 second transition
+
+      if (scoreAnimId) cancelAnimationFrame(scoreAnimId);
+
+      function step(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Gentle cubic ease-out
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+        
+        displayedScore = Math.round(startScore + (targetScore - startScore) * easeProgress);
+        scoreText.innerText = `${displayedScore}%`;
+
+        if (progress < 1) {
+          scoreAnimId = requestAnimationFrame(step);
+        }
+      }
+
+      scoreAnimId = requestAnimationFrame(step);
+    }
+
+    // --- SMOOTH RING & DIRECTIVES ---
+    const svg = document.getElementById('ring-svg');
+    const habitContainer = document.getElementById('habit-container');
+    const scoreText = document.getElementById('score-text');
+
+    const radius = 85;
+    const circumference = 2 * Math.PI * radius;
+    
+    function renderHabitsAndRing() {
+      svg.innerHTML = '<circle class="ring-track" cx="100" cy="100" r="85"></circle>';
+      habitContainer.innerHTML = '';
+      
+      const segments = state.habits.length;
+      const gap = 12; 
+      const dashLength = (circumference / segments) - gap;
+      let completedCount = 0;
+
+      state.habits.forEach((habit, i) => {
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        const offsetAngle = (i * (360 / segments)) - 90;
+        
+        circle.setAttribute("cx", 100);
+        circle.setAttribute("cy", 100);
+        circle.setAttribute("r", radius);
+        circle.setAttribute("stroke-dasharray", `${dashLength} ${circumference - dashLength}`);
+        circle.setAttribute("transform", `rotate(${offsetAngle} 100 100)`);
+        circle.setAttribute("class", `ring-segment ${habit.completed ? 'active' : ''}`);
+        svg.appendChild(circle);
+
+        if (habit.completed) completedCount++;
+
+        const itemDiv = document.createElement('div');
+        itemDiv.className = `habit-item ${habit.completed ? 'completed' : ''}`;
+        
+        itemDiv.innerHTML = `
+          <div class="checkbox">
+            <svg class="check-icon" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="habit-text" contenteditable="true">${habit.name}</div>
+        `;
+
+        itemDiv.addEventListener('click', (e) => {
+          if(e.target.hasAttribute('contenteditable')) return;
+          state.habits[i].completed = !state.habits[i].completed;
+          saveState();
+          renderHabitsAndRing();
+        });
+
+        const textEdit = itemDiv.querySelector('.habit-text');
+        textEdit.addEventListener('blur', (e) => {
+          state.habits[i].name = e.target.innerText;
+          saveState();
+        });
+
+        habitContainer.appendChild(itemDiv);
+      });
+
+      const targetPercentage = Math.round((completedCount / segments) * 100) || 0;
+      animateScoreTo(targetPercentage);
+    }
+
+    // --- NO-SPEND IMPACT ENGINE ---
+    const streakVal = document.getElementById('streak-val');
+    const cashSavedEl = document.getElementById('cash-saved');
+    const compoundValEl = document.getElementById('compound-val');
+    const rewardRankEl = document.getElementById('reward-rank');
+    const dailySavingsInput = document.getElementById('dailySavingsInput');
+    const resetStreakBtn = document.getElementById('reset-streak-btn');
+    
+    function updateImpactEngine() {
+      streakVal.innerText = state.streak;
+      dailySavingsInput.value = state.dailySavingsEst;
+      
+      const savedTotal = state.streak * state.dailySavingsEst;
+      const compoundTotal = savedTotal * 1.08; 
+      
+      cashSavedEl.innerText = `$${savedTotal}`;
+      compoundValEl.innerText = `$${compoundTotal.toFixed(0)}`;
+
+      if (state.streak >= 30) rewardRankEl.innerText = "👑 Sovereign Citadel";
+      else if (state.streak >= 14) rewardRankEl.innerText = "🛡️ Fortress Warden";
+      else if (state.streak >= 7) rewardRankEl.innerText = "⚔️ Discipline Guard";
+      else rewardRankEl.innerText = "✦ Citadel Initiate";
+
+      saveState();
+    }
+
+    document.getElementById('streak-minus').addEventListener('click', () => {
+      if(state.streak > 0) state.streak--;
+      updateImpactEngine();
+    });
+
+    document.getElementById('streak-plus').addEventListener('click', () => {
+      state.streak++;
+      updateImpactEngine();
+    });
+
+    resetStreakBtn.addEventListener('click', () => {
+      state.streak = 0;
+      updateImpactEngine();
+    });
+
+    dailySavingsInput.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value);
+      state.dailySavingsEst = isNaN(val) ? 0 : val;
+      updateImpactEngine();
+    });
+
+    streakVal.addEventListener('blur', (e) => {
+      const val = parseInt(e.target.innerText);
+      if(!isNaN(val)) state.streak = val;
+      updateImpactEngine();
+    });
+
+    // --- LIFE HOURS & IMPULSE VAULT ---
+    const itemCostIn = document.getElementById('itemCost');
+    const hourlyRateIn = document.getElementById('hourlyRate');
+    const lifeBanner = document.getElementById('life-banner');
+    const hoursNeededEl = document.getElementById('hours-needed');
+
+    function calculateLifeCost() {
+      const cost = parseFloat(itemCostIn.value) || 0;
+      const rate = parseFloat(hourlyRateIn.value) || 1;
+      
+      if (cost > 0 && rate > 0) {
+        hoursNeededEl.innerText = `${(cost / rate).toFixed(1)} Hours`;
+        lifeBanner.style.display = 'block';
+      } else {
+        lifeBanner.style.display = 'none';
+      }
+    }
+
+    itemCostIn.addEventListener('input', calculateLifeCost);
+    hourlyRateIn.addEventListener('input', calculateLifeCost);
+
+    const vaultCard = document.getElementById('vault-card');
+    const vaultHeader = document.getElementById('vault-header');
+    const inputView = document.getElementById('vault-input-view');
+    const timerView = document.getElementById('vault-timer-view');
+    const engageBtn = document.getElementById('engageLockBtn');
+    const countdownEl = document.getElementById('countdown');
+    const lockedDisplay = document.getElementById('lockedItemDisplay');
+    const resetVaultBtn = document.getElementById('resetVaultBtn');
+
+    let timerInterval;
+
+    vaultHeader.addEventListener('click', () => {
+      vaultCard.classList.toggle('open');
+    });
+
+    function updateTimerUI() {
+      if (state.vaultActive && state.vaultEndTime) {
+        inputView.style.display = 'none';
+        timerView.style.display = 'block';
+        lockedDisplay.innerText = `Lock Target: ${state.vaultItem} ($${state.vaultCost})`;
+        
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+          const distance = state.vaultEndTime - new Date().getTime();
+
+          if (distance <= 0) {
+            clearInterval(timerInterval);
+            countdownEl.innerText = "CLEARED";
+          } else {
+            const h = Math.floor((distance % (1000 * 60 * 60 * 24 * 30)) / (1000 * 60 * 60)).toString().padStart(2, '0');
+            const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+            const s = Math.floor((distance % (1000 * 60)) / 1000).toString().padStart(2, '0');
+            countdownEl.innerText = `${h}:${m}:${s}`;
+          }
+        }, 1000);
+      } else {
+        inputView.style.display = 'flex';
+        timerView.style.display = 'none';
+        clearInterval(timerInterval);
+      }
+    }
+
+    engageBtn.addEventListener('click', () => {
+      const item = document.getElementById('itemName').value.trim() || "Impulse Item";
+      const cost = parseFloat(itemCostIn.value) || 0;
+      
+      state.vaultActive = true;
+      state.vaultItem = item;
+      state.vaultCost = cost;
+      state.vaultEndTime = new Date().getTime() + (48 * 60 * 60 * 1000);
+      
+      saveState();
+      updateTimerUI();
+    });
+
+    resetVaultBtn.addEventListener('click', () => {
+      state.vaultActive = false;
+      state.vaultEndTime = null;
+      saveState();
+      updateTimerUI();
+    });
+
+    // INITIALIZATION
+    renderHabitsAndRing();
+    updateImpactEngine();
+    updateTimerUI();
+  </script>
+</body>
+</html>
