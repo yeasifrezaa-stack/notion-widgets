@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notion Motivational Widget</title>
+    <style>
+        /* Importing a powerful Roman-style serif and a clean Notion-style sans-serif */
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@400;500;600&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            /* Notion's default dark mode background color */
+            background-color: #191919; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .widget-card {
+            background: linear-gradient(145deg, #202020, #141414);
+            border: 1px solid #2e2e2e;
+            border-radius: 12px;
+            padding: 50px 40px;
+            max-width: 450px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Subtle TV-static/grain overlay to match the gritty image aesthetic */
+        .widget-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://grainy-gradients.vercel.app/noise.svg');
+            opacity: 0.12;
+            pointer-events: none;
+        }
+
+        .quote {
+            font-family: 'Cinzel', serif;
+            font-size: 26px;
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1.5;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            /* The glowing halo effect */
+            text-shadow: 0 0 5px rgba(255,255,255,0.7), 
+                         0 0 15px rgba(255,255,255,0.5), 
+                         0 0 30px rgba(200,200,200,0.3);
+            animation: pulseGlow 4s infinite alternate ease-in-out;
+        }
+
+        .attributes {
+            font-size: 11px;
+            color: #777;
+            font-weight: 600;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            animation: fadeIn 2s ease-in-out;
+        }
+
+        .attributes span {
+            color: #aaa;
+        }
+
+        /* Highly animative glowing and slight scaling effect */
+        @keyframes pulseGlow {
+            0% {
+                text-shadow: 0 0 5px rgba(255,255,255,0.4), 
+                             0 0 10px rgba(255,255,255,0.2), 
+                             0 0 20px rgba(150,150,150,0.1);
+                transform: scale(0.99);
+            }
+            100% {
+                text-shadow: 0 0 8px #fff, 
+                             0 0 25px #fff, 
+                             0 0 45px rgba(255, 255, 255, 0.8), 
+                             0 0 70px rgba(180, 180, 180, 0.6);
+                transform: scale(1.02);
+            }
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="widget-card">
+        <div class="quote">
+            "Greatness is forged in the fires of discipline."
+        </div>
+        <div class="attributes">
+            Discipline <span>•</span> Focus <span>•</span> Freedom <span>•</span> Wealth
+        </div>
+    </div>
+
+</body>
+</html>
