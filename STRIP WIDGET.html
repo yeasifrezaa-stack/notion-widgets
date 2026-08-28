@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Dashboard Strip</title>
+  <style>
+    /* ==========================================================================
+       THEME VARIABLES 
+       ========================================================================== */
+    :root {
+      --bg-body: #191919;
+      --bg-glass: rgba(10, 45, 50, 0.65); 
+      --bg-glass-modal: rgba(15, 25, 25, 0.85);
+      --border-glass: rgba(45, 212, 191, 0.2);
+      --accent: #2dd4bf; 
+      --accent-glow: rgba(45, 212, 191, 0.4);
+      --accent-bright: #5eead4;
+      --text-main: #f3f4f6;
+      --text-muted: #94a3b8;
+      --card-height: 150px;
+      --card-radius: 14px;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg-body); 
+      font-family: var(--font-family);
+      color: var(--text-main);
+      padding: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    /* ==========================================================================
+       MAIN WIDGET STRIP
+       ========================================================================== */
+    .widget-strip {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(210px, 1fr));
+      gap: 14px;
+      width: 100%;
+      min-width: 1100px;
+      max-width: 1350px;
+    }
+
+    .glass-card {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--card-radius);
+      padding: 14px;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.5);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      height: var(--card-height);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .glass-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 6px 24px var(--accent-glow);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .card-title {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .card-icon { 
+      font-size: 0.95rem; 
+      cursor: pointer; 
+      transition: transform 0.2s;
+    }
+    
+    .card-icon:hover {
+      transform: scale(1.2);
+      filter: drop-shadow(0 0 5px var(--accent-bright));
+    }
+
+    /* ==========================================================================
+       MODULE SPECIFIC STYLES
+       ========================================================================== */
+    /* Module 1: Clock */
+    .mod-content { display: flex; align-items: center; gap: 12px; flex-grow: 1; }
+    .clock-display { cursor: pointer; user-select: none; }
+    .digital-time {
+      font-family: "Courier New", Courier, monospace;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--accent-bright);
+      text-shadow: 0 0 8px var(--accent-glow);
+    }
+    .digital-date { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
+    .pomodoro-label { font-size: 0.6rem; color: var(--accent); font-weight: bold; margin-top: 2px; display: none; }
+
+    /* Module 2: Tasks */
+    .task-list { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+    .task-item { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .task-item input { cursor: pointer; accent-color: var(--accent); }
+    .task-item span { font-size: 0.73rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .task-item input:checked + span { text-decoration: line-through; opacity: 0.4; }
+    .progress-bar-bg { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: auto; }
+    .progress-bar-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.4s ease; border-radius: 2px; box-shadow: 0 0 8px var(--accent-glow); }
+
+    /* Module 3: Countdown */
+    .countdown-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; text-align: center; width: 100%; }
+    .timer-block { background: rgba(0, 0, 0, 0.35); padding: 4px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.04); }
+    .timer-num { font-family: "Courier New", Courier, monospace; font-size: 1rem; font-weight: 700; color: var(--accent-bright); }
+    .timer-lbl { font-size: 0.55rem; color: var(--text-muted); text-transform: uppercase; }
+    .session-logger { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.05); }
+    .session-logger span { font-size: 0.68rem; color: var(--text-muted); }
+    .session-btn { background: var(--accent-glow); border: 1px solid var(--accent); color: var(--text-main); width: 20px; height: 20px; border-radius: 4px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+
+    /* Module 4: Tachymeter Arc */
+    .tachymeter-container { display: flex; align-items: center; justify-content: space-between; width: 100%; cursor: pointer; }
+    .tach-arc-svg { width: 72px; height: 72px; transform: rotate(-90deg); }
+    .tach-bg { fill: none; stroke: rgba(255, 255, 255, 0.1); stroke-width: 6; }
+    .tach-progress { fill: none; stroke: var(--accent); stroke-width: 6; stroke-dasharray: 188; stroke-dashoffset: 188; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; filter: drop-shadow(0px 0px 4px var(--accent)); }
+    .tach-meta { text-align: right; user-select: none; }
+    .tach-val { font-size: 1.15rem; font-weight: 800; color: var(--text-main); }
+    .tach-sub { font-size: 0.65rem; color: var(--text-muted); }
+
+    /* Module 5: Plaque Scratchpad */
+    .scratchpad-area {
+      width: 100%; height: 100%; background: transparent; border: none; color: var(--text-main);
+      font-size: 0.72rem; font-family: inherit; resize: none; outline: none; padding: 2px; line-height: 1.35;
+    }
+    .scratchpad-area::placeholder { color: rgba(255,255,255,0.25); }
+
+    .spin { animation: spin 5s linear infinite; transform-origin: center; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    /* ==========================================================================
+       MODAL (POP-OUT) STYLES
+       ========================================================================== */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      backdrop-filter: blur(5px);
+    }
+    
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal-box {
+      background: var(--bg-glass-modal);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 20px;
+      width: 320px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+    }
+    
+    .modal-overlay.active .modal-box {
+      transform: translateY(0);
+    }
+
+    .modal-box h2 {
+      font-size: 0.9rem;
+      color: var(--accent-bright);
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 8px;
+    }
+
+    .input-group {
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .input-group label {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .input-group input {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.8rem;
+      outline: none;
+    }
+    
+    .input-group input:focus { border-color: var(--accent); }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .modal-btn {
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: bold;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-cancel { background: rgba(255,255,255,0.1); color: white; }
+    .btn-cancel:hover { background: rgba(255,255,255,0.2); }
+    .btn-save { background: var(--accent); color: #000; }
+    .btn-save:hover { background: var(--accent-bright); box-shadow: 0 0 10px var(--accent-glow); }
+  </style>
+</head>
+<body>
+
+  <div class="widget-strip" id="widgetStrip">
+    
+    <article class="glass-card" id="mod-1">
+      <div class="card-header">
+        <span class="card-title" id="m1-title"></span>
+        <span class="card-icon" title="Settings" onclick="openSettings('mod1')">🕰️</span>
+      </div>
+      <div class="mod-content clock-display" onclick="togglePomodoro()" title="Click to toggle Pomodoro">
+        <svg width="48" height="48" viewBox="0 0 50 50">
+          <circle cx="25" cy="25" r="22" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+          <g class="spin"><circle cx="25" cy="25" r="14" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="4 4"/></g>
+        </svg>
+        <div style="display:flex; flex-direction:column;">
+          <span class="digital-time" id="clock-time">00:00</span>
+          <span class="digital-date" id="clock-date">...</span>
+          <span class="pomodoro-label" id="pomo-label">FOCUS</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="glass-card" id="mod-2">
+      <div class="card-header">
+        <span class="card-title" id="m2-title"></span>
+        <span class="card-icon" title="Settings" onclick="openSettings('mod2')">🎨</span>
+      </div>
+      <div class="task-list" id="task-container"></div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="m2-progress"></div></div>
+    </article>
+
+    <article class="glass-card" id="mod-3">
+      <div class="card-header">
+        <span class="card-title" id="m3-title"></span>
+        <span class="card-icon" title="Settings" onclick="openSettings('mod3')">🎓</span>
+      </div>
+      <div class="countdown-grid">
+        <div class="timer-block"><div class="timer-num" id="cd-days">00</div><div class="timer-lbl" id="m3-lbl-d"></div></div>
+        <div class="timer-block"><div class="timer-num" id="cd-hours">00</div><div class="timer-lbl" id="m3-lbl-h"></div></div>
+        <div class="timer-block"><div class="timer-num" id="cd-mins">00</div><div class="timer-lbl" id="m3-lbl-m"></div></div>
+      </div>
+      <div class="session-logger">
+        <span id="m3-logger-lbl">Sessions: <b id="m3-session-val" style="color:var(--accent-bright)">0</b></span>
+        <button class="session-btn" onclick="addSession()">+</button>
+      </div>
+    </article>
+
+    <article class="glass-card" id="mod-4">
+      <div class="card-header">
+        <span class="card-title" id="m4-title"></span>
+        <div>
+            <span class="card-icon" style="margin-right: 5px;" title="Reset Progress" onclick="resetCounter()">🔄</span>
+            <span class="card-icon" title="Settings" onclick="openSettings('mod4')">📜</span>
+        </div>
+      </div>
+      <div class="tachymeter-container" onclick="incrementCounter()">
+        <svg class="tach-arc-svg" viewBox="0 0 70 70">
+          <circle class="tach-bg" cx="35" cy="35" r="30"/>
+          <circle class="tach-progress" id="tach-circle" cx="35" cy="35" r="30"/>
+        </svg>
+        <div class="tach-meta">
+          <div class="tach-val" id="m4-ratio">0/0</div>
+          <div class="tach-sub" id="m4-lbl"></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="glass-card" id="mod-5">
+      <div class="card-header">
+        <span class="card-title" id="m5-title" style="color: var(--accent-bright);"></span>
+        <span class="card-icon" title="Settings" onclick="openSettings('mod5')">🎖️</span>
+      </div>
+      <textarea class="scratchpad-area" id="m5-scratchpad" placeholder="Type here... (Auto-saves)"></textarea>
+    </article>
+  </div>
+
+  <div id="settings-modal" class="modal-overlay">
+    <div class="modal-box">
+      <h2 id="modal-header">Edit Settings</h2>
+      <div id="modal-form-body">
+        </div>
+      <div class="modal-actions">
+        <button class="modal-btn btn-cancel" onclick="closeSettings()">Cancel</button>
+        <button class="modal-btn btn-save" onclick="saveSettings()">Apply & Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- 1. DEFAULT CONFIGURATION ---
+    const defaultData = {
+      mod1: { title: "SYSTEM CLOCK", pomoMins: 25 },
+      mod2: { title: "PORTFOLIO HUB", task1: "3D Asset Modeling", task2: "Export & Render Scene", task3: "Upload Portfolio Item" },
+      mod3: { title: "A-LEVELS PREP", date: "2027-05-01T09:00", lblD: "Days", lblH: "Hours", lblM: "Mins" },
+      mod4: { title: "FITNESS GOAL", goal: 200, step: 10, subLbl: "Daily Crunches" },
+      mod5: { title: "QUICK NOTES" }
+    };
+
+    // Load from Local Storage or use defaults
+    let appData = JSON.parse(localStorage.getItem('userSettings')) || defaultData;
+    let currentEditModule = null; // Tracks which module is currently open in settings
+
+    // --- 2. INITIALIZATION ---
+    document.addEventListener("DOMContentLoaded", () => {
+      renderAllModules();
+      
+      // Setup Scratchpad
+      const pad = document.getElementById("m5-scratchpad");
+      pad.value = localStorage.getItem('m5_scratch') || "";
+      pad.addEventListener('input', () => localStorage.setItem('m5_scratch', pad.value));
+    });
+
+    function renderAllModules() {
+      initMod1(); initMod2(); initMod3(); initMod4(); initMod5();
+    }
+
+    // --- 3. MODULE RENDER LOGIC ---
+    let pomoActive = false, pomoTimeLeft = 0;
+    
+    function initMod1() {
+      document.getElementById("m1-title").innerText = appData.mod1.title;
+      if(pomoTimeLeft === 0 && !pomoActive) pomoTimeLeft = appData.mod1.pomoMins * 60;
+    }
+
+    function initMod2() {
+      document.getElementById("m2-title").innerText = appData.mod2.title;
+      const container = document.getElementById("task-container");
+      container.innerHTML = "";
+      const tasks = [appData.mod2.task1, appData.mod2.task2, appData.mod2.task3];
+      let completed = 0;
+
+      tasks.forEach((lbl, idx) => {
+        const id = `t${idx+1}`;
+        const isChecked = localStorage.getItem(`m2_${id}`) === "true";
+        if (isChecked) completed++;
+        container.innerHTML += `<label class="task-item"><input type="checkbox" id="${id}" ${isChecked ? "checked" : ""} onchange="saveTask2('${id}')"><span>${lbl}</span></label>`;
+      });
+      document.getElementById("m2-progress").style.width = `${(completed / 3) * 100}%`;
+    }
+
+    function initMod3() {
+      document.getElementById("m3-title").innerText = appData.mod3.title;
+      document.getElementById("m3-lbl-d").innerText = appData.mod3.lblD;
+      document.getElementById("m3-lbl-h").innerText = appData.mod3.lblH;
+      document.getElementById("m3-lbl-m").innerText = appData.mod3.lblM;
+      document.getElementById("m3-session-val").innerText = localStorage.getItem('m3_sessions') || 0;
+    }
+
+    function initMod4() {
+      document.getElementById("m4-title").innerText = appData.mod4.title;
+      document.getElementById("m4-lbl").innerText = appData.mod4.subLbl;
+      renderGoalProgress();
+    }
+
+    function initMod5() {
+      document.getElementById("m5-title").innerText = appData.mod5.title;
+    }
+
+    // --- 4. INTERACTIVE MODULE FUNCTIONS ---
+    
+    // Module 1 Clock Loop
+    setInterval(() => {
+      if (!pomoActive) {
+        const now = new Date();
+        document.getElementById("clock-time").innerText = now.toTimeString().split(' ')[0];
+        document.getElementById("clock-date").innerText = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
+      } else {
+        if (pomoTimeLeft > 0) pomoTimeLeft--; else pomoActive = false;
+        const m = String(Math.floor(pomoTimeLeft / 60)).padStart(2, '0');
+        const s = String(pomoTimeLeft % 60).padStart(2, '0');
+        document.getElementById("clock-time").innerText = `${m}:${s}`;
+      }
+    }, 1000);
+
+    function togglePomodoro() {
+      pomoActive = !pomoActive;
+      document.getElementById("clock-date").style.display = pomoActive ? "none" : "block";
+      document.getElementById("pomo-label").style.display = pomoActive ? "block" : "none";
+      if(pomoActive && pomoTimeLeft === 0) pomoTimeLeft = appData.mod1.pomoMins * 60;
+    }
+
+    // Module 2 Tasks
+    function saveTask2(id) {
+      localStorage.setItem(`m2_${id}`, document.getElementById(id).checked);
+      initMod2();
+    }
+
+    // Module 3 Countdown
+    setInterval(() => {
+      const target = new Date(appData.mod3.date).getTime();
+      const diff = target - new Date().getTime();
+      if (diff > 0) {
+        document.getElementById("cd-days").innerText = String(Math.floor(diff / (1000 * 60 * 60 * 24))).padStart(2, '0');
+        document.getElementById("cd-hours").innerText = String(Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+        document.getElementById("cd-mins").innerText = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+      }
+    }, 1000);
+
+    function addSession() {
+      let current = parseInt(localStorage.getItem('m3_sessions') || 0) + 1;
+      localStorage.setItem('m3_sessions', current);
+      document.getElementById("m3-session-val").innerText = current;
+    }
+
+    // Module 4 Goal Counter
+    function incrementCounter() {
+      let val = parseInt(localStorage.getItem('m4_val') || 0);
+      let goal = parseInt(appData.mod4.goal);
+      let step = parseInt(appData.mod4.step);
+      if (val < goal) {
+        val += step;
+        if(val > goal) val = goal;
+        localStorage.setItem('m4_val', val);
+        renderGoalProgress();
+      }
+    }
+    
+    function resetCounter() {
+      localStorage.setItem('m4_val', 0);
+      renderGoalProgress();
+    }
+
+    function renderGoalProgress() {
+      let val = parseInt(localStorage.getItem('m4_val') || 0);
+      let goal = parseInt(appData.mod4.goal);
+      document.getElementById("m4-ratio").innerText = `${val}/${goal}`;
+      const pct = goal === 0 ? 0 : (val / goal) * 100;
+      document.getElementById("tach-circle").style.strokeDashoffset = 188 - (188 * pct) / 100;
+    }
+
+    // --- 5. SETTINGS MODAL ENGINE ---
+    const modalOverlay = document.getElementById("settings-modal");
+    const modalBody = document.getElementById("modal-form-body");
+
+    function openSettings(modId) {
+      currentEditModule = modId;
+      document.getElementById("modal-header").innerText = `Edit ${modId.toUpperCase()}`;
+      modalBody.innerHTML = ""; // Clear old inputs
+
+      let html = "";
+      if (modId === 'mod1') {
+        html += createInput("Title", "title", appData.mod1.title);
+        html += createInput("Pomodoro Mins", "pomoMins", appData.mod1.pomoMins, "number");
+      } 
+      else if (modId === 'mod2') {
+        html += createInput("Title", "title", appData.mod2.title);
+        html += createInput("Task 1", "task1", appData.mod2.task1);
+        html += createInput("Task 2", "task2", appData.mod2.task2);
+        html += createInput("Task 3", "task3", appData.mod2.task3);
+      } 
+      else if (modId === 'mod3') {
+        html += createInput("Title", "title", appData.mod3.title);
+        html += createInput("Target Date/Time", "date", appData.mod3.date, "datetime-local");
+        html += createInput("Label (Days)", "lblD", appData.mod3.lblD);
+        html += createInput("Label (Hours)", "lblH", appData.mod3.lblH);
+        html += createInput("Label (Mins)", "lblM", appData.mod3.lblM);
+      } 
+      else if (modId === 'mod4') {
+        html += createInput("Title", "title", appData.mod4.title);
+        html += createInput("Target Goal", "goal", appData.mod4.goal, "number");
+        html += createInput("Step Amount", "step", appData.mod4.step, "number");
+        html += createInput("Metric Sub-Label", "subLbl", appData.mod4.subLbl);
+      }
+      else if (modId === 'mod5') {
+        html += createInput("Title", "title", appData.mod5.title);
+      }
+
+      modalBody.innerHTML = html;
+      modalOverlay.classList.add("active");
+    }
+
+    function createInput(label, id, value, type="text") {
+      return `
+        <div class="input-group">
+          <label>${label}</label>
+          <input type="${type}" id="edit_${id}" value="${value}">
+        </div>
+      `;
+    }
+
+    function closeSettings() {
+      modalOverlay.classList.remove("active");
+      currentEditModule = null;
+    }
+
+    function saveSettings() {
+      if (!currentEditModule) return;
+
+      // Extract values dynamically based on module
+      if (currentEditModule === 'mod1') {
+        appData.mod1.title = document.getElementById("edit_title").value;
+        appData.mod1.pomoMins = document.getElementById("edit_pomoMins").value;
+        pomoTimeLeft = appData.mod1.pomoMins * 60; // reset timer
+      } 
+      else if (currentEditModule === 'mod2') {
+        appData.mod2.title = document.getElementById("edit_title").value;
+        appData.mod2.task1 = document.getElementById("edit_task1").value;
+        appData.mod2.task2 = document.getElementById("edit_task2").value;
+        appData.mod2.task3 = document.getElementById("edit_task3").value;
+      }
+      else if (currentEditModule === 'mod3') {
+        appData.mod3.title = document.getElementById("edit_title").value;
+        appData.mod3.date = document.getElementById("edit_date").value;
+        appData.mod3.lblD = document.getElementById("edit_lblD").value;
+        appData.mod3.lblH = document.getElementById("edit_lblH").value;
+        appData.mod3.lblM = document.getElementById("edit_lblM").value;
+      }
+      else if (currentEditModule === 'mod4') {
+        appData.mod4.title = document.getElementById("edit_title").value;
+        appData.mod4.goal = document.getElementById("edit_goal").value;
+        appData.mod4.step = document.getElementById("edit_step").value;
+        appData.mod4.subLbl = document.getElementById("edit_subLbl").value;
+      }
+      else if (currentEditModule === 'mod5') {
+        appData.mod5.title = document.getElementById("edit_title").value;
+      }
+
+      // Save to local storage and re-render
+      localStorage.setItem('userSettings', JSON.stringify(appData));
+      renderAllModules();
+      closeSettings();
+    }
+  </script>
+</body>
+</html>
