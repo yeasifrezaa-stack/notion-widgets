@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sacrifice Codex — Platinum Monochrome Edition</title>
+    <style>
+        /* ⚡ SHARP & CURVY TYPOGRAPHY + MONOCHROME PALETTE IN EXACT ORDER */
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&display=swap');
+
+        :root {
+            /* Palette ordered strictly as requested */
+            --color-1-lead: #202020;
+            --color-2-off-black: #313131;
+            --color-3-pig-iron: #494949;
+            --color-4-covered-platinum: #B9B9B9;
+            --color-5-dugong: #707070;
+            --color-6-tin: #909090;
+
+            /* Metallic Platinum & Monochromatic Glow Effects */
+            --glow-platinum: 0 0 12px rgba(185, 185, 185, 0.7), 0 0 24px rgba(185, 185, 185, 0.3);
+            --glow-tin: 0 0 8px rgba(144, 144, 144, 0.6);
+            --box-shadow-depth: 0 25px 60px rgba(0, 0, 0, 0.95), inset 0 0 35px rgba(0, 0, 0, 0.8);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            font-family: 'Cormorant Garamond', 'Cinzel Decorative', serif;
+        }
+
+        body {
+            background-color: var(--color-1-lead);
+            color: var(--color-4-covered-platinum);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 50% 30%, var(--color-2-off-black) 0%, var(--color-1-lead) 75%),
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 30px 30px;
+        }
+
+        /* 🏛️ 3D DIARY CONTAINER */
+        .diary-viewport {
+            perspective: 2000px;
+            width: 100%;
+            max-width: 1080px;
+            height: 680px;
+            position: relative;
+        }
+
+        .diary-book {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* 🖤 EMBOSSED MONOCHROME COVER */
+        .diary-cover {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--color-1-lead) 0%, var(--color-2-off-black) 60%, #151515 100%);
+            border-radius: 12px 24px 24px 12px;
+            border: 2px solid var(--color-4-covered-platinum);
+            box-shadow: var(--box-shadow-depth), 0 0 25px rgba(185, 185, 185, 0.25);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 10;
+            transform-origin: left center;
+            transition: transform 1.1s cubic-bezier(0.645, 0.045, 0.355, 1);
+            backface-visibility: hidden;
+        }
+
+        .cover-border {
+            width: 90%;
+            height: 88%;
+            border: 1px solid var(--color-3-pig-iron);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 40px;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8), 0 0 10px rgba(73, 73, 73, 0.5);
+            background: radial-gradient(circle at center, rgba(185, 185, 185, 0.03) 0%, transparent 70%);
+        }
+
+        .cover-title {
+            font-family: 'Cinzel Decorative', serif !important;
+            font-size: 2.8rem;
+            color: var(--color-4-covered-platinum);
+            text-shadow: var(--glow-platinum);
+            letter-spacing: 4px;
+            text-align: center;
+            font-weight: 900;
+        }
+
+        .cover-sub {
+            font-size: 1.1rem;
+            color: var(--color-6-tin);
+            text-shadow: var(--glow-tin);
+            letter-spacing: 3px;
+            font-style: italic;
+        }
+
+        /* 📖 OPEN DIARY WORKSPACE */
+        .diary-pages-container {
+            width: 100%;
+            height: 100%;
+            background: var(--color-2-off-black);
+            border-radius: 12px;
+            border: 2px solid var(--color-3-pig-iron);
+            box-shadow: var(--box-shadow-depth), 0 0 20px rgba(185, 185, 185, 0.2);
+            display: flex;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* RIBBON HEADER NAV */
+        .diary-header-nav {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: linear-gradient(180deg, var(--color-1-lead) 0%, rgba(49, 49, 49, 0.9) 100%);
+            border-bottom: 1px solid var(--color-3-pig-iron);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 5;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.7);
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 12px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--color-5-dugong);
+            font-size: 1.05rem;
+            padding: 6px 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .tab-btn.active, .tab-btn:hover {
+            color: var(--color-4-covered-platinum);
+            text-shadow: var(--glow-platinum);
+            border-bottom: 2px solid var(--color-4-covered-platinum);
+        }
+
+        .action-btn {
+            background: var(--color-2-off-black);
+            border: 1px solid var(--color-3-pig-iron);
+            color: var(--color-4-covered-platinum);
+            font-size: 0.85rem;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+            text-shadow: 0 0 5px rgba(185, 185, 185, 0.5);
+            font-weight: 700;
+        }
+
+        .action-btn:hover {
+            border-color: var(--color-4-covered-platinum);
+            background: var(--color-3-pig-iron);
+            color: #ffffff;
+            box-shadow: var(--glow-platinum);
+        }
+
+        /* SPREAD PAGES */
+        .page-spread {
+            width: 100%;
+            height: 100%;
+            padding-top: 55px;
+            display: none;
+            grid-template-columns: 1fr 1fr;
+            position: relative;
+        }
+
+        .page-spread.active {
+            display: grid;
+            animation: fadeInPage 0.5s ease forwards;
+        }
+
+        .page-left, .page-right {
+            padding: 24px 32px;
+            height: 100%;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .page-left {
+            border-right: 1px solid var(--color-3-pig-iron);
+            background: radial-gradient(circle at top left, rgba(73, 73, 73, 0.15) 0%, transparent 70%);
+        }
+
+        .page-right {
+            background: radial-gradient(circle at top right, rgba(144, 144, 144, 0.08) 0%, transparent 70%);
+        }
+
+        /* HEADER DETAILS */
+        .diary-entry-header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--color-3-pig-iron);
+            padding-bottom: 8px;
+            margin-bottom: 16px;
+            font-size: 0.95rem;
+            color: var(--color-6-tin);
+            letter-spacing: 1px;
+        }
+
+        .editable-title {
+            font-family: 'Cinzel Decorative', serif !important;
+            font-size: 1.25rem;
+            color: var(--color-4-covered-platinum);
+            text-shadow: var(--glow-platinum);
+            margin-bottom: 12px;
+            outline: none;
+            border-bottom: 1px dashed transparent;
+            transition: all 0.3s ease;
+        }
+
+        .editable-title[contenteditable="true"] {
+            border-bottom-color: var(--color-4-covered-platinum);
+            background: rgba(185, 185, 185, 0.08);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* GLOWING INPUTS & TEXT AREAS */
+        .diary-textbox {
+            width: 100%;
+            background: var(--color-1-lead);
+            border: 1px solid var(--color-3-pig-iron);
+            border-radius: 8px;
+            padding: 14px;
+            color: var(--color-4-covered-platinum);
+            font-size: 1.05rem;
+            line-height: 1.6;
+            text-shadow: 0 0 5px rgba(185, 185, 185, 0.4);
+            outline: none;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .diary-textbox:focus {
+            border-color: var(--color-4-covered-platinum);
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.9), var(--glow-platinum);
+        }
+
+        /* STOPWATCH MODULE */
+        .timer-display {
+            font-family: 'Cinzel Decorative', serif !important;
+            font-size: 2.8rem;
+            color: var(--color-4-covered-platinum);
+            text-shadow: var(--glow-platinum);
+            text-align: center;
+            margin: 12px 0;
+            letter-spacing: 4px;
+        }
+
+        .timer-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* ARTIFACT ROWS */
+        .artifact-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            background: var(--color-1-lead);
+            padding: 10px 14px;
+            border-radius: 6px;
+            border: 1px solid var(--color-3-pig-iron);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .artifact-row input {
+            background: transparent;
+            border: none;
+            color: var(--color-4-covered-platinum);
+            font-size: 1.05rem;
+            text-shadow: var(--glow-tin);
+            width: 100%;
+            outline: none;
+        }
+
+        /* DIAGNOSTIC BUTTONS */
+        .diag-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .diag-btn {
+            background: var(--color-1-lead);
+            border: 1px solid var(--color-3-pig-iron);
+            color: var(--color-6-tin);
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .diag-btn:hover {
+            box-shadow: var(--glow-platinum);
+            border-color: var(--color-4-covered-platinum);
+            color: var(--color-4-covered-platinum);
+            background: var(--color-3-pig-iron);
+        }
+
+        /* EDIT MODE ANIMATION */
+        .edit-active {
+            animation: editGlow 1.5s infinite alternate;
+        }
+
+        @keyframes editGlow {
+            from { box-shadow: 0 0 5px var(--color-5-dugong); }
+            to { box-shadow: 0 0 20px var(--color-4-covered-platinum); }
+        }
+
+        @keyframes fadeInPage {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* BOOK OPEN STATE */
+        .diary-viewport.open .diary-cover {
+            transform: rotateY(-140deg);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="diary-viewport" id="diaryViewport">
+        
+        <!-- 🖤 MONOCHROME PLATINUM COVER -->
+        <div class="diary-cover" onclick="openDiary()">
+            <div class="cover-border">
+                <div class="cover-sub">SYNAPTIC CODEX</div>
+                <div style="font-size: 3rem; color: var(--color-4-covered-platinum); text-shadow: var(--glow-platinum);">✦</div>
+                <div>
+                    <div class="cover-title">Sacrifice Diary</div>
+                    <div class="cover-sub" style="text-align: center; margin-top: 10px;">[ CLICK TO UNLOCK ]</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 📖 OPEN DIARY WORKSPACE -->
+        <div class="diary-pages-container">
+            
+            <!-- HEADER NAV & ACCESSIBLE CUSTOMIZATION -->
+            <div class="diary-header-nav">
+                <div class="nav-tabs">
+                    <button class="tab-btn active" onclick="switchSpread(0)">I. Daily Focus</button>
+                    <button class="tab-btn" onclick="switchSpread(1)">II. Artifact Ledger</button>
+                    <button class="tab-btn" onclick="switchSpread(2)">III. Friction Reflection</button>
+                </div>
+                <div>
+                    <button class="action-btn" onclick="toggleEditMode()" style="margin-right: 8px;">⚙️ Customize Titles</button>
+                    <button class="action-btn" onclick="closeDiary()">Close Codex</button>
+                </div>
+            </div>
+
+            <!-- SPREAD 1: DAILY FOCUS & STOPWATCH -->
+            <div class="page-spread active" id="spread0">
+                <div class="page-left">
+                    <div class="diary-entry-header">
+                        <span id="entryDate">DATE: ---</span>
+                        <span>STATE: DEEP WORK</span>
+                    </div>
+                    <div class="editable-title" contenteditable="false" id="p1_t1">Core Focus Intention</div>
+                    <textarea class="diary-textbox" rows="3" placeholder="Define today's core deliverable (e.g., 3D Asset Render, Math Olympiad Set, Speech Rehearsal)..."></textarea>
+
+                    <div class="editable-title" contenteditable="false" id="p1_t2">Hourly Execution Blocks</div>
+                    <textarea class="diary-textbox" rows="4" placeholder="4:00 PM - 5:30 PM: Deep Analytical Work&#10;5:30 PM - 6:30 PM: 3D Render & Design&#10;6:30 PM - 7:30 PM: Rooftop Conditioning Session"></textarea>
+                </div>
+
+                <div class="page-right">
+                    <div class="diary-entry-header">
+                        <span>STOPWATCH</span>
+                        <span>PRECISION DEEP WORK</span>
+                    </div>
+                    <div class="editable-title" style="text-align: center;" contenteditable="false" id="p1_t3">Live Pomodoro Session</div>
+                    <div class="timer-display" id="timerDisplay">25:00</div>
+                    <div class="timer-controls">
+                        <button class="action-btn" onclick="startTimer()">Start Block</button>
+                        <button class="action-btn" onclick="pauseTimer()">Pause</button>
+                        <button class="action-btn" onclick="resetTimer()">Reset</button>
+                    </div>
+
+                    <div class="editable-title" contenteditable="false" id="p1_t4">Anchor Notes & Speech Pacing</div>
+                    <textarea class="diary-textbox" rows="4" placeholder="Log active focus anchors, key formulas, or speech pacing points..."></textarea>
+                </div>
+            </div>
+
+            <!-- SPREAD 2: ARTIFACT PROOF LEDGER -->
+            <div class="page-spread" id="spread1">
+                <div class="page-left">
+                    <div class="diary-entry-header">
+                        <span>QUANTIFIED METRICS</span>
+                        <span>PROOF OF EXECUTION</span>
+                    </div>
+                    <div class="editable-title" contenteditable="false" id="p2_t1">Tangible Output Metrics</div>
+                    <div id="artifactContainer">
+                        <div class="artifact-row">
+                            <input type="text" value="🎨 Blender 3D Mesh Render Finalized">
+                        </div>
+                        <div class="artifact-row">
+                            <input type="text" value="🗣️ Speech Rehearsal Session Completed">
+                        </div>
+                        <div class="artifact-row">
+                            <input type="text" value="📜 Science Olympiad Problem Set Solved">
+                        </div>
+                    </div>
+                    <button class="action-btn" style="margin-top: 10px; width: 100%;" onclick="addArtifactRow()">+ Add Artifact Node</button>
+                </div>
+
+                <div class="page-right">
+                    <div class="diary-entry-header">
+                        <span>MASTERY TRACKER</span>
+                        <span>PORTFOLIO BUILDER</span>
+                    </div>
+                    <div class="editable-title" contenteditable="false" id="p2_t2">Weekly Credential Accumulator</div>
+                    <textarea class="diary-textbox" rows="6" placeholder="Document verified output milestones to ready for Notion export or CV update..."></textarea>
+                    <button class="action-btn" style="width: 100%; background: var(--color-4-covered-platinum); color: var(--color-1-lead); font-weight: bold;" onclick="saveDiaryData()">💾 Save Diary Progress</button>
+                </div>
+            </div>
+
+            <!-- SPREAD 3: FRICTION DIAGNOSTIC & REFLECTION -->
+            <div class="page-spread" id="spread2">
+                <div class="page-left">
+                    <div class="diary-entry-header">
+                        <span>DIAGNOSTIC MATRIX</span>
+                        <span>BOTTLENECK ISOLATION</span>
+                    </div>
+                    <div class="editable-title" contenteditable="false" id="p3_t1">Friction Protocol Trigger</div>
+                    <div class="diag-grid">
+                        <button class="diag-btn" onclick="logFriction('Overload')">Cognitive Overload</button>
+                        <button class="diag-btn" onclick="logFriction('Drift')">Focus Drift</button>
+                        <button class="diag-btn" onclick="logFriction('Fatigue')">Physical Fatigue</button>
+                        <button class="diag-btn" onclick="logFriction('Asset Glitch')">Software Glitch</button>
+                    </div>
+                    <div class="editable-title" contenteditable="false" id="p3_t2">Immediate Corrective Step</div>
+                    <div class="diary-textbox" id="frictionResult" style="min-height: 90px;">Select a bottleneck above to generate instant corrective action protocols.</div>
+                </div>
+
+                <div class="page-right">
+                    <div class="diary-entry-header">
+                        <span>EVENING JOURNAL</span>
+                        <span>RETROSPECTIVE</span>
+                    </div>
+                    <div class="editable-title" contenteditable="false" id="p3_t3">Daily Reflection & Synthesis</div>
+                    <textarea class="diary-textbox" rows="7" placeholder="What core output was mastered today? What will be streamlined tomorrow? Final thought..."></textarea>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        /* ⚡ MONOCHROME DIARY LOGIC & CUSTOMIZATION */
+        let timerInterval = null;
+        let timeLeft = 1500;
+        let isEditing = false;
+
+        function openDiary() {
+            document.getElementById('diaryViewport').classList.add('open');
+        }
+
+        function closeDiary() {
+            document.getElementById('diaryViewport').classList.remove('open');
+        }
+
+        function switchSpread(index) {
+            const tabs = document.querySelectorAll('.tab-btn');
+            const spreads = document.querySelectorAll('.page-spread');
+            
+            tabs.forEach((tab, i) => tab.classList.toggle('active', i === index));
+            spreads.forEach((spread, i) => spread.classList.toggle('active', i === index));
+        }
+
+        /* ⚙️ ACCESSIBLE TITLE CUSTOMIZATION */
+        function toggleEditMode() {
+            isEditing = !isEditing;
+            const titles = document.querySelectorAll('.editable-title');
+            
+            titles.forEach(t => {
+                t.contentEditable = isEditing;
+                if(isEditing) t.classList.add('edit-active');
+                else t.classList.remove('edit-active');
+            });
+
+            const btn = event.target;
+            btn.textContent = isEditing ? '✅ Save Page Titles' : '⚙️ Customize Titles';
+            if(!isEditing) saveDiaryData();
+        }
+
+        /* ⏱️ POMODORO STOPWATCH */
+        function updateTimerDisplay() {
+            const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+            const secs = (timeLeft % 60).toString().padStart(2, '0');
+            document.getElementById('timerDisplay').textContent = `${mins}:${secs}`;
+        }
+
+        function startTimer() {
+            if (timerInterval) return;
+            timerInterval = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    updateTimerDisplay();
+                } else {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    alert('Focus block completed!');
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            timeLeft = 1500;
+            updateTimerDisplay();
+        }
+
+        /* 🎨 ARTIFACT LEDGER */
+        function addArtifactRow() {
+            const container = document.getElementById('artifactContainer');
+            const row = document.createElement('div');
+            row.className = 'artifact-row';
+            row.innerHTML = `<input type="text" placeholder="⚡ New Output Metric...">`;
+            container.appendChild(row);
+        }
+
+        /* 🛠️ FRICTION PROTOCOLS */
+        function logFriction(type) {
+            const box = document.getElementById('frictionResult');
+            const fixes = {
+                'Overload': '⚡ PROTOCOL: Take 10 minutes on the rooftop. Deconstruct complex problems into 3 micro-nodes.',
+                'Drift': '⚡ PROTOCOL: Switch instantly to Spatial Render or 3D Blender asset work for 20 mins.',
+                'Fatigue': '⚡ PROTOCOL: Complete crunch benchmark, hydrate, and recalibrate posture.',
+                'Asset Glitch': '⚡ PROTOCOL: Save backup iteration, pivot to vocal speech preparation while render completes.'
+            };
+            box.textContent = fixes[type] || 'Protocol initialized...';
+        }
+
+        /* 💾 LOCAL STORAGE PERSISTENCE */
+        function saveDiaryData() {
+            const titles = {};
+            document.querySelectorAll('.editable-title').forEach(t => {
+                titles[t.id] = t.textContent;
+            });
+            localStorage.setItem('sacrificeMonoDiaryTitles', JSON.stringify(titles));
+        }
+
+        function loadDiaryData() {
+            const saved = localStorage.getItem('sacrificeMonoDiaryTitles');
+            if (saved) {
+                const titles = JSON.parse(saved);
+                Object.keys(titles).forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = titles[id];
+                });
+            }
+            const now = new Date();
+            document.getElementById('entryDate').textContent = 'DATE: ' + now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase();
+        }
+
+        loadDiaryData();
+    </script>
+</body>
+</html>
