@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Notion Productivity Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- EXACT COLOR PALETTE --- */
+        :root {
+            /* From Screenshot 2 */
+            --notion-bg: #191919; 
+            
+            /* From Palette Image */
+            --sinister: #11110D;
+            --shoe-wax-solid: #2C2B29;
+            --shoe-wax-glass: rgba(44, 43, 41, 0.75); 
+            --sturgis-grey: #58534E;
+            --handmade: #7F735F;
+            
+            --text-light: #F5F5F5;
+            --text-muted: rgba(245, 245, 245, 0.6);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Matches Notion Background */
+        body {
+            background-color: var(--notion-bg);
+            color: var(--text-light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Main Background (Handmade) */
+        .widget-container {
+            background-color: var(--handmade);
+            width: 100%;
+            max-width: 900px;
+            border-radius: 24px;
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            position: relative;
+            box-shadow: 0 24px 50px rgba(17, 17, 13, 0.4);
+            overflow: hidden;
+        }
+
+        /* Glassmorphism Panels (Shoe Wax) */
+        .glass-panel {
+            background: var(--shoe-wax-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(88, 83, 78, 0.4); /* Sturgis Grey border */
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(17, 17, 13, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .glass-panel:hover {
+            transform: translateY(-2px);
+        }
+
+        /* --- HEADER & SETTINGS ICON --- */
+        .header-area {
+            position: absolute;
+            top: 25px;
+            right: 30px;
+            z-index: 10;
+        }
+
+        .settings-btn {
+            background: var(--shoe-wax-solid);
+            border: 1px solid var(--sturgis-grey);
+            color: var(--text-light);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(17, 17, 13, 0.5);
+        }
+
+        .settings-btn:hover {
+            background: var(--sinister);
+            transform: rotate(45deg);
+        }
+
+        .settings-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--text-light);
+        }
+
+        /* --- LEFT COLUMN: DYNAMIC TASKS --- */
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 2;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--sinister);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.2);
+        }
+
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--sinister);
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--sturgis-grey);
+        }
+
+        .task-name {
+            font-size: 14px;
+            font-weight: 500;
+            flex: 1;
+        }
+
+        .task-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        select {
+            background: var(--shoe-wax-solid);
+            color: var(--text-light);
+            border: 1px solid var(--sturgis-grey);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .add-btn {
+            background: var(--handmade);
+            color: var(--sinister);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .add-btn:hover {
+            background: #958771; /* Slightly lighter handmade */
+            transform: scale(1.05);
+        }
+
+        /* --- RIGHT COLUMN: ACTIVITY PULSE --- */
+        .right-column {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+        }
+
+        .pulse-container {
+            position: relative;
+            width: 240px;
+            height: 240px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .svg-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .circle-bg {
+            fill: none;
+            stroke: var(--sinister);
+            stroke-width: 14;
+        }
+
+        .circle-progress {
+            fill: none;
+            stroke: var(--handmade); /* Uses handmade for the fill bar */
+            stroke-width: 14;
+            stroke-linecap: round;
+            stroke-dasharray: 691; /* 2 * PI * 110 */
+            stroke-dashoffset: 691;
+            transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 0 6px rgba(127, 115, 95, 0.4));
+        }
+
+        .pulse-data {
+            text-align: center;
+            z-index: 2;
+        }
+
+        .pulse-number {
+            font-size: 56px;
+            font-weight: 700;
+            color: var(--text-light);
+            line-height: 1;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        .pulse-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .reset-btn {
+            margin-top: 20px;
+            background: transparent;
+            border: 1px solid var(--sturgis-grey);
+            color: var(--text-light);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .reset-btn:hover {
+            background: var(--sinister);
+        }
+
+        /* --- SETTINGS MODAL (POP OUT) --- */
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(17, 17, 13, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 20;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            width: 90%;
+            max-width: 450px;
+            background: var(--shoe-wax-solid);
+            border: 1px solid var(--handmade);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--handmade);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .edit-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .edit-input {
+            flex: 1;
+            background: var(--sinister);
+            border: 1px solid var(--sturgis-grey);
+            color: var(--text-light);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .edit-input:focus { border-color: var(--handmade); }
+
+        .icon-btn {
+            background: var(--sinister);
+            border: 1px solid var(--sturgis-grey);
+            color: var(--text-light);
+            width: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.2s;
+        }
+        
+        .icon-btn.delete:hover { background: #5a2a2a; border-color: #ff6b6b; }
+        
+        .add-new-task-btn {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            border: 1px dashed var(--sturgis-grey);
+            color: var(--text-light);
+            border-radius: 8px;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .add-new-task-btn:hover {
+            border-color: var(--handmade);
+            color: var(--handmade);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="widget-container">
+        
+        <!-- Settings Icon -->
+        <div class="header-area">
+            <button class="settings-btn" onclick="toggleModal()">
+                <svg viewBox="0 0 24 24">
+                    <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Left Side: Dynamic Quick Adds -->
+        <div class="left-column">
+            <div class="section-title">✦ Active Hub</div>
+            <div class="glass-panel">
+                <div class="task-list" id="mainTaskList">
+                    <!-- Tasks injected by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: The Activity Pulse -->
+        <div class="right-column">
+            <div class="glass-panel" style="padding: 30px; border-radius: 50%; display: flex; flex-direction: column; align-items: center;">
+                <div class="pulse-container">
+                    <svg class="svg-ring" viewBox="0 0 240 240">
+                        <circle class="circle-bg" cx="120" cy="120" r="110"></circle>
+                        <circle class="circle-progress" id="progressRing" cx="120" cy="120" r="110"></circle>
+                    </svg>
+                    <div class="pulse-data">
+                        <div class="pulse-number" id="hoursDisplay">0</div>
+                        <div class="pulse-label">Total Hours</div>
+                    </div>
+                </div>
+                <button class="reset-btn" onclick="resetTime()">Reset Week</button>
+            </div>
+        </div>
+
+        <!-- Pop-out Settings Modal -->
+        <div class="modal-overlay" id="settingsModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span>Manage Hub</span>
+                    <button class="close-modal" onclick="toggleModal()">✕</button>
+                </div>
+                <div id="editTaskList">
+                    <!-- Edit inputs injected by JavaScript -->
+                </div>
+                <button class="add-new-task-btn" onclick="addNewTask()">+ Create New Topic</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- CORE DATA & STATE ---
+        let weeklyGoal = 40; 
+        let totalHours = parseFloat(localStorage.getItem('hub_total_hours')) || 0;
+        
+        // Initial setup data loaded dynamically
+        let tasks = JSON.parse(localStorage.getItem('hub_tasks')) || [
+            { id: 1, name: '📚 O-Level Study Block' },
+            { id: 2, name: '🎨 GRITandGLITCH Designs' },
+            { id: 3, name: '🏃‍♂️ Rooftop Session & Crunches' },
+            { id: 4, name: '💻 Blender 3D Rendering' }
+        ];
+
+        const hourOptions = [0.5, 1, 1.5, 2, 3, 4, 5];
+
+        window.onload = () => {
+            renderMainTasks();
+            updatePulseRing();
+        };
+
+        // --- RENDER MAIN UI ---
+        function renderMainTasks() {
+            const list = document.getElementById('mainTaskList');
+            list.innerHTML = '';
+
+            tasks.forEach(task => {
+                let optionsHtml = hourOptions.map(h => `<option value="${h}">${h} hr</option>`).join('');
+                
+                list.innerHTML += `
+                    <div class="task-item">
+                        <div class="task-name">${task.name}</div>
+                        <div class="task-controls">
+                            <select id="select-${task.id}">
+                                ${optionsHtml}
+                            </select>
+                            <button class="add-btn" onclick="addTime('${task.id}')">Add</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // --- CORE FUNCTIONALITY ---
+        function addTime(taskId) {
+            const selectEl = document.getElementById(`select-${taskId}`);
+            const hoursToAdd = parseFloat(selectEl.value);
+            
+            totalHours += hoursToAdd;
+            saveData();
+            updatePulseRing();
+        }
+
+        function resetTime() {
+            totalHours = 0;
+            saveData();
+            updatePulseRing();
+        }
+
+        function updatePulseRing() {
+            document.getElementById('hoursDisplay').innerText = totalHours.toFixed(1);
+            
+            const ring = document.getElementById('progressRing');
+            const radius = ring.r.baseVal.value;
+            const circumference = radius * 2 * Math.PI;
+            
+            ring.style.strokeDasharray = `${circumference} ${circumference}`;
+            
+            let percent = totalHours / weeklyGoal;
+            if (percent > 1) percent = 1; 
+            
+            const offset = circumference - (percent * circumference);
+            ring.style.strokeDashoffset = offset;
+        }
+
+        function saveData() {
+            localStorage.setItem('hub_total_hours', totalHours);
+            localStorage.setItem('hub_tasks', JSON.stringify(tasks));
+        }
+
+        // --- MODAL / SETTINGS LOGIC ---
+        function toggleModal() {
+            const modal = document.getElementById('settingsModal');
+            if(modal.classList.contains('active')) {
+                modal.classList.remove('active');
+                renderMainTasks(); // Re-render main list when closing
+            } else {
+                renderEditList();
+                modal.classList.add('active');
+            }
+        }
+
+        function renderEditList() {
+            const list = document.getElementById('editTaskList');
+            list.innerHTML = '';
+            
+            tasks.forEach((task, index) => {
+                list.innerHTML += `
+                    <div class="edit-row">
+                        <input type="text" class="edit-input" value="${task.name}" onchange="updateTaskName(${index}, this.value)">
+                        <button class="icon-btn delete" onclick="deleteTask(${index})">🗑️</button>
+                    </div>
+                `;
+            });
+        }
+
+        function updateTaskName(index, newName) {
+            tasks[index].name = newName;
+            saveData();
+        }
+
+        function deleteTask(index) {
+            tasks.splice(index, 1);
+            saveData();
+            renderEditList(); 
+        }
+
+        function addNewTask() {
+            const newId = tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1;
+            tasks.push({ id: newId, name: '✨ New Custom Topic' });
+            saveData();
+            renderEditList();
+        }
+    </script>
+</body>
+</html>
