@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Link Vault</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090B;
+      --gold: #E8C987;
+      --gold-soft: #F3D9A0;
+      --gold-dim: rgba(232, 201, 135, 0.35);
+      --text: #F7F1E7;
+      --text-muted: #B1A694;
+      --danger: #E08A8A;
+      --glass: rgba(20, 18, 16, 0.72);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== VAULT ===== */
+    .vault {
+      width: 100%;
+      max-width: 480px;
+      background: 
+        radial-gradient(ellipse at top, rgba(232, 201, 135, 0.06), transparent 60%),
+        linear-gradient(165deg, rgba(28, 25, 22, 0.92), rgba(14, 13, 12, 0.97));
+      border: 1px solid rgba(232, 201, 135, 0.16);
+      border-radius: 24px;
+      padding: 32px 26px 24px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 
+        0 0 0 1px rgba(232, 201, 135, 0.04),
+        0 30px 60px -20px rgba(0, 0, 0, 0.75),
+        0 0 100px -30px rgba(232, 201, 135, 0.12);
+      opacity: 0;
+      transform: translateY(20px) scale(0.97);
+      animation: vaultIn 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes vaultIn {
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* subtle grain */
+    .vault::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.035;
+      pointer-events: none;
+      border-radius: 24px;
+    }
+
+    /* top luminous line */
+    .vault::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 65%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      padding: 0 2px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .pin {
+      width: 17px;
+      height: 17px;
+      color: var(--gold);
+      filter: drop-shadow(0 0 8px rgba(232, 201, 135, 0.45));
+    }
+
+    .header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 26px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      color: var(--gold-soft);
+    }
+
+    .capacity-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .capacity-text {
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+    }
+
+    .capacity-text span {
+      color: var(--gold);
+      font-weight: 500;
+    }
+
+    /* capacity ring */
+    .ring {
+      width: 28px;
+      height: 28px;
+      position: relative;
+    }
+
+    .ring svg {
+      transform: rotate(-90deg);
+    }
+
+    .ring-bg {
+      fill: none;
+      stroke: rgba(232, 201, 135, 0.12);
+      stroke-width: 3;
+    }
+
+    .ring-fill {
+      fill: none;
+      stroke: var(--gold);
+      stroke-width: 3;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* ===== LIST ===== */
+    .links {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      margin-bottom: 20px;
+      position: relative;
+      min-height: 160px;
+    }
+
+    /* soft left spine */
+    .links::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 8px;
+      bottom: 8px;
+      width: 1px;
+      background: linear-gradient(to bottom, transparent, rgba(232, 201, 135, 0.2), transparent);
+    }
+
+    .link-row {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 13px 14px 13px 16px;
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid rgba(232, 201, 135, 0.09);
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      margin-left: 8px;
+      opacity: 0;
+      transform: translateY(12px);
+      animation: rowIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes rowIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .link-row:hover {
+      background: rgba(232, 201, 135, 0.055);
+      border-color: rgba(232, 201, 135, 0.22);
+      transform: translateY(-1px);
+      box-shadow: 0 10px 28px -10px rgba(0, 0, 0, 0.45);
+    }
+
+    .link-row::before {
+      content: "";
+      position: absolute;
+      left: -8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 50%;
+      background: var(--gold);
+      border-radius: 0 3px 3px 0;
+      transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .link-row:hover::before {
+      width: 3px;
+    }
+
+    .favicon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(232, 201, 135, 0.15);
+      object-fit: contain;
+      padding: 5px;
+      flex-shrink: 0;
+    }
+
+    .link-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .link-title {
+      font-size: 14.5px;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .link-url {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .link-actions {
+      display: flex;
+      gap: 5px;
+      opacity: 0;
+      transform: translateX(6px);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .link-row:hover .link-actions {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .action-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      border: 1px solid rgba(232, 201, 135, 0.14);
+      background: rgba(0, 0, 0, 0.25);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .action-btn:hover {
+      background: rgba(232, 201, 135, 0.12);
+      color: var(--gold);
+      border-color: rgba(232, 201, 135, 0.3);
+    }
+
+    .action-btn.delete:hover {
+      background: rgba(224, 138, 138, 0.12);
+      color: var(--danger);
+      border-color: rgba(224, 138, 138, 0.3);
+    }
+
+    /* ===== EMPTY STATE ===== */
+    .empty {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 42px 20px 36px;
+      text-align: center;
+    }
+
+    .empty.visible {
+      display: flex;
+    }
+
+    .empty-visual {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 18px;
+      color: var(--gold);
+      opacity: 0.55;
+      filter: drop-shadow(0 0 12px rgba(232, 201, 135, 0.2));
+    }
+
+    .empty h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--gold-soft);
+      margin-bottom: 6px;
+    }
+
+    .empty p {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      max-width: 220px;
+    }
+
+    /* ===== ADD BUTTON ===== */
+    .add-btn {
+      width: 100%;
+      height: 48px;
+      border-radius: 14px;
+      border: 1px dashed rgba(232, 201, 135, 0.32);
+      background: transparent;
+      color: var(--gold);
+      font-size: 13.5px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      z-index: 2;
+    }
+
+    .add-btn:hover:not(:disabled) {
+      background: rgba(232, 201, 135, 0.07);
+      border-style: solid;
+      border-color: rgba(232, 201, 135, 0.48);
+      box-shadow: 0 0 28px -8px rgba(232, 201, 135, 0.25);
+    }
+
+    .add-btn:disabled {
+      opacity: 0.38;
+      cursor: not-allowed;
+    }
+
+    .footer-note {
+      text-align: center;
+      margin-top: 14px;
+      font-size: 11px;
+      color: rgba(177, 166, 148, 0.55);
+      letter-spacing: 0.05em;
+    }
+
+    /* ===== MODALS ===== */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      width: 90%;
+      max-width: 380px;
+      background: linear-gradient(165deg, #1C1A17, #121110);
+      border: 1px solid rgba(232, 201, 135, 0.18);
+      border-radius: 20px;
+      padding: 28px 24px;
+      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.85);
+      transform: scale(0.95) translateY(12px);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .overlay.active .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--gold-soft);
+      margin-bottom: 5px;
+    }
+
+    .modal p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 22px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      letter-spacing: 0.04em;
+    }
+
+    .form-group input {
+      width: 100%;
+      height: 44px;
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(232, 201, 135, 0.16);
+      border-radius: 11px;
+      padding: 0 14px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .form-group input:focus {
+      border-color: rgba(232, 201, 135, 0.42);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .btn {
+      flex: 1;
+      height: 44px;
+      border-radius: 11px;
+      font-size: 13.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #E8C987, #D4B56A);
+      color: #1A160F;
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.07);
+      box-shadow: 0 0 22px -4px rgba(232, 201, 135, 0.4);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid rgba(232, 201, 135, 0.22);
+      color: var(--text-muted);
+    }
+
+    .btn-secondary:hover {
+      border-color: rgba(232, 201, 135, 0.4);
+      color: var(--text);
+    }
+
+    .limit-modal {
+      text-align: center;
+    }
+
+    .limit-modal .modal-icon {
+      width: 46px;
+      height: 46px;
+      margin: 0 auto 14px;
+      color: var(--gold);
+      opacity: 0.75;
+    }
+  </style>
+</head>
+<body>
+  <div class="vault">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <svg class="pin" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
+        </svg>
+        <h1>Link Vault</h1>
+      </div>
+
+      <div class="capacity-wrap">
+        <div class="capacity-text"><span id="count">0</span>/10</div>
+        <div class="ring">
+          <svg width="28" height="28" viewBox="0 0 28 28">
+            <circle class="ring-bg" cx="14" cy="14" r="11"/>
+            <circle class="ring-fill" id="ringFill" cx="14" cy="14" r="11" 
+              stroke-dasharray="69.1" stroke-dashoffset="69.1"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Links -->
+    <div class="links" id="links"></div>
+
+    <!-- Empty State -->
+    <div class="empty" id="empty">
+      <svg class="empty-visual" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+      </svg>
+      <h3>No gateways yet</h3>
+      <p>Create your first destination and start building your private vault.</p>
+    </div>
+
+    <!-- Add Button -->
+    <button class="add-btn" id="addBtn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      Add Gateway
+    </button>
+
+    <div class="footer-note">Vault secured · Maximum 10 gateways</div>
+  </div>
+
+  <!-- Form Modal -->
+  <div class="overlay" id="formOverlay">
+    <div class="modal">
+      <h2 id="modalTitle">New Gateway</h2>
+      <p>Give it a name and the destination URL.</p>
+      
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" id="inputTitle" placeholder="e.g. Club Portal" maxlength="42" />
+      </div>
+      <div class="form-group">
+        <label>URL</label>
+        <input type="url" id="inputUrl" placeholder="https://..." />
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="cancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="saveBtn">Save Gateway</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Limit Modal -->
+  <div class="overlay" id="limitOverlay">
+    <div class="modal limit-modal">
+      <svg class="modal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      <h2>Vault Capacity Reached</h2>
+      <p>You can hold a maximum of 10 gateways. Remove one to add a new destination.</p>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="limitOk" style="flex:1">Understood</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let links = JSON.parse(localStorage.getItem('linkVault_v2')) || [];
+    let editingId = null;
+
+    const linksEl = document.getElementById('links');
+    const emptyEl = document.getElementById('empty');
+    const countEl = document.getElementById('count');
+    const ringFill = document.getElementById('ringFill');
+    const addBtn = document.getElementById('addBtn');
+    const formOverlay = document.getElementById('formOverlay');
+    const limitOverlay = document.getElementById('limitOverlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const inputTitle = document.getElementById('inputTitle');
+    const inputUrl = document.getElementById('inputUrl');
+    const saveBtn = document.getElementById('saveBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const limitOk = document.getElementById('limitOk');
+
+    function getFavicon(url) {
+      try {
+        const domain = new URL(url).hostname;
+        return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+      } catch {
+        return null;
+      }
+    }
+
+    function updateRing() {
+      const total = 69.1;
+      const offset = total - (links.length / 10) * total;
+      ringFill.style.strokeDashoffset = offset;
+    }
+
+    function render() {
+      linksEl.innerHTML = '';
+      countEl.textContent = links.length;
+      addBtn.disabled = links.length >= 10;
+      updateRing();
+
+      if (links.length === 0) {
+        emptyEl.classList.add('visible');
+      } else {
+        emptyEl.classList.remove('visible');
+
+        links.forEach((link, i) => {
+          const row = document.createElement('div');
+          row.className = 'link-row';
+          row.style.animationDelay = `${i * 0.05}s`;
+
+          const faviconUrl = getFavicon(link.url);
+          const faviconHtml = faviconUrl 
+            ? `<img class="favicon" src="${faviconUrl}" alt="" onerror="this.style.display='none'">`
+            : `<div class="favicon" style="display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--gold)">${link.title.charAt(0)}</div>`;
+
+          row.innerHTML = `
+            ${faviconHtml}
+            <div class="link-content">
+              <div class="link-title">${escapeHtml(link.title)}</div>
+              <div class="link-url">${escapeHtml(link.url.replace(/^https?:\/\//, ''))}</div>
+            </div>
+            <div class="link-actions">
+              <button class="action-btn edit" title="Edit">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
+              <button class="action-btn delete" title="Remove">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+              </button>
+            </div>
+          `;
+
+          row.addEventListener('click', (e) => {
+            if (e.target.closest('.action-btn')) return;
+            window.open(link.url, '_blank');
+          });
+
+          row.querySelector('.edit').addEventListener('click', (e) => {
+            e.stopPropagation();
+            openEdit(link);
+          });
+
+          row.querySelector('.delete').addEventListener('click', (e) => {
+            e.stopPropagation();
+            links = links.filter(l => l.id !== link.id);
+            save();
+            render();
+          });
+
+          linksEl.appendChild(row);
+        });
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function save() {
+      localStorage.setItem('linkVault_v2', JSON.stringify(links));
+    }
+
+    function openAdd() {
+      if (links.length >= 10) {
+        limitOverlay.classList.add('active');
+        return;
+      }
+      editingId = null;
+      modalTitle.textContent = 'New Gateway';
+      inputTitle.value = '';
+      inputUrl.value = '';
+      formOverlay.classList.add('active');
+      setTimeout(() => inputTitle.focus(), 80);
+    }
+
+    function openEdit(link) {
+      editingId = link.id;
+      modalTitle.textContent = 'Edit Gateway';
+      inputTitle.value = link.title;
+      inputUrl.value = link.url;
+      formOverlay.classList.add('active');
+      setTimeout(() => inputTitle.focus(), 80);
+    }
+
+    function closeForm() {
+      formOverlay.classList.remove('active');
+    }
+
+    addBtn.addEventListener('click', openAdd);
+    cancelBtn.addEventListener('click', closeForm);
+    limitOk.addEventListener('click', () => limitOverlay.classList.remove('active'));
+
+    saveBtn.addEventListener('click', () => {
+      const title = inputTitle.value.trim();
+      let url = inputUrl.value.trim();
+
+      if (!title || !url) {
+        if (!title) inputTitle.style.borderColor = 'var(--danger)';
+        if (!url) inputUrl.style.borderColor = 'var(--danger)';
+        return;
+      }
+
+      if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+
+      if (editingId) {
+        const idx = links.findIndex(l => l.id === editingId);
+        if (idx !== -1) {
+          links[idx].title = title;
+          links[idx].url = url;
+        }
+      } else {
+        links.push({ id: Date.now(), title, url });
+      }
+
+      save();
+      render();
+      closeForm();
+    });
+
+    formOverlay.addEventListener('click', (e) => {
+      if (e.target === formOverlay) closeForm();
+    });
+    limitOverlay.addEventListener('click', (e) => {
+      if (e.target === limitOverlay) limitOverlay.classList.remove('active');
+    });
+
+    inputUrl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') saveBtn.click();
+    });
+
+    render();
+  </script>
+</body>
+</html>
