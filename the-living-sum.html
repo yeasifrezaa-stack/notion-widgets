@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Living Sum</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --black: #16131F;
+      --heather: #F0D9E4;
+      --decanting: #C1A0AC;
+      --funkie: #4A3F4B;
+      --moonscape: #806C79;
+      --notion: #191919;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--notion);
+      color: var(--heather);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+      position: relative;
+    }
+
+    body::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: 
+        radial-gradient(ellipse 90% 60% at 50% 30%, rgba(240, 217, 228, 0.05), transparent 70%),
+        radial-gradient(ellipse 70% 50% at 70% 80%, rgba(193, 160, 172, 0.04), transparent);
+      pointer-events: none;
+    }
+
+    /* ===== MAIN WIDGET ===== */
+    .widget {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(22, 19, 31, 0.45);
+      backdrop-filter: blur(28px) saturate(160%);
+      -webkit-backdrop-filter: blur(28px) saturate(160%);
+      border: 1px solid rgba(240, 217, 228, 0.09);
+      border-radius: 28px;
+      padding: 28px 24px 24px;
+      position: relative;
+      box-shadow: 
+        0 20px 50px -20px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(24px) scale(0.97);
+      animation: enter 1s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+    }
+
+    @keyframes enter {
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .widget::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(240, 217, 228, 0.25), transparent);
+    }
+
+    /* ===== TABS ===== */
+    .tabs {
+      display: flex;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 14px;
+      padding: 4px;
+      margin-bottom: 28px;
+    }
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 9px 0;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--moonscape);
+      border-radius: 11px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .tab.active {
+      background: rgba(240, 217, 228, 0.1);
+      color: var(--heather);
+    }
+
+    /* ===== PANELS ===== */
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+      animation: fadePanel 0.45s ease;
+    }
+
+    @keyframes fadePanel {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== VESSEL PANEL ===== */
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 26px;
+      font-weight: 500;
+      color: var(--heather);
+      margin-bottom: 3px;
+    }
+
+    .header p {
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--moonscape);
+    }
+
+    .vessel-wrap {
+      position: relative;
+      width: 170px;
+      height: 200px;
+      margin: 0 auto 24px;
+    }
+
+    .vessel {
+      position: absolute;
+      inset: 0;
+      background: rgba(74, 63, 75, 0.25);
+      border: 1px solid rgba(240, 217, 228, 0.12);
+      border-radius: 85px 85px 36px 36px;
+      overflow: hidden;
+      box-shadow: inset 0 0 30px rgba(240, 217, 228, 0.05);
+    }
+
+    .liquid {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 0%;
+      background: linear-gradient(to top, rgba(240, 217, 228, 0.55), rgba(193, 160, 172, 0.35) 60%, rgba(240, 217, 228, 0.15));
+      border-radius: 0 0 34px 34px;
+      transition: height 1.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .liquid::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 7px;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.25), transparent);
+    }
+
+    .total {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      z-index: 4;
+    }
+
+    .total-number {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 48px;
+      font-weight: 500;
+      color: var(--heather);
+      line-height: 1;
+      text-shadow: 0 0 28px rgba(240, 217, 228, 0.35);
+    }
+
+    .total-label {
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--decanting);
+      margin-top: 2px;
+    }
+
+    .memories {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .memory {
+      position: absolute;
+      background: rgba(74, 63, 75, 0.55);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(240, 217, 228, 0.1);
+      border-radius: 12px;
+      padding: 9px 12px;
+      width: 138px;
+      pointer-events: auto;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      opacity: 0;
+    }
+
+    .memory:hover {
+      background: rgba(74, 63, 75, 0.8);
+      transform: scale(1.04) translateY(-3px);
+    }
+
+    .memory-title {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--heather);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .memory-meta {
+      font-size: 10px;
+      color: var(--moonscape);
+      margin-top: 2px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .footer-text {
+      text-align: center;
+      font-size: 11px;
+      color: var(--moonscape);
+      line-height: 1.55;
+      margin-top: 8px;
+    }
+
+    /* ===== LOG PANEL (Productive) ===== */
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .log-header h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--heather);
+    }
+
+    .log-total {
+      font-size: 13px;
+      color: var(--decanting);
+    }
+
+    .session-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 280px;
+      overflow-y: auto;
+      padding-right: 4px;
+      margin-bottom: 16px;
+    }
+
+    .session-list::-webkit-scrollbar {
+      width: 4px;
+    }
+    .session-list::-webkit-scrollbar-thumb {
+      background: rgba(240, 217, 228, 0.15);
+      border-radius: 4px;
+    }
+
+    .session-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 13px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(240, 217, 228, 0.07);
+      border-radius: 12px;
+      transition: all 0.2s ease;
+    }
+
+    .session-item:hover {
+      background: rgba(240, 217, 228, 0.05);
+      border-color: rgba(240, 217, 228, 0.14);
+    }
+
+    .session-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .session-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--heather);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .session-meta {
+      font-size: 11px;
+      color: var(--moonscape);
+      margin-top: 2px;
+    }
+
+    .session-hours {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--decanting);
+    }
+
+    .add-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .add-row select,
+    .add-row input {
+      height: 40px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(240, 217, 228, 0.12);
+      border-radius: 11px;
+      color: var(--heather);
+      font-size: 13px;
+      padding: 0 12px;
+      outline: none;
+    }
+
+    .add-row select {
+      flex: 1.4;
+    }
+
+    .add-row input {
+      width: 70px;
+      text-align: center;
+    }
+
+    .add-row button {
+      height: 40px;
+      padding: 0 16px;
+      border-radius: 11px;
+      border: none;
+      background: linear-gradient(135deg, #F0D9E4, #C1A0AC);
+      color: #16131F;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .add-row button:hover {
+      filter: brightness(1.05);
+    }
+  </style>
+</head>
+<body>
+  <div class="widget">
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" data-panel="vessel">Vessel</div>
+      <div class="tab" data-panel="log">Log</div>
+    </div>
+
+    <!-- ===== VESSEL PANEL ===== -->
+    <div class="panel active" id="panel-vessel">
+      <div class="header">
+        <h1>The Living Sum</h1>
+        <p>Accumulated Time</p>
+      </div>
+
+      <div class="vessel-wrap">
+        <div class="vessel">
+          <div class="liquid" id="liquid"></div>
+        </div>
+        <div class="total">
+          <div class="total-number" id="totalNumber">0</div>
+          <div class="total-label">Hours</div>
+        </div>
+        <div class="memories" id="memories"></div>
+      </div>
+
+      <p class="footer-text">
+        This number only exists because<br>
+        Session Log feeds it.
+      </p>
+    </div>
+
+    <!-- ===== LOG PANEL ===== -->
+    <div class="panel" id="panel-log">
+      <div class="log-header">
+        <h2>Session Log</h2>
+        <div class="log-total" id="logTotal">0 hours</div>
+      </div>
+
+      <div class="session-list" id="sessionList"></div>
+
+      <div class="add-row">
+        <select id="newActivity">
+          <option value="Photography Club">Photography</option>
+          <option value="Debate Club">Debate Club</option>
+          <option value="Football">Football</option>
+          <option value="Student Council">Student Council</option>
+          <option value="Animal Shelter">Animal Shelter</option>
+          <option value="Guitar Lessons">Guitar</option>
+          <option value="Other">Other</option>
+        </select>
+        <input type="number" id="newHours" placeholder="Hrs" step="0.5" min="0.5" max="12">
+        <button id="addSessionBtn">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let sessions = JSON.parse(localStorage.getItem('livingSum')) || [
+      { id: 1, title: "Golden hour shoot", activity: "Photography Club", hours: 2, date: "Aug 13" },
+      { id: 2, title: "Debate practice", activity: "Debate Club", hours: 2, date: "Aug 10" },
+      { id: 3, title: "Weekend shelter", activity: "Animal Shelter", hours: 3, date: "Aug 15" },
+      { id: 4, title: "Team training", activity: "Football", hours: 1.5, date: "Aug 11" },
+      { id: 5, title: "Planning meeting", activity: "Student Council", hours: 2.5, date: "Aug 6" }
+    ];
+
+    const liquid = document.getElementById('liquid');
+    const totalNumber = document.getElementById('totalNumber');
+    const memoriesEl = document.getElementById('memories');
+    const sessionList = document.getElementById('sessionList');
+    const logTotal = document.getElementById('logTotal');
+
+    // Tabs
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
+      });
+    });
+
+    function getTotal() {
+      return sessions.reduce((sum, s) => sum + s.hours, 0);
+    }
+
+    function updateVessel() {
+      const total = getTotal();
+      totalNumber.textContent = total % 1 === 0 ? total : total.toFixed(1);
+      const height = Math.min((total / 40) * 82, 82);
+      liquid.style.height = height + '%';
+      logTotal.textContent = (total % 1 === 0 ? total : total.toFixed(1)) + ' hours';
+    }
+
+    function renderMemories() {
+      memoriesEl.innerHTML = '';
+      const recent = sessions.slice(-4).reverse();
+      const positions = [
+        { top: '14%', left: '-14px' },
+        { top: '28%', right: '-18px' },
+        { top: '54%', left: '-22px' },
+        { top: '68%', right: '-12px' }
+      ];
+
+      recent.forEach((s, i) => {
+        const card = document.createElement('div');
+        card.className = 'memory';
+        card.style.cssText = `
+          top:${positions[i].top};
+          ${positions[i].left ? 'left:'+positions[i].left : 'right:'+positions[i].right};
+          animation: fadeIn 0.7s ease ${0.8 + i*0.12}s forwards;
+        `;
+        card.innerHTML = `
+          <div class="memory-title">${s.title}</div>
+          <div class="memory-meta">
+            <span>${s.activity.split(' ')[0]}</span>
+            <span>${s.hours}h</span>
+          </div>
+        `;
+        memoriesEl.appendChild(card);
+      });
+    }
+
+    function renderLog() {
+      sessionList.innerHTML = '';
+      [...sessions].reverse().forEach(s => {
+        const item = document.createElement('div');
+        item.className = 'session-item';
+        item.innerHTML = `
+          <div class="session-info">
+            <div class="session-title">${s.title}</div>
+            <div class="session-meta">${s.activity} · ${s.date}</div>
+          </div>
+          <div class="session-hours">${s.hours}h</div>
+        `;
+        sessionList.appendChild(item);
+      });
+    }
+
+    document.getElementById('addSessionBtn').addEventListener('click', () => {
+      const activity = document.getElementById('newActivity').value;
+      const hours = parseFloat(document.getElementById('newHours').value);
+
+      if (!hours || hours <= 0) return;
+
+      const titleMap = {
+        "Photography Club": "Photography session",
+        "Debate Club": "Debate practice",
+        "Football": "Team training",
+        "Student Council": "Council work",
+        "Animal Shelter": "Shelter shift",
+        "Guitar Lessons": "Guitar practice",
+        "Other": "Logged session"
+      };
+
+      sessions.push({
+        id: Date.now(),
+        title: titleMap[activity] || "Logged session",
+        activity,
+        hours,
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      });
+
+      localStorage.setItem('livingSum', JSON.stringify(sessions));
+      document.getElementById('newHours').value = '';
+      updateVessel();
+      renderMemories();
+      renderLog();
+    });
+
+    // Init
+    updateVessel();
+    renderMemories();
+    renderLog();
+
+    setTimeout(() => {
+      const total = getTotal();
+      liquid.style.height = Math.min((total / 40) * 82, 82) + '%';
+    }, 300);
+
+    // Simple fade-in for memories
+    const style = document.createElement('style');
+    style.innerHTML = `@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }`;
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>
