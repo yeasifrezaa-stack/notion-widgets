@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Bento Command Center</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;500;700&family=Playfair+Display:ital,wght@0,600;0,800;1,600&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Base Environment */
+        :root {
+            --bg-notion: #191919;
+            --gold-light: #F1C40F;
+            --gold-deep: #D4AF37;
+            --glass-bg: rgba(25, 25, 28, 0.45);
+            --glass-border: rgba(212, 175, 55, 0.35);
+            --text-main: #EFEFEF;
+            --text-muted: #A0A0A5;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg-notion);
+            color: var(--text-main);
+            overflow: hidden;
+            perspective: 2000px; /* Deep 3D Space */
+        }
+
+        /* Cinematic Gold Ambient Glow */
+        .ambient-core {
+            position: absolute;
+            width: 70vw;
+            height: 70vh;
+            background: radial-gradient(ellipse at center, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.05) 40%, transparent 70%);
+            filter: blur(60px);
+            animation: breathe 10s infinite ease-in-out alternate;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        @keyframes breathe {
+            0% { transform: scale(0.9) rotate(0deg); opacity: 0.7; }
+            100% { transform: scale(1.15) rotate(5deg); opacity: 1; }
+        }
+
+        /* The Bento Grid Container */
+        .bento-vault {
+            position: relative;
+            z-index: 1;
+            width: 90%;
+            max-width: 1100px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 25px;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Premium Glass Panels */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(35px) saturate(200%);
+            -webkit-backdrop-filter: blur(35px) saturate(200%);
+            border-radius: 28px;
+            border: 1px solid var(--glass-border);
+            padding: 35px;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.5), inset 0 2px 2px rgba(255,255,255,0.05);
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(255, 215, 0, 0.7);
+            box-shadow: 0 40px 90px rgba(0,0,0,0.7), inset 0 2px 2px rgba(255,255,255,0.1), 0 0 30px rgba(212, 175, 55, 0.15);
+            transform: translateY(-5px);
+        }
+
+        /* Card 1: Trophy Span */
+        .card-trophy {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 25px 40px;
+            background: linear-gradient(135deg, rgba(30,28,20,0.7) 0%, rgba(45,35,15,0.5) 100%);
+        }
+
+        /* Typography */
+        h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            font-style: italic;
+            margin: 0 0 20px 0;
+            background: linear-gradient(to right, #FFF, var(--gold-deep));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 600;
+            letter-spacing: 1px;
+            outline: none;
+        }
+
+        h3 {
+            font-family: 'Comfortaa', cursive;
+            font-size: 1.1rem;
+            color: var(--gold-light);
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 700;
+        }
+
+        p, div {
+            font-family: 'Comfortaa', cursive;
+            outline: none;
+        }
+
+        /* The Drop-Out Database Entries */
+        .dropout-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .dropout-item {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 0;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            overflow: hidden;
+        }
+
+        .dropout-item:hover {
+            border-color: var(--gold-light);
+            background: rgba(212, 175, 55, 0.05);
+        }
+
+        .dropout-header {
+            padding: 18px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #EFEFEF;
+        }
+
+        .dropout-tag {
+            font-size: 0.75rem;
+            padding: 5px 12px;
+            border-radius: 20px;
+            background: rgba(212, 175, 55, 0.2);
+            color: var(--gold-light);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+        }
+
+        /* The Animated Expanding Content */
+        .dropout-content {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .dropout-inner {
+            overflow: hidden;
+            padding: 0 20px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            opacity: 0;
+            transition: opacity 0.4s ease, padding 0.4s ease;
+        }
+
+        .dropout-item.active .dropout-content {
+            grid-template-rows: 1fr;
+        }
+
+        .dropout-item.active .dropout-inner {
+            padding: 0 20px 20px 20px;
+            opacity: 1;
+        }
+
+        .dropout-item.active .dropout-header {
+            color: var(--gold-light);
+        }
+
+        /* Weekly Review Metrics Grid */
+        .metrics-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .metric-title {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        .metric-value {
+            color: #FFF;
+            font-weight: 700;
+            text-align: right;
+            max-width: 60%;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="ambient-core"></div>
+
+    <div class="bento-vault" id="master-vault">
+        
+        <div class="glass-card card-trophy">
+            <div>
+                <h3 contenteditable="true">🏆 The Trophy Case</h3>
+                <h2 style="margin-top: 10px; margin-bottom: 0;" contenteditable="true">Winner: Inter-School Debate Final</h2>
+            </div>
+            <div class="dropout-tag" contenteditable="true">August 2026</div>
+        </div>
+
+        <div class="glass-card">
+            <h2 contenteditable="true">Activity Journal</h2>
+            
+            <div class="dropout-container">
+                <div class="dropout-item" onclick="toggleDropout(this)">
+                    <div class="dropout-header">
+                        <span contenteditable="true">Fundraiser Festival 🎟️</span>
+                        <span class="dropout-tag" contenteditable="true">Sept 5</span>
+                    </div>
+                    <div class="dropout-content">
+                        <div class="dropout-inner" contenteditable="true">
+                            Ran the stall and managed all the setups. It was a massive success, got some great networking in, and definitely impressed a few beautiful girls from Bangladesh who stopped by the booth! 
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dropout-item" onclick="toggleDropout(this)">
+                    <div class="dropout-header">
+                        <span contenteditable="true">Rooftop Grind 🏋️‍♂️</span>
+                        <span class="dropout-tag" contenteditable="true">Sept 4</span>
+                    </div>
+                    <div class="dropout-content">
+                        <div class="dropout-inner" contenteditable="true">
+                            Pushed through all 200 crunches today and finished the full 1-hour session on the roof. Kept my diet strictly hovering right around 2000 calories. Solid discipline.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dropout-item" onclick="toggleDropout(this)">
+                    <div class="dropout-header">
+                        <span contenteditable="true">Golden Hour Shoot 📸</span>
+                        <span class="dropout-tag" contenteditable="true">Sept 2</span>
+                    </div>
+                    <div class="dropout-content">
+                        <div class="dropout-inner" contenteditable="true">
+                            Tried shooting directly into the light for silhouetting. The contrast curves need a bit of adjustment in post, but the raw files look incredible.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <h2 contenteditable="true">Weekly Intelligence</h2>
+            
+            <div class="metrics-grid">
+                <div class="metric-row">
+                    <span class="metric-title" contenteditable="true">Target Week</span>
+                    <span class="dropout-tag" contenteditable="true">Aug 30 - Sept 5</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-title" contenteditable="true">Most Valuable Activity</span>
+                    <span class="metric-value" contenteditable="true">Event Organization & Pitching</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-title" contenteditable="true">Stop Doing 🛑</span>
+                    <span class="metric-value" contenteditable="true" style="color: #FF6B6B;">Skipping morning review</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-title" contenteditable="true">Continue Doing 🟢</span>
+                    <span class="metric-value" contenteditable="true" style="color: #51CF66;">Strict 1-hour skill blocks</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-title" contenteditable="true">Execute Next Week 🎯</span>
+                    <span class="metric-value" contenteditable="true">Finalize the video upscale</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Fluid Drop-Out Logic
+        function toggleDropout(element) {
+            // Check if user is trying to type inside instead of clicking to open
+            if (event.target.isContentEditable && element.classList.contains('active')) {
+                return; // Don't close if they are typing
+            }
+            
+            // Toggle the active class which triggers the CSS Grid transition
+            element.classList.toggle('active');
+        }
+
+        // Subtly track mouse movement to gently tilt the entire Bento Vault
+        const vault = document.getElementById('master-vault');
+        
+        document.addEventListener('mousemove', (e) => {
+            // Highly dampened rotation for a heavy, expensive feel
+            const xAxis = (window.innerWidth / 2 - e.pageX) / 60; 
+            const yAxis = (window.innerHeight / 2 - e.pageY) / 60;
+            
+            vault.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+        });
+
+        // Reset gracefully
+        document.addEventListener('mouseleave', () => {
+            vault.style.transition = "transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)";
+            vault.style.transform = `rotateY(0deg) rotateX(0deg)`;
+        });
+        
+        document.addEventListener('mouseenter', () => {
+            setTimeout(() => {
+                vault.style.transition = "none"; // Remove transition for active tracking
+            }, 800);
+        });
+        
+        // Ensure enter key behaves nicely in editable fields
+        document.querySelectorAll('[contenteditable="true"]').forEach(el => {
+            el.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    el.blur();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
