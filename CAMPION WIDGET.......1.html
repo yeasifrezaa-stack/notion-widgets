@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Champion's Vault Widget</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Notion Background Blending 
+           #191919 perfectly matches standard Notion Dark Mode
+        */
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #191919; 
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            perspective: 1000px;
+        }
+
+        /* The Widget Container (3D Environment) 
+        */
+        .widget-container {
+            position: relative;
+            width: 450px;
+            border-radius: 24px;
+            /* The iridescent border effect */
+            background: linear-gradient(135deg, rgba(255,215,0,0.5), rgba(0,0,0,0), rgba(0,255,255,0.3));
+            padding: 2px; /* Thickness of the glowing border */
+            transition: background 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        /* The Glassy Panel (Main Background) 
+        */
+        .glass-panel {
+            background: rgba(30, 30, 35, 0.6);
+            backdrop-filter: blur(20px) saturate(200%);
+            -webkit-backdrop-filter: blur(20px) saturate(200%);
+            border-radius: 22px;
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Dynamic Glow Behind the Glass */
+        .glass-panel::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, var(--glow-color, rgba(255,215,0,0.15)) 0%, transparent 60%);
+            opacity: 0.6;
+            transition: background 0.6s ease;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Content Z-Index Fix */
+        .content-wrapper {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Typography & Textures 
+        */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .status-badge {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.6s ease;
+        }
+
+        .title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0;
+            /* 3D Metallic Text Texture */
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            transition: all 0.6s ease;
+        }
+
+        .message {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #A0A0A5;
+            margin: 0;
+            font-weight: 300;
+            transition: color 0.6s ease;
+        }
+
+        /* State: WIN (Millionaire Vibe)
+        */
+        .state-win .widget-container {
+            background: linear-gradient(135deg, #D4AF37 0%, rgba(255,215,0,0.1) 50%, #00FFFF 100%);
+            box-shadow: 0 0 40px rgba(212, 175, 55, 0.3);
+        }
+        .state-win .glass-panel {
+            --glow-color: rgba(212, 175, 55, 0.2);
+        }
+        .state-win .status-badge {
+            color: #D4AF37;
+            border-color: rgba(212, 175, 55, 0.4);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+        }
+        .state-win .title {
+            background-image: linear-gradient(to right, #FFF 0%, #D4AF37 50%, #FFF 100%);
+        }
+
+        /* State: LOSS (Gritty, Motivational Vibe)
+        */
+        .state-loss .widget-container {
+            background: linear-gradient(135deg, #FF3366 0%, rgba(255,51,102,0.1) 50%, #6633FF 100%);
+            box-shadow: 0 0 40px rgba(255, 51, 102, 0.2);
+        }
+        .state-loss .glass-panel {
+            --glow-color: rgba(255, 51, 102, 0.15);
+        }
+        .state-loss .status-badge {
+            color: #FF3366;
+            border-color: rgba(255, 51, 102, 0.4);
+            box-shadow: 0 0 15px rgba(255, 51, 102, 0.2);
+        }
+        .state-loss .title {
+            background-image: linear-gradient(to right, #FFF 0%, #FF3366 50%, #FFF 100%);
+        }
+
+        /* Toggle Button (For Demonstration) 
+        */
+        .toggle-btn {
+            margin-top: 50px;
+            padding: 12px 24px;
+            background: transparent;
+            border: 1px solid #555;
+            color: #FFF;
+            font-family: 'Space Grotesk', sans-serif;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .toggle-btn:hover {
+            background: #FFF;
+            color: #000;
+        }
+
+    </style>
+</head>
+<body class="state-win" id="body-state">
+
+    <div class="widget-container" id="widget">
+        <div class="glass-panel">
+            <div class="content-wrapper">
+                <div class="header">
+                    <span class="status-badge" id="badge-text">VICTORY SECURED</span>
+                    <span style="font-size: 1.5rem;" id="icon-text">🏆</span>
+                </div>
+                
+                <h2 class="title" id="main-title">Flawless Execution</h2>
+                
+                <p class="message" id="body-message">
+                    You've hit the gold standard. Champions aren't born, they're built in moments like these. Take a breath, admire the work, and then raise the bar even higher.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <button class="toggle-btn" onclick="toggleState()">Toggle Win / Loss State 🔄</button>
+
+    <script>
+        // Buttery Smooth 3D Parallax Hover Effect
+        const widget = document.getElementById('widget');
+        
+        document.addEventListener('mousemove', (e) => {
+            const xAxis = (window.innerWidth / 2 - e.pageX) / 25;
+            const yAxis = (window.innerHeight / 2 - e.pageY) / 25;
+            
+            // Applying smooth transform
+            widget.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+        });
+
+        // Reset position when mouse leaves window
+        document.addEventListener('mouseleave', () => {
+            widget.style.transition = "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)";
+            widget.style.transform = `rotateY(0deg) rotateX(0deg)`;
+        });
+        
+        // Remove transition during movement to keep it responsive and buttery
+        document.addEventListener('mouseenter', () => {
+            setTimeout(() => {
+                widget.style.transition = "none";
+            }, 600);
+        });
+
+        // Reactive State Logic
+        let isWin = true;
+        function toggleState() {
+            isWin = !isWin;
+            const body = document.getElementById('body-state');
+            const badge = document.getElementById('badge-text');
+            const icon = document.getElementById('icon-text');
+            const title = document.getElementById('main-title');
+            const message = document.getElementById('body-message');
+
+            if (isWin) {
+                body.className = "state-win";
+                badge.innerText = "VICTORY SECURED";
+                icon.innerText = "🏆";
+                title.innerText = "Flawless Execution";
+                message.innerText = "You've hit the gold standard. Champions aren't born, they're built in moments like these. Take a breath, admire the work, and then raise the bar even higher.";
+            } else {
+                body.className = "state-loss";
+                badge.innerText = "TACTICAL SETBACK";
+                icon.innerText = "🛡️";
+                title.innerText = "Embrace the Grind";
+                message.innerText = "A minor setback for a major comeback. Masterminds don't lose; they gather data. Analyze the gaps, adapt your strategy, and return untouchable.";
+            }
+        }
+    </script>
+
+</body>
+</html>
