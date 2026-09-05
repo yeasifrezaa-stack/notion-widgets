@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weekly Prep Schedule</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,500&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #F5F2EB;
+      --linen: #D7CDBE;
+      --straw: #C8A77D;
+      --taupe: #8F8272;
+      --gold: #E9DEC1;
+      --notion: #191919;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Outfit', system-ui, sans-serif;
+      background: var(--notion);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 16px;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Atmospheric rear glow */
+    body::before {
+      content: "";
+      position: absolute;
+      width: 700px;
+      height: 500px;
+      background: radial-gradient(ellipse at center, rgba(200, 167, 125, 0.12) 0%, transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ===== WIDGET ===== */
+    .schedule {
+      width: 100%;
+      max-width: 860px;
+      background: rgba(25, 25, 25, 0.55);
+      backdrop-filter: blur(40px) saturate(150%);
+      -webkit-backdrop-filter: blur(40px) saturate(150%);
+      border: 1px solid rgba(245, 242, 235, 0.1);
+      border-radius: 28px;
+      padding: 28px 24px 22px;
+      position: relative;
+      z-index: 1;
+      box-shadow: 
+        0 30px 80px -30px rgba(0,0,0,0.7),
+        0 0 100px rgba(200, 167, 125, 0.06),
+        inset 0 1px 0 rgba(245, 242, 235, 0.06);
+      opacity: 0;
+      transform: translateY(30px) scale(0.97);
+      animation: cinematicIn 1.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes cinematicIn {
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .schedule::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(245,242,235,0.25), transparent);
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+      opacity: 0;
+      transform: translateY(12px);
+      animation: fadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+    }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      font-weight: 500;
+      color: var(--cream);
+      letter-spacing: 0.04em;
+      text-shadow: 0 0 30px rgba(245, 242, 235, 0.25);
+    }
+
+    .header p {
+      font-size: 11px;
+      color: var(--taupe);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* Days header */
+    .days {
+      display: grid;
+      grid-template-columns: 70px repeat(6, 1fr);
+      gap: 8px;
+      margin-bottom: 10px;
+      padding: 0 2px;
+      opacity: 0;
+      animation: fadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards;
+    }
+
+    .day-label {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--linen);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .day-label:first-child {
+      text-align: left;
+      color: var(--taupe);
+    }
+
+    /* Time bands */
+    .band {
+      display: grid;
+      grid-template-columns: 70px repeat(6, 1fr);
+      gap: 8px;
+      margin-bottom: 8px;
+      opacity: 0;
+      transform: translateY(16px);
+      animation: bandIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .band:nth-child(1) { animation-delay: 0.45s; }
+    .band:nth-child(2) { animation-delay: 0.55s; }
+    .band:nth-child(3) { animation-delay: 0.65s; }
+
+    @keyframes bandIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .time-label {
+      font-size: 12px;
+      color: var(--taupe);
+      display: flex;
+      align-items: center;
+      letter-spacing: 0.02em;
+    }
+
+    /* Task cards */
+    .slot {
+      min-height: 52px;
+      border-radius: 12px;
+      border: 1px solid rgba(245, 242, 235, 0.06);
+      background: rgba(143, 130, 114, 0.08);
+      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slot:hover {
+      background: rgba(200, 167, 125, 0.12);
+      border-color: rgba(245, 242, 235, 0.14);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px -8px rgba(0,0,0,0.4);
+    }
+
+    .slot.filled {
+      background: linear-gradient(145deg, rgba(200, 167, 125, 0.22), rgba(143, 130, 114, 0.18));
+      border-color: rgba(233, 222, 193, 0.2);
+    }
+
+    .slot.filled:hover {
+      background: linear-gradient(145deg, rgba(200, 167, 125, 0.3), rgba(143, 130, 114, 0.25));
+      box-shadow: 0 10px 24px -8px rgba(0,0,0,0.45);
+    }
+
+    .task {
+      padding: 10px 11px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .task-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--cream);
+      line-height: 1.25;
+      text-shadow: 0 0 12px rgba(245, 242, 235, 0.15);
+    }
+
+    .task-tag {
+      font-size: 9px;
+      color: var(--straw);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-top: 2px;
+      opacity: 0.85;
+    }
+
+    /* Empty slot plus */
+    .slot:not(.filled)::after {
+      content: "+";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 18px;
+      color: rgba(245, 242, 235, 0.15);
+      transition: all 0.3s ease;
+    }
+
+    .slot:not(.filled):hover::after {
+      color: rgba(245, 242, 235, 0.35);
+    }
+
+    /* Guide */
+    .guide {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(245, 242, 235, 0.08);
+      opacity: 0;
+      animation: fadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.8s forwards;
+    }
+
+    .guide-text {
+      font-size: 12px;
+      color: var(--linen);
+      line-height: 1.55;
+      margin-bottom: 8px;
+    }
+
+    .guide-tip {
+      font-size: 11.5px;
+      color: var(--taupe);
+      line-height: 1.5;
+      padding: 9px 12px;
+      background: rgba(200, 167, 125, 0.1);
+      border-radius: 10px;
+      border-left: 2px solid rgba(200, 167, 125, 0.35);
+    }
+
+    /* Modal */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(14px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.35s ease;
+    }
+
+    .overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      width: 90%;
+      max-width: 340px;
+      background: rgba(30, 28, 25, 0.95);
+      border: 1px solid rgba(245, 242, 235, 0.12);
+      border-radius: 18px;
+      padding: 24px 20px;
+      transform: scale(0.95) translateY(14px);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .overlay.open .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      color: var(--cream);
+      margin-bottom: 14px;
+      text-shadow: 0 0 16px rgba(245, 242, 235, 0.2);
+    }
+
+    .modal label {
+      display: block;
+      font-size: 11px;
+      color: var(--taupe);
+      margin-bottom: 5px;
+      letter-spacing: 0.04em;
+    }
+
+    .modal input, .modal select {
+      width: 100%;
+      height: 40px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(245, 242, 235, 0.12);
+      border-radius: 10px;
+      color: var(--cream);
+      font-size: 14px;
+      padding: 0 12px;
+      outline: none;
+      margin-bottom: 12px;
+    }
+
+    .modal input:focus, .modal select:focus {
+      border-color: rgba(200, 167, 125, 0.4);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .modal-actions button {
+      flex: 1;
+      height: 40px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.25s ease;
+    }
+
+    .btn-cancel {
+      background: transparent;
+      border: 1px solid rgba(245, 242, 235, 0.15) !important;
+      color: var(--taupe);
+    }
+
+    .btn-save {
+      background: linear-gradient(135deg, #C8A77D, #8F8272);
+      color: #1a1815;
+    }
+
+    .btn-save:hover {
+      filter: brightness(1.08);
+    }
+
+    @media (max-width: 700px) {
+      .days, .band {
+        grid-template-columns: 54px repeat(6, 1fr);
+        gap: 5px;
+      }
+      .task-title { font-size: 11px; }
+      .header h1 { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="schedule">
+    <div class="header">
+      <h1>Weekly Prep Schedule</h1>
+      <p>Evening Focus Blocks</p>
+    </div>
+
+    <!-- Days -->
+    <div class="days">
+      <div class="day-label">Time</div>
+      <div class="day-label">Mon</div>
+      <div class="day-label">Tue</div>
+      <div class="day-label">Wed</div>
+      <div class="day-label">Thu</div>
+      <div class="day-label">Fri</div>
+      <div class="day-label">Sat</div>
+    </div>
+
+    <!-- 4-5pm -->
+    <div class="band">
+      <div class="time-label">4–5pm</div>
+      <div class="slot filled" data-day="mon" data-time="4-5">
+        <div class="task"><div class="task-title">IELTS Practice</div><div class="task-tag">Practice</div></div>
+      </div>
+      <div class="slot" data-day="tue" data-time="4-5"></div>
+      <div class="slot filled" data-day="wed" data-time="4-5">
+        <div class="task"><div class="task-title">Essay Writing</div><div class="task-tag">Writing</div></div>
+      </div>
+      <div class="slot" data-day="thu" data-time="4-5"></div>
+      <div class="slot filled" data-day="fri" data-time="4-5">
+        <div class="task"><div class="task-title">Scholarship Research</div><div class="task-tag">Research</div></div>
+      </div>
+      <div class="slot" data-day="sat" data-time="4-5"></div>
+    </div>
+
+    <!-- 5-6pm -->
+    <div class="band">
+      <div class="time-label">5–6pm</div>
+      <div class="slot" data-day="mon" data-time="5-6"></div>
+      <div class="slot filled" data-day="tue" data-time="5-6">
+        <div class="task"><div class="task-title">University Research</div><div class="task-tag">Research</div></div>
+      </div>
+      <div class="slot" data-day="wed" data-time="5-6"></div>
+      <div class="slot filled" data-day="thu" data-time="5-6">
+        <div class="task"><div class="task-title">CV Editing</div><div class="task-tag">Career</div></div>
+      </div>
+      <div class="slot" data-day="fri" data-time="5-6"></div>
+      <div class="slot filled" data-day="sat" data-time="5-6">
+        <div class="task"><div class="task-title">Interview Practice</div><div class="task-tag">Practice</div></div>
+      </div>
+    </div>
+
+    <!-- 6-7pm -->
+    <div class="band">
+      <div class="time-label">6–7pm</div>
+      <div class="slot" data-day="mon" data-time="6-7"></div>
+      <div class="slot" data-day="tue" data-time="6-7"></div>
+      <div class="slot filled" data-day="wed" data-time="6-7">
+        <div class="task"><div class="task-title">Portfolio Work</div><div class="task-tag">Career</div></div>
+      </div>
+      <div class="slot" data-day="thu" data-time="6-7"></div>
+      <div class="slot" data-day="fri" data-time="6-7"></div>
+      <div class="slot filled" data-day="sat" data-time="6-7">
+        <div class="task"><div class="task-title">Career Reading</div><div class="task-tag">Career</div></div>
+      </div>
+    </div>
+
+    <!-- Guide -->
+    <div class="guide">
+      <div class="guide-text">
+        Click any filled card to edit it, or click an empty slot to add a new focus block. This board replaces the rigid table with a clearer visual map of your evening prep time.
+      </div>
+      <div class="guide-tip">
+        <strong>Tip:</strong> Keep at least one empty slot per day. Leaving breathing room prevents burnout and keeps the schedule sustainable.
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <h3 id="modalTitle">Edit Block</h3>
+      <label>Task name</label>
+      <input type="text" id="taskName" placeholder="e.g. Essay Writing" />
+      <label>Category</label>
+      <select id="taskCat">
+        <option>Practice</option>
+        <option>Writing</option>
+        <option>Research</option>
+        <option>Career</option>
+      </select>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="btnCancel">Cancel</button>
+        <button class="btn-save" id="btnSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentSlot = null;
+
+    document.querySelectorAll('.slot').forEach(slot => {
+      slot.addEventListener('click', () => {
+        currentSlot = slot;
+        const isFilled = slot.classList.contains('filled');
+        document.getElementById('modalTitle').textContent = isFilled ? 'Edit Block' : 'Add Block';
+        
+        if (isFilled) {
+          const title = slot.querySelector('.task-title')?.textContent || '';
+          const tag = slot.querySelector('.task-tag')?.textContent || 'Practice';
+          document.getElementById('taskName').value = title;
+          document.getElementById('taskCat').value = tag;
+        } else {
+          document.getElementById('taskName').value = '';
+          document.getElementById('taskCat').value = 'Practice';
+        }
+
+        document.getElementById('overlay').classList.add('open');
+        setTimeout(() => document.getElementById('taskName').focus(), 80);
+      });
+    });
+
+    document.getElementById('btnCancel').addEventListener('click', () => {
+      document.getElementById('overlay').classList.remove('open');
+    });
+
+    document.getElementById('btnSave').addEventListener('click', () => {
+      const name = document.getElementById('taskName').value.trim();
+      const cat = document.getElementById('taskCat').value;
+      if (!name || !currentSlot) return;
+
+      currentSlot.classList.add('filled');
+      currentSlot.innerHTML = `
+        <div class="task">
+          <div class="task-title">${name}</div>
+          <div class="task-tag">${cat}</div>
+        </div>
+      `;
+      document.getElementById('overlay').classList.remove('open');
+    });
+
+    document.getElementById('overlay').addEventListener('click', (e) => {
+      if (e.target.id === 'overlay') {
+        document.getElementById('overlay').classList.remove('open');
+      }
+    });
+  </script>
+</body>
+</html>
