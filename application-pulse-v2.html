@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Application Pulse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --straw: #DDBEB8;
+      --rose: #F4DFDB;
+      --caramel: #B79892;
+      --onyx: #2C272C;
+      --puce: #796465;
+      --notion: #191919;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--notion);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ===== MAIN WIDGET ===== */
+    .pulse {
+      width: 100%;
+      max-width: 940px;
+      background: rgba(44, 39, 44, 0.52);
+      backdrop-filter: blur(32px) saturate(160%);
+      -webkit-backdrop-filter: blur(32px) saturate(160%);
+      border: 1px solid rgba(221, 190, 184, 0.1);
+      border-radius: 30px;
+      padding: 24px 22px 20px;
+      position: relative;
+      box-shadow: 
+        0 20px 50px -20px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(244, 223, 219, 0.05);
+      opacity: 0;
+      transform: translateY(24px) scale(0.98);
+      animation: enter 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes enter {
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .pulse::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 45%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(244,223,219,0.3), transparent);
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 20px;
+      padding: 0 4px;
+    }
+
+    .header-left h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 24px;
+      font-weight: 500;
+      color: var(--rose);
+      letter-spacing: 0.02em;
+    }
+
+    .header-left p {
+      font-size: 11px;
+      color: var(--caramel);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      background: rgba(221, 190, 184, 0.1);
+      border: 1px solid rgba(221, 190, 184, 0.18);
+      font-size: 11px;
+      color: var(--straw);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--straw);
+      box-shadow: 0 0 8px rgba(221, 190, 184, 0.6);
+      animation: pulseDot 2.4s ease-in-out infinite;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    /* Cards */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      position: relative;
+      border-radius: 18px;
+      padding: 18px 14px 15px;
+      cursor: pointer;
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow: hidden;
+      border: 1px solid transparent;
+      opacity: 0;
+      transform: translateY(16px);
+      animation: cardIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .card:nth-child(1) { animation-delay: 0.15s; }
+    .card:nth-child(2) { animation-delay: 0.25s; }
+    .card:nth-child(3) { animation-delay: 0.35s; }
+    .card:nth-child(4) { animation-delay: 0.45s; }
+
+    @keyframes cardIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card:hover {
+      transform: translateY(-6px) scale(1.02);
+      box-shadow: 0 16px 32px -12px rgba(0,0,0,0.4);
+    }
+
+    .card.active {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px -10px rgba(0,0,0,0.35);
+    }
+
+    /* Stronger color presence */
+    .card-uni {
+      background: linear-gradient(160deg, rgba(121,100,101,0.75), rgba(44,39,44,0.85));
+      border-color: rgba(221,190,184,0.2);
+    }
+    .card-app {
+      background: linear-gradient(160deg, rgba(183,152,146,0.7), rgba(44,39,44,0.85));
+      border-color: rgba(244,223,219,0.18);
+    }
+    .card-sch {
+      background: linear-gradient(160deg, rgba(221,190,184,0.55), rgba(121,100,101,0.5));
+      border-color: rgba(244,223,219,0.22);
+    }
+    .card-dead {
+      background: linear-gradient(160deg, rgba(183,152,146,0.65), rgba(121,100,101,0.6));
+      border-color: rgba(221,190,184,0.25);
+    }
+
+    .card-icon {
+      font-size: 16px;
+      margin-bottom: 10px;
+      opacity: 0.9;
+    }
+
+    .card-number {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 34px;
+      font-weight: 500;
+      color: var(--rose);
+      line-height: 1;
+      margin-bottom: 5px;
+      text-shadow: 0 0 20px rgba(244,223,219,0.15);
+    }
+
+    .card-label {
+      font-size: 12px;
+      color: var(--straw);
+      letter-spacing: 0.02em;
+      line-height: 1.35;
+    }
+
+    /* Connecting pulse line */
+    .pulse-line {
+      height: 2px;
+      margin: 0 10px 16px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, 
+        transparent, 
+        var(--puce) 10%, 
+        var(--caramel) 35%, 
+        var(--straw) 60%, 
+        var(--rose) 85%, 
+        transparent);
+      opacity: 0.55;
+      transform: scaleX(0);
+      transform-origin: left center;
+      animation: drawLine 1.6s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;
+    }
+
+    @keyframes drawLine {
+      to { transform: scaleX(1); }
+    }
+
+    /* ===== PRODUCTIVE SECTION ===== */
+    .work-area {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 12px;
+    }
+
+    .panel {
+      background: rgba(44, 39, 44, 0.55);
+      border: 1px solid rgba(221, 190, 184, 0.1);
+      border-radius: 16px;
+      padding: 14px 15px;
+    }
+
+    .panel-title {
+      font-size: 11px;
+      color: var(--caramel);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    /* Quick actions */
+    .quick-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .q-btn {
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid rgba(221,190,184,0.14);
+      background: rgba(0,0,0,0.2);
+      color: var(--rose);
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+
+    .q-btn:hover {
+      background: rgba(221,190,184,0.12);
+      border-color: rgba(221,190,184,0.28);
+      transform: translateX(3px);
+    }
+
+    /* Next deadline focus */
+    .deadline-box {
+      text-align: center;
+    }
+
+    .deadline-number {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 42px;
+      font-weight: 500;
+      color: var(--rose);
+      line-height: 1;
+      text-shadow: 0 0 24px rgba(244,223,219,0.2);
+    }
+
+    .deadline-label {
+      font-size: 12px;
+      color: var(--straw);
+      margin-top: 2px;
+      margin-bottom: 10px;
+    }
+
+    .deadline-actions {
+      display: flex;
+      gap: 7px;
+    }
+
+    .deadline-actions button {
+      flex: 1;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid rgba(221,190,184,0.15);
+      background: rgba(0,0,0,0.2);
+      color: var(--rose);
+      font-size: 11.5px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .deadline-actions button:hover {
+      background: rgba(221,190,184,0.12);
+    }
+
+    /* Expandable editor */
+    .editor {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                  opacity 0.45s ease,
+                  margin 0.45s ease;
+      opacity: 0;
+      margin-top: 0;
+    }
+
+    .editor.open {
+      max-height: 200px;
+      opacity: 1;
+      margin-top: 14px;
+    }
+
+    .editor-inner {
+      background: rgba(44, 39, 44, 0.65);
+      border: 1px solid rgba(221, 190, 184, 0.12);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .editor-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 17px;
+      color: var(--rose);
+      margin-bottom: 4px;
+    }
+
+    .editor-desc {
+      font-size: 12px;
+      color: var(--straw);
+      margin-bottom: 12px;
+      line-height: 1.45;
+    }
+
+    .editor-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .editor-row input {
+      flex: 1;
+      height: 36px;
+      background: rgba(0,0,0,0.28);
+      border: 1px solid rgba(221,190,184,0.15);
+      border-radius: 9px;
+      color: var(--rose);
+      font-size: 14px;
+      padding: 0 12px;
+      outline: none;
+    }
+
+    .editor-row input:focus {
+      border-color: rgba(221,190,184,0.35);
+    }
+
+    .editor-row button {
+      height: 36px;
+      padding: 0 16px;
+      border-radius: 9px;
+      border: none;
+      background: linear-gradient(135deg, var(--straw), var(--caramel));
+      color: var(--onyx);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: filter 0.2s ease;
+    }
+
+    .editor-row button:hover {
+      filter: brightness(1.08);
+    }
+
+    .note-input {
+      width: 100%;
+      height: 52px;
+      background: rgba(0,0,0,0.22);
+      border: 1px solid rgba(221,190,184,0.12);
+      border-radius: 9px;
+      color: var(--rose);
+      font-size: 12.5px;
+      padding: 10px 12px;
+      resize: none;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .note-input:focus {
+      border-color: rgba(221,190,184,0.3);
+    }
+
+    @media (max-width: 720px) {
+      .cards { grid-template-columns: 1fr 1fr; }
+      .work-area { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="pulse">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <h1>Application Pulse</h1>
+        <p>Command Strip</p>
+      </div>
+      <div class="status-pill">
+        <div class="status-dot"></div>
+        Live
+      </div>
+    </div>
+
+    <!-- Pulse line -->
+    <div class="pulse-line"></div>
+
+    <!-- Stat cards -->
+    <div class="cards">
+      <div class="card card-uni" data-key="uni">
+        <div class="card-icon">🔑</div>
+        <div class="card-number" id="num-uni">5</div>
+        <div class="card-label">universities<br>researched</div>
+      </div>
+      <div class="card card-app" data-key="app">
+        <div class="card-icon">📄</div>
+        <div class="card-number" id="num-app">4</div>
+        <div class="card-label">applications<br>active</div>
+      </div>
+      <div class="card card-sch" data-key="sch">
+        <div class="card-icon">💰</div>
+        <div class="card-number" id="num-sch">4</div>
+        <div class="card-label">scholarships<br>tracked</div>
+      </div>
+      <div class="card card-dead" data-key="dead">
+        <div class="card-icon">⚠️</div>
+        <div class="card-number" id="num-dead">5</div>
+        <div class="card-label">days to next<br>deadline</div>
+      </div>
+    </div>
+
+    <!-- Productive work area -->
+    <div class="work-area">
+      <div class="panel">
+        <div class="panel-title">Quick Actions</div>
+        <div class="quick-actions">
+          <button class="q-btn" data-action="uni">+ Add University</button>
+          <button class="q-btn" data-action="app">+ New Application</button>
+          <button class="q-btn" data-action="sch">+ Track Scholarship</button>
+          <button class="q-btn" data-action="dead">Update Deadline</button>
+        </div>
+      </div>
+
+      <div class="panel deadline-box">
+        <div class="panel-title">Next Deadline</div>
+        <div class="deadline-number" id="bigDeadline">5</div>
+        <div class="deadline-label">days remaining</div>
+        <div class="deadline-actions">
+          <button id="btnMinus">−1 Day</button>
+          <button id="btnPlus">+1 Day</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Expandable editor -->
+    <div class="editor" id="editor">
+      <div class="editor-inner">
+        <div class="editor-title" id="editorTitle">Universities Researched</div>
+        <div class="editor-desc" id="editorDesc">Update the count and leave a short note.</div>
+        <div class="editor-row">
+          <input type="number" id="editorInput" min="0" max="99" />
+          <button id="editorSave">Save</button>
+        </div>
+        <textarea class="note-input" id="editorNote" placeholder="Quick note (optional)..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const store = {
+      uni: { label: "Universities Researched", value: 5, note: "", desc: "How many universities have you deeply researched?" },
+      app: { label: "Applications Active", value: 4, note: "", desc: "Applications currently in progress." },
+      sch: { label: "Scholarships Tracked", value: 4, note: "", desc: "Scholarships you are actively following." },
+      dead: { label: "Days to Next Deadline", value: 5, note: "", desc: "Countdown to your nearest deadline." }
+    };
+
+    let activeKey = null;
+    const editor = document.getElementById('editor');
+
+    function updateDisplay() {
+      document.getElementById('num-uni').textContent = store.uni.value;
+      document.getElementById('num-app').textContent = store.app.value;
+      document.getElementById('num-sch').textContent = store.sch.value;
+      document.getElementById('num-dead').textContent = store.dead.value;
+      document.getElementById('bigDeadline').textContent = store.dead.value;
+    }
+
+    function openEditor(key) {
+      if (activeKey === key) {
+        editor.classList.remove('open');
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+        activeKey = null;
+        return;
+      }
+
+      activeKey = key;
+      document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+      document.querySelector(`.card[data-key="${key}"]`).classList.add('active');
+
+      document.getElementById('editorTitle').textContent = store[key].label;
+      document.getElementById('editorDesc').textContent = store[key].desc;
+      document.getElementById('editorInput').value = store[key].value;
+      document.getElementById('editorNote').value = store[key].note || '';
+      editor.classList.add('open');
+    }
+
+    // Card clicks
+    document.querySelectorAll('.card').forEach(card => {
+      card.addEventListener('click', () => openEditor(card.dataset.key));
+    });
+
+    // Quick action buttons
+    document.querySelectorAll('.q-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.action;
+        openEditor(key);
+        // Pre-fill with +1 suggestion
+        document.getElementById('editorInput').value = store[key].value + 1;
+      });
+    });
+
+    // Save
+    document.getElementById('editorSave').addEventListener('click', () => {
+      if (!activeKey) return;
+      const val = parseInt(document.getElementById('editorInput').value);
+      if (isNaN(val) || val < 0) return;
+
+      store[activeKey].value = val;
+      store[activeKey].note = document.getElementById('editorNote').value;
+      updateDisplay();
+      editor.classList.remove('open');
+      document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+      activeKey = null;
+    });
+
+    // Deadline quick adjust
+    document.getElementById('btnMinus').addEventListener('click', () => {
+      if (store.dead.value > 0) {
+        store.dead.value--;
+        updateDisplay();
+      }
+    });
+
+    document.getElementById('btnPlus').addEventListener('click', () => {
+      store.dead.value++;
+      updateDisplay();
+    });
+
+    updateDisplay();
+  </script>
+</body>
+</html>
