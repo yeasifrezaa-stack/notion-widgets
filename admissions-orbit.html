@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admissions Orbit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,500&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --dove: #C0BAB3;
+      --chocolate: #52423D;
+      --moon: #887D77;
+      --sienna: #391214;
+      --raspberry: #160F0C;
+      --notion: #191919;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Outfit', system-ui, sans-serif;
+      background: var(--notion);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+
+    /* ===== WIDGET SHELL ===== */
+    .orbit-widget {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(22, 15, 12, 0.55);
+      backdrop-filter: blur(36px) saturate(160%);
+      -webkit-backdrop-filter: blur(36px) saturate(160%);
+      border: 1px solid rgba(192, 186, 179, 0.1);
+      border-radius: 32px;
+      padding: 28px 24px 24px;
+      position: relative;
+      box-shadow: 
+        0 24px 60px -24px rgba(0,0,0,0.6),
+        inset 0 1px 0 rgba(192, 186, 179, 0.06);
+      opacity: 0;
+      transform: translateY(20px) scale(0.97);
+      animation: shellIn 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes shellIn {
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .orbit-widget::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(192,186,179,0.28), transparent);
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px;
+      font-weight: 500;
+      color: var(--dove);
+      letter-spacing: 0.03em;
+      text-shadow: 0 0 24px rgba(192, 186, 179, 0.35);
+    }
+
+    .header p {
+      font-size: 11px;
+      color: var(--moon);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-top: 3px;
+    }
+
+    /* ===== ORBIT STAGE ===== */
+    .stage {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      margin: 12px auto 20px;
+    }
+
+    /* Center core */
+    .core {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #52423D, #160F0C 70%);
+      border: 1px solid rgba(192, 186, 179, 0.2);
+      box-shadow: 
+        0 0 40px rgba(57, 18, 20, 0.5),
+        inset 0 0 30px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .core:hover {
+      box-shadow: 
+        0 0 50px rgba(57, 18, 20, 0.7),
+        inset 0 0 30px rgba(0,0,0,0.5);
+    }
+
+    .core-score {
+      font-family: 'Playfair Display', serif;
+      font-size: 42px;
+      font-weight: 500;
+      color: var(--dove);
+      line-height: 1;
+      text-shadow: 0 0 28px rgba(192, 186, 179, 0.45);
+    }
+
+    .core-label {
+      font-size: 10px;
+      color: var(--moon);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* Orbit rings */
+    .ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      border-radius: 50%;
+      border: 1px solid rgba(192, 186, 179, 0.12);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .ring-1 { width: 180px; height: 180px; }
+    .ring-2 { width: 240px; height: 240px; opacity: 0.7; }
+    .ring-3 { width: 290px; height: 290px; opacity: 0.4; }
+
+    /* Orbiting nodes */
+    .node {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 64px;
+      height: 64px;
+      margin: -32px 0 0 -32px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 5;
+      opacity: 0;
+      animation: nodeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .node:nth-child(1) { animation-delay: 0.3s; }
+    .node:nth-child(2) { animation-delay: 0.4s; }
+    .node:nth-child(3) { animation-delay: 0.5s; }
+    .node:nth-child(4) { animation-delay: 0.6s; }
+    .node:nth-child(5) { animation-delay: 0.7s; }
+
+    @keyframes nodeIn {
+      to { opacity: 1; }
+    }
+
+    .node:hover {
+      transform: scale(1.12);
+      z-index: 8;
+    }
+
+    .node-inner {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(192, 186, 179, 0.25);
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      transition: all 0.4s ease;
+    }
+
+    .node:hover .node-inner {
+      box-shadow: 0 0 28px rgba(192, 186, 179, 0.25);
+    }
+
+    .node-uni .node-inner { background: linear-gradient(145deg, #52423D, #391214); }
+    .node-app .node-inner { background: linear-gradient(145deg, #887D77, #52423D); }
+    .node-sch .node-inner { background: linear-gradient(145deg, #C0BAB3, #887D77); }
+    .node-essay .node-inner { background: linear-gradient(145deg, #391214, #160F0C); }
+    .node-test .node-inner { background: linear-gradient(145deg, #52423D, #160F0C); }
+
+    .node-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--dove);
+      line-height: 1;
+      text-shadow: 0 0 12px rgba(192, 186, 179, 0.4);
+    }
+
+    .node-label {
+      font-size: 8px;
+      color: rgba(192, 186, 179, 0.75);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-top: 1px;
+    }
+
+    /* Positioning the 5 nodes in orbit */
+    .node-uni   { transform: rotate(0deg) translateY(-118px) rotate(0deg); }
+    .node-app   { transform: rotate(72deg) translateY(-118px) rotate(-72deg); }
+    .node-sch   { transform: rotate(144deg) translateY(-118px) rotate(-144deg); }
+    .node-essay { transform: rotate(216deg) translateY(-118px) rotate(-216deg); }
+    .node-test  { transform: rotate(288deg) translateY(-118px) rotate(-288deg); }
+
+    .node-uni:hover   { transform: rotate(0deg) translateY(-118px) rotate(0deg) scale(1.12); }
+    .node-app:hover   { transform: rotate(72deg) translateY(-118px) rotate(-72deg) scale(1.12); }
+    .node-sch:hover   { transform: rotate(144deg) translateY(-118px) rotate(-144deg) scale(1.12); }
+    .node-essay:hover { transform: rotate(216deg) translateY(-118px) rotate(-216deg) scale(1.12); }
+    .node-test:hover  { transform: rotate(288deg) translateY(-118px) rotate(-288deg) scale(1.12); }
+
+    /* Ambient glow particles */
+    .glow {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      filter: blur(20px);
+      opacity: 0.35;
+      animation: floatGlow 8s ease-in-out infinite;
+    }
+
+    .glow-1 {
+      width: 80px; height: 80px;
+      background: var(--sienna);
+      top: 20%; left: 15%;
+      animation-delay: 0s;
+    }
+    .glow-2 {
+      width: 60px; height: 60px;
+      background: var(--chocolate);
+      bottom: 25%; right: 10%;
+      animation-delay: -3s;
+    }
+
+    @keyframes floatGlow {
+      0%, 100% { transform: translate(0, 0); opacity: 0.3; }
+      50% { transform: translate(10px, -12px); opacity: 0.5; }
+    }
+
+    /* ===== PRODUCTIVE FOOTER ===== */
+    .footer {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .action-card {
+      background: rgba(22, 15, 12, 0.6);
+      border: 1px solid rgba(192, 186, 179, 0.12);
+      border-radius: 14px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .action-card:hover {
+      background: rgba(82, 66, 61, 0.4);
+      border-color: rgba(192, 186, 179, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .action-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 14px;
+      color: var(--dove);
+      text-shadow: 0 0 12px rgba(192, 186, 179, 0.25);
+      margin-bottom: 2px;
+    }
+
+    .action-desc {
+      font-size: 11px;
+      color: var(--moon);
+    }
+
+    /* Edit modal */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.35s ease;
+    }
+
+    .overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      width: 90%;
+      max-width: 320px;
+      background: rgba(22, 15, 12, 0.9);
+      border: 1px solid rgba(192, 186, 179, 0.15);
+      border-radius: 20px;
+      padding: 24px 20px;
+      transform: scale(0.94) translateY(12px);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .overlay.open .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      color: var(--dove);
+      text-shadow: 0 0 16px rgba(192, 186, 179, 0.3);
+      margin-bottom: 6px;
+    }
+
+    .modal p {
+      font-size: 12px;
+      color: var(--moon);
+      margin-bottom: 16px;
+    }
+
+    .modal input {
+      width: 100%;
+      height: 42px;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(192, 186, 179, 0.18);
+      border-radius: 11px;
+      color: var(--dove);
+      font-size: 16px;
+      padding: 0 14px;
+      outline: none;
+      margin-bottom: 14px;
+    }
+
+    .modal input:focus {
+      border-color: rgba(192, 186, 179, 0.4);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .modal-actions button {
+      flex: 1;
+      height: 40px;
+      border-radius: 11px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.25s ease;
+    }
+
+    .btn-cancel {
+      background: transparent;
+      border: 1px solid rgba(192, 186, 179, 0.2) !important;
+      color: var(--moon);
+    }
+
+    .btn-save {
+      background: linear-gradient(135deg, #887D77, #52423D);
+      color: var(--dove);
+    }
+
+    .btn-save:hover {
+      filter: brightness(1.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="orbit-widget">
+    <div class="header">
+      <h1>Admissions Orbit</h1>
+      <p>Readiness Dial</p>
+    </div>
+
+    <div class="stage">
+      <!-- Ambient glows -->
+      <div class="glow glow-1"></div>
+      <div class="glow glow-2"></div>
+
+      <!-- Rings -->
+      <div class="ring ring-1"></div>
+      <div class="ring ring-2"></div>
+      <div class="ring ring-3"></div>
+
+      <!-- Center -->
+      <div class="core">
+        <div class="core-score" id="score">78</div>
+        <div class="core-label">Readiness</div>
+      </div>
+
+      <!-- Orbiting nodes -->
+      <div class="node node-uni" data-key="uni">
+        <div class="node-inner">
+          <div class="node-value" id="val-uni">5</div>
+          <div class="node-label">Univ</div>
+        </div>
+      </div>
+      <div class="node node-app" data-key="app">
+        <div class="node-inner">
+          <div class="node-value" id="val-app">4</div>
+          <div class="node-label">Apps</div>
+        </div>
+      </div>
+      <div class="node node-sch" data-key="sch">
+        <div class="node-inner">
+          <div class="node-value" id="val-sch">4</div>
+          <div class="node-label">Funds</div>
+        </div>
+      </div>
+      <div class="node node-essay" data-key="essay">
+        <div class="node-inner">
+          <div class="node-value" id="val-essay">3</div>
+          <div class="node-label">Essay</div>
+        </div>
+      </div>
+      <div class="node node-test" data-key="test">
+        <div class="node-inner">
+          <div class="node-value" id="val-test">2</div>
+          <div class="node-label">Tests</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Productive footer -->
+    <div class="footer">
+      <div class="action-card" id="btnBalance">
+        <div class="action-title">Rebalance</div>
+        <div class="action-desc">Optimize readiness</div>
+      </div>
+      <div class="action-card" id="btnLog">
+        <div class="action-title">Quick Log</div>
+        <div class="action-desc">Update any pillar</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Overlay -->
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <h3 id="modalTitle">Update</h3>
+      <p id="modalDesc">Adjust the value for this pillar.</p>
+      <input type="number" id="modalInput" min="0" max="50" />
+      <div class="modal-actions">
+        <button class="btn-cancel" id="btnCancel">Cancel</button>
+        <button class="btn-save" id="btnSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const data = {
+      uni:   { label: "Universities", value: 5 },
+      app:   { label: "Applications", value: 4 },
+      sch:   { label: "Scholarships", value: 4 },
+      essay: { label: "Essays", value: 3 },
+      test:  { label: "Tests", value: 2 }
+    };
+
+    let activeKey = null;
+
+    function calcScore() {
+      // Simple weighted readiness score
+      const total = data.uni.value + data.app.value + data.sch.value + data.essay.value + data.test.value;
+      const max = 25; // rough ideal
+      return Math.min(100, Math.round((total / max) * 100));
+    }
+
+    function updateUI() {
+      document.getElementById('val-uni').textContent = data.uni.value;
+      document.getElementById('val-app').textContent = data.app.value;
+      document.getElementById('val-sch').textContent = data.sch.value;
+      document.getElementById('val-essay').textContent = data.essay.value;
+      document.getElementById('val-test').textContent = data.test.value;
+      document.getElementById('score').textContent = calcScore();
+    }
+
+    function openModal(key) {
+      activeKey = key;
+      document.getElementById('modalTitle').textContent = data[key].label;
+      document.getElementById('modalDesc').textContent = `Update the count for ${data[key].label.toLowerCase()}.`;
+      document.getElementById('modalInput').value = data[key].value;
+      document.getElementById('overlay').classList.add('open');
+      setTimeout(() => document.getElementById('modalInput').focus(), 100);
+    }
+
+    // Node clicks
+    document.querySelectorAll('.node').forEach(node => {
+      node.addEventListener('click', () => openModal(node.dataset.key));
+    });
+
+    document.getElementById('btnLog').addEventListener('click', () => openModal('uni'));
+    document.getElementById('btnBalance').addEventListener('click', () => {
+      // Gentle rebalance suggestion
+      const avg = Math.round((data.uni.value + data.app.value + data.sch.value + data.essay.value + data.test.value) / 5);
+      Object.keys(data).forEach(k => data[k].value = Math.max(data[k].value, avg - 1));
+      updateUI();
+    });
+
+    document.getElementById('btnCancel').addEventListener('click', () => {
+      document.getElementById('overlay').classList.remove('open');
+    });
+
+    document.getElementById('btnSave').addEventListener('click', () => {
+      const val = parseInt(document.getElementById('modalInput').value);
+      if (!isNaN(val) && val >= 0) {
+        data[activeKey].value = val;
+        updateUI();
+      }
+      document.getElementById('overlay').classList.remove('open');
+    });
+
+    document.getElementById('overlay').addEventListener('click', (e) => {
+      if (e.target.id === 'overlay') {
+        document.getElementById('overlay').classList.remove('open');
+      }
+    });
+
+    updateUI();
+  </script>
+</body>
+</html>
