@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Opportunity Command</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --breath: #E4DCD8;
+      --mauve: #C6ADAB;
+      --mocha: #A57F7C;
+      --deep: #3A2A28;
+      --notion: #191919;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Outfit', system-ui, sans-serif;
+      background: var(--notion);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      -webkit-font-smoothing: antialiased;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Strong luminous glow */
+    body::before {
+      content: "";
+      position: absolute;
+      width: 820px;
+      height: 820px;
+      background: radial-gradient(circle, 
+        rgba(198, 173, 171, 0.32) 0%, 
+        rgba(165, 127, 124, 0.14) 40%, 
+        transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 0;
+      animation: glowPulse 6.5s ease-in-out infinite;
+    }
+
+    @keyframes glowPulse {
+      0%, 100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.07); }
+    }
+
+    .widget {
+      width: 100%;
+      max-width: 520px;
+      background: rgba(58, 42, 40, 0.55);
+      backdrop-filter: blur(42px) saturate(170%);
+      -webkit-backdrop-filter: blur(42px) saturate(170%);
+      border: 1px solid rgba(228, 220, 216, 0.2);
+      border-radius: 28px;
+      padding: 26px 22px 20px;
+      position: relative;
+      z-index: 1;
+      box-shadow: 
+        0 30px 70px -25px rgba(0,0,0,0.5),
+        0 0 130px rgba(198, 173, 171, 0.22),
+        inset 0 1px 0 rgba(228, 220, 216, 0.1);
+      opacity: 0;
+      transform: translateY(22px);
+      animation: enter 1.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes enter {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .widget::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 55%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(228, 220, 216, 0.55), transparent);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+
+    .header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      font-weight: 500;
+      color: var(--breath);
+      letter-spacing: 0.04em;
+      text-shadow: 0 0 36px rgba(228, 220, 216, 0.55);
+    }
+
+    .header p {
+      font-size: 11px;
+      color: var(--mauve);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      margin-top: 4px;
+      text-shadow: 0 0 14px rgba(198, 173, 171, 0.35);
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .metric {
+      background: rgba(58, 42, 40, 0.5);
+      border: 1px solid rgba(198, 173, 171, 0.22);
+      border-radius: 14px;
+      padding: 13px 10px;
+      text-align: center;
+      transition: all 0.4s ease;
+      box-shadow: 0 0 24px rgba(165, 127, 124, 0.12);
+    }
+
+    .metric:hover {
+      border-color: rgba(228, 220, 216, 0.35);
+      box-shadow: 0 0 32px rgba(198, 173, 171, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .metric-value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 26px;
+      font-weight: 500;
+      color: var(--breath);
+      text-shadow: 0 0 22px rgba(228, 220, 216, 0.5);
+    }
+
+    .metric-label {
+      font-size: 10px;
+      color: var(--mauve);
+      letter-spacing: 0.08em;
+      margin-top: 2px;
+    }
+
+    .focus {
+      background: rgba(58, 42, 40, 0.5);
+      border: 1px solid rgba(198, 173, 171, 0.22);
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 0 48px rgba(165, 127, 124, 0.15);
+      position: relative;
+    }
+
+    .focus::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 18px;
+      background: radial-gradient(circle at 30% 20%, rgba(228, 220, 216, 0.08), transparent 65%);
+      pointer-events: none;
+    }
+
+    .focus-title {
+      font-size: 11px;
+      color: var(--mauve);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .focus-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--breath);
+      text-shadow: 0 0 24px rgba(228, 220, 216, 0.45);
+      margin-bottom: 3px;
+    }
+
+    .focus-meta {
+      font-size: 12px;
+      color: var(--mocha);
+      margin-bottom: 12px;
+    }
+
+    .focus-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .focus-btn {
+      flex: 1;
+      height: 36px;
+      border-radius: 11px;
+      border: 1px solid rgba(198, 173, 171, 0.28);
+      background: rgba(165, 127, 124, 0.35);
+      color: var(--breath);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-shadow: 0 0 10px rgba(228, 220, 216, 0.25);
+    }
+
+    .focus-btn:hover {
+      background: rgba(165, 127, 124, 0.5);
+      border-color: rgba(228, 220, 216, 0.4);
+      box-shadow: 0 0 24px rgba(198, 173, 171, 0.25);
+    }
+
+    .list-title {
+      font-size: 11px;
+      color: var(--mauve);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 14px;
+      max-height: 170px;
+      overflow-y: auto;
+    }
+
+    .item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 13px;
+      background: rgba(58, 42, 40, 0.45);
+      border: 1px solid rgba(165, 127, 124, 0.2);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.35s ease;
+    }
+
+    .item:hover {
+      background: rgba(165, 127, 124, 0.25);
+      border-color: rgba(228, 220, 216, 0.3);
+      transform: translateX(3px);
+      box-shadow: 0 0 20px rgba(198, 173, 171, 0.15);
+    }
+
+    .item.active {
+      border-color: rgba(228, 220, 216, 0.4);
+      background: rgba(165, 127, 124, 0.3);
+      box-shadow: 0 0 26px rgba(198, 173, 171, 0.2);
+    }
+
+    .item-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--breath);
+      text-shadow: 0 0 12px rgba(228, 220, 216, 0.25);
+    }
+
+    .item-country {
+      font-size: 11px;
+      color: var(--mocha);
+      margin-top: 1px;
+    }
+
+    .item-status {
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 20px;
+      background: rgba(165, 127, 124, 0.3);
+      color: var(--breath);
+    }
+
+    .item-status.ready {
+      background: rgba(198, 173, 171, 0.45);
+      box-shadow: 0 0 14px rgba(198, 173, 171, 0.35);
+    }
+
+    .bottom {
+      display: flex;
+      gap: 8px;
+    }
+
+    .bottom button {
+      flex: 1;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid rgba(198, 173, 171, 0.25);
+      background: rgba(58, 42, 40, 0.5);
+      color: var(--breath);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-shadow: 0 0 10px rgba(228, 220, 216, 0.2);
+    }
+
+    .bottom button:hover {
+      background: rgba(165, 127, 124, 0.4);
+      border-color: rgba(228, 220, 216, 0.4);
+      box-shadow: 0 0 28px rgba(198, 173, 171, 0.25);
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(14px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      width: 90%;
+      max-width: 320px;
+      background: rgba(58, 42, 40, 0.96);
+      border: 1px solid rgba(228, 220, 216, 0.22);
+      border-radius: 18px;
+      padding: 22px 18px;
+      box-shadow: 0 0 70px rgba(198, 173, 171, 0.2);
+      transform: scale(0.95);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .overlay.open .modal {
+      transform: scale(1);
+    }
+
+    .modal h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 20px;
+      color: var(--breath);
+      margin-bottom: 14px;
+      text-shadow: 0 0 18px rgba(228, 220, 216, 0.35);
+    }
+
+    .modal label {
+      display: block;
+      font-size: 11px;
+      color: var(--mauve);
+      margin-bottom: 4px;
+    }
+
+    .modal input, .modal select {
+      width: 100%;
+      height: 38px;
+      background: rgba(0,0,0,0.28);
+      border: 1px solid rgba(165, 127, 124, 0.3);
+      border-radius: 10px;
+      color: var(--breath);
+      font-size: 14px;
+      padding: 0 12px;
+      outline: none;
+      margin-bottom: 12px;
+    }
+
+    .modal input:focus, .modal select:focus {
+      border-color: rgba(228, 220, 216, 0.45);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .modal-actions button {
+      flex: 1;
+      height: 38px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-cancel {
+      background: transparent;
+      border: 1px solid rgba(165, 127, 124, 0.35) !important;
+      color: var(--mocha);
+    }
+
+    .btn-save {
+      background: linear-gradient(135deg, #C6ADAB, #A57F7C);
+      color: #2a1f1d;
+      box-shadow: 0 0 18px rgba(198, 173, 171, 0.35);
+    }
+  </style>
+</head>
+<body>
+  <div class="widget">
+    <div class="header">
+      <h1>Opportunity Command</h1>
+      <p>Scholarship Focus</p>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-value" id="m-active">4</div>
+        <div class="metric-label">Active</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" id="m-ready">1</div>
+        <div class="metric-label">Ready</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" id="m-draft">3</div>
+        <div class="metric-label">In Draft</div>
+      </div>
+    </div>
+
+    <div class="focus">
+      <div class="focus-title">Current Focus</div>
+      <div class="focus-name" id="focusName">Lester B. Pearson</div>
+      <div class="focus-meta" id="focusMeta">Canada · Ready to submit</div>
+      <div class="focus-actions">
+        <button class="focus-btn" id="btnMark">Mark Submitted</button>
+        <button class="focus-btn" id="btnEditFocus">Edit</button>
+      </div>
+    </div>
+
+    <div class="list-title">All Opportunities</div>
+    <div class="list" id="list"></div>
+
+    <div class="bottom">
+      <button id="btnAdd">+ Add Opportunity</button>
+      <button id="btnNext">Next Focus</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <h3 id="modalTitle">Edit Opportunity</h3>
+      <label>Name</label>
+      <input type="text" id="inputName" />
+      <label>Country</label>
+      <input type="text" id="inputCountry" />
+      <label>Status</label>
+      <select id="inputStatus">
+        <option value="draft">In Draft</option>
+        <option value="ready">Ready</option>
+        <option value="submitted">Submitted</option>
+      </select>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="btnCancel">Cancel</button>
+        <button class="btn-save" id="btnSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let items = [
+      { id: 1, name: "Lester B. Pearson", country: "Canada", status: "ready" },
+      { id: 2, name: "Study Abroad Merit Grant", country: "International", status: "draft" },
+      { id: 3, name: "Melbourne Global Scholars", country: "Australia", status: "draft" },
+      { id: 4, name: "Vanier-style Merit Award", country: "Canada", status: "draft" }
+    ];
+
+    let focusId = 1;
+    let editId = null;
+
+    function render() {
+      document.getElementById('m-active').textContent = items.length;
+      document.getElementById('m-ready').textContent = items.filter(i => i.status === 'ready').length;
+      document.getElementById('m-draft').textContent = items.filter(i => i.status === 'draft').length;
+
+      const focus = items.find(i => i.id === focusId) || items[0];
+      if (focus) {
+        focusId = focus.id;
+        document.getElementById('focusName').textContent = focus.name;
+        document.getElementById('focusMeta').textContent = 
+          focus.country + ' · ' + (focus.status === 'ready' ? 'Ready to submit' : focus.status === 'submitted' ? 'Submitted' : 'In draft');
+      }
+
+      const list = document.getElementById('list');
+      list.innerHTML = items.map(item => `
+        <div class="item ${item.id === focusId ? 'active' : ''}" data-id="${item.id}">
+          <div>
+            <div class="item-name">${item.name}</div>
+            <div class="item-country">${item.country}</div>
+          </div>
+          <div class="item-status ${item.status}">${item.status}</div>
+        </div>
+      `).join('');
+
+      document.querySelectorAll('.item').forEach(el => {
+        el.addEventListener('click', () => {
+          focusId = parseInt(el.dataset.id);
+          render();
+        });
+      });
+    }
+
+    function openModal(id = null) {
+      editId = id;
+      if (id) {
+        const item = items.find(i => i.id === id);
+        document.getElementById('modalTitle').textContent = 'Edit Opportunity';
+        document.getElementById('inputName').value = item.name;
+        document.getElementById('inputCountry').value = item.country;
+        document.getElementById('inputStatus').value = item.status;
+      } else {
+        document.getElementById('modalTitle').textContent = 'Add Opportunity';
+        document.getElementById('inputName').value = '';
+        document.getElementById('inputCountry').value = '';
+        document.getElementById('inputStatus').value = 'draft';
+      }
+      document.getElementById('overlay').classList.add('open');
+    }
+
+    document.getElementById('btnEditFocus').addEventListener('click', () => openModal(focusId));
+    document.getElementById('btnAdd').addEventListener('click', () => openModal(null));
+
+    document.getElementById('btnMark').addEventListener('click', () => {
+      const item = items.find(i => i.id === focusId);
+      if (item) { item.status = 'submitted'; render(); }
+    });
+
+    document.getElementById('btnNext').addEventListener('click', () => {
+      const idx = items.findIndex(i => i.id === focusId);
+      focusId = items[(idx + 1) % items.length].id;
+      render();
+    });
+
+    document.getElementById('btnCancel').addEventListener('click', () => {
+      document.getElementById('overlay').classList.remove('open');
+    });
+
+    document.getElementById('btnSave').addEventListener('click', () => {
+      const name = document.getElementById('inputName').value.trim();
+      const country = document.getElementById('inputCountry').value.trim();
+      const status = document.getElementById('inputStatus').value;
+      if (!name) return;
+
+      if (editId) {
+        const item = items.find(i => i.id === editId);
+        item.name = name;
+        item.country = country || item.country;
+        item.status = status;
+      } else {
+        items.push({ id: Date.now(), name, country: country || '—', status });
+      }
+      document.getElementById('overlay').classList.remove('open');
+      render();
+    });
+
+    document.getElementById('overlay').addEventListener('click', e => {
+      if (e.target.id === 'overlay') document.getElementById('overlay').classList.remove('open');
+    });
+
+    render();
+  </script>
+</body>
+</html>
