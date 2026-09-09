@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sakura River Milestones</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Palette mapped strictly from reference image */
+            --notion-bg: #191919;
+            --back-in-black: #16131F;
+            --mountain-heather: #F0D9E4;
+            --decanting: #C1A0AC;
+            --funkie-friday: #4A3F4B;
+            --moonscape: #806C79;
+            --glass-border: rgba(193, 160, 172, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--notion-bg);
+            color: var(--mountain-heather);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* Container floating on Notion background */
+        .river-card {
+            width: 100%;
+            max-width: 980px;
+            background: var(--back-in-black);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 35px 30px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.7), inset 0 1px 1px rgba(240, 217, 228, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Header Bar */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            z-index: 2;
+            position: relative;
+        }
+
+        .title-group h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.2rem;
+            color: var(--mountain-heather);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            outline: none;
+        }
+
+        .title-group p {
+            font-size: 0.85rem;
+            color: var(--decanting);
+            margin-top: 4px;
+        }
+
+        .progress-pill {
+            background: rgba(74, 63, 75, 0.4);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            padding: 8px 18px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--mountain-heather);
+            backdrop-filter: blur(10px);
+        }
+
+        /* River & Stones Stage */
+        .river-stage {
+            position: relative;
+            height: 240px;
+            width: 100%;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Animated SVG Water Stream */
+        .river-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .river-path-bg {
+            fill: none;
+            stroke: var(--funkie-friday);
+            stroke-width: 12;
+            stroke-linecap: round;
+            opacity: 0.5;
+        }
+
+        .river-path-flow {
+            fill: none;
+            stroke: url(#riverGradient);
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke-dasharray: 12 8;
+            animation: flow 20s linear infinite;
+        }
+
+        @keyframes flow {
+            from { stroke-dashoffset: 400; }
+            to { stroke-dashoffset: 0; }
+        }
+
+        /* Stepping Stone Nodes */
+        .stones-container {
+            position: relative;
+            z-index: 3;
+            width: 100%;
+            height: 100%;
+        }
+
+        .stone-wrapper {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .stone-wrapper:hover {
+            transform: translate(-50%, -58%) scale(1.08);
+        }
+
+        /* Dynamic Pebble Shapes */
+        .stone {
+            width: 58px;
+            height: 54px;
+            border-radius: 48% 52% 60% 40% / 50% 55% 45% 50%;
+            background: var(--funkie-friday);
+            border: 2px solid var(--moonscape);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--moonscape);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            position: relative;
+            transition: all 0.4s ease;
+        }
+
+        /* Status Variations */
+        .stone-wrapper.completed .stone {
+            background: var(--moonscape);
+            border-color: var(--decanting);
+            color: var(--back-in-black);
+            box-shadow: 0 0 15px rgba(193, 160, 172, 0.3);
+        }
+
+        .stone-wrapper.active .stone {
+            background: var(--mountain-heather);
+            border-color: #FFF;
+            color: var(--back-in-black);
+            box-shadow: 0 0 25px rgba(240, 217, 228, 0.6), 0 0 40px rgba(240, 217, 228, 0.2);
+            animation: pulseGlow 3s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 15px rgba(240, 217, 228, 0.5); }
+            100% { box-shadow: 0 0 30px rgba(240, 217, 228, 0.8), 0 0 50px rgba(193, 160, 172, 0.4); }
+        }
+
+        /* Water Ripples around Active Stone */
+        .stone-wrapper.active::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 80px;
+            height: 70px;
+            border-radius: 50%;
+            border: 1px solid var(--mountain-heather);
+            transform: translate(-50%, -50%) scale(0.8);
+            opacity: 0.8;
+            animation: ripple 2.5s infinite linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple {
+            0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0.8; }
+            100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+        }
+
+        .stone-label {
+            margin-top: 10px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--decanting);
+            text-align: center;
+            white-space: nowrap;
+            background: rgba(22, 19, 31, 0.8);
+            padding: 3px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(193, 160, 172, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .stone-wrapper.active .stone-label {
+            color: var(--mountain-heather);
+            border-color: var(--decanting);
+        }
+
+        /* Floating Petal Particles */
+        .petal {
+            position: absolute;
+            background: var(--mountain-heather);
+            border-radius: 15px 0 15px 0;
+            opacity: 0.25;
+            pointer-events: none;
+            animation: floatPetal 12s infinite linear;
+        }
+
+        @keyframes floatPetal {
+            0% { transform: translate(0, -10px) rotate(0deg); opacity: 0; }
+            20% { opacity: 0.3; }
+            80% { opacity: 0.3; }
+            100% { transform: translate(600px, 200px) rotate(720deg); opacity: 0; }
+        }
+
+        /* STONE NOTEBOOK DRAWER / MODAL */
+        .notebook-drawer {
+            margin-top: 20px;
+            background: rgba(74, 63, 75, 0.18);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            padding: 22px 25px;
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            position: relative;
+            z-index: 4;
+        }
+
+        .notebook-drawer.open {
+            display: flex;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(193, 160, 172, 0.15);
+            padding-bottom: 10px;
+        }
+
+        .drawer-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            color: var(--mountain-heather);
+            font-weight: 600;
+            outline: none;
+        }
+
+        .status-toggle-btn {
+            background: var(--funkie-friday);
+            border: 1px solid var(--decanting);
+            color: var(--mountain-heather);
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .status-toggle-btn:hover {
+            background: var(--decanting);
+            color: var(--back-in-black);
+        }
+
+        .quote-box {
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            font-size: 1.1rem;
+            color: var(--decanting);
+            border-left: 3px solid var(--mountain-heather);
+            padding-left: 14px;
+            margin: 5px 0;
+            outline: none;
+        }
+
+        .notes-area {
+            font-size: 0.9rem;
+            color: var(--mountain-heather);
+            line-height: 1.6;
+            background: rgba(22, 19, 31, 0.5);
+            border: 1px solid rgba(193, 160, 172, 0.1);
+            border-radius: 12px;
+            padding: 14px;
+            outline: none;
+            min-height: 70px;
+        }
+
+        [contenteditable="true"]:focus {
+            border-color: var(--decanting);
+            box-shadow: 0 0 10px rgba(193, 160, 172, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="river-card">
+        <!-- Floating Sakura Petals -->
+        <div class="petal" style="width: 12px; height: 10px; top: 10%; left: 5%; animation-delay: 0s;"></div>
+        <div class="petal" style="width: 10px; height: 8px; top: 30%; left: 15%; animation-delay: 3s;"></div>
+        <div class="petal" style="width: 14px; height: 12px; top: 60%; left: 2%; animation-delay: 6s;"></div>
+
+        <!-- Header -->
+        <div class="header">
+            <div class="title-group">
+                <h1 contenteditable="true">🌸 Sakura Stepping Stones</h1>
+                <p contenteditable="true">Click any stone to open its notebook & motivation vault</p>
+            </div>
+            <div class="progress-pill" id="progressPill">2 / 5 Passed</div>
+        </div>
+
+        <!-- Serpentine River Stage -->
+        <div class="river-stage">
+            <svg class="river-svg" viewBox="0 0 900 240" preserveAspectRatio="none">
+                <defs>
+                    <linearGradient id="riverGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#C1A0AC" stop-opacity="0.8" />
+                        <stop offset="50%" stop-color="#F0D9E4" stop-opacity="1" />
+                        <stop offset="100%" stop-color="#4A3F4B" stop-opacity="0.4" />
+                    </linearGradient>
+                </defs>
+                <!-- Meandering path coordinates -->
+                <path class="river-path-bg" d="M 50,120 C 200,30 250,210 420,120 C 580,30 650,210 850,120" />
+                <path class="river-path-flow" d="M 50,120 C 200,30 250,210 420,120 C 580,30 650,210 850,120" />
+            </svg>
+
+            <!-- Stepping Stone Nodes placed along the curve -->
+            <div class="stones-container">
+                <div class="stone-wrapper completed" style="top: 50%; left: 7%;" onclick="openNotebook(0)">
+                    <div class="stone">01</div>
+                    <div class="stone-label">Concept Sketch</div>
+                </div>
+
+                <div class="stone-wrapper completed" style="top: 25%; left: 28%;" onclick="openNotebook(1)">
+                    <div class="stone">02</div>
+                    <div class="stone-label">Base Mesh</div>
+                </div>
+
+                <div class="stone-wrapper active" style="top: 50%; left: 48%;" onclick="openNotebook(2)">
+                    <div class="stone">03</div>
+                    <div class="stone-label">Shading & Lighting</div>
+                </div>
+
+                <div class="stone-wrapper" style="top: 72%; left: 70%;" onclick="openNotebook(3)">
+                    <div class="stone">04</div>
+                    <div class="stone-label">Render Polish</div>
+                </div>
+
+                <div class="stone-wrapper" style="top: 50%; left: 91%;" onclick="openNotebook(4)">
+                    <div class="stone">05</div>
+                    <div class="stone-label">Final Release</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Stone Notebook Drawer -->
+        <div class="notebook-drawer" id="notebookDrawer">
+            <div class="drawer-header">
+                <div class="drawer-title" id="drawerTitle" contenteditable="true">Stone 03 Notebook</div>
+                <button class="status-toggle-btn" id="statusBtn" onclick="toggleCurrentStoneStatus()">Status: Active</button>
+            </div>
+            <div class="quote-box" id="drawerQuote" contenteditable="true">"Light is the shadow of intent."</div>
+            <div class="notes-area" id="drawerNotes" contenteditable="true">
+                Focusing on cinematic rim lights and ambient Occlusion pass. Ensure textures match the dark velvet aesthetic.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const stonesData = [
+            { id: 0, title: "01. Concept Sketch", quote: '"Every mountain top is within reach if you keep climbing."', notes: "Silhouettes drafted, proportion logic verified, and palette selected.", status: "completed" },
+            { id: 1, title: "02. Base Mesh Setup", quote: '"Structure precedes beauty."', notes: "Clean topology verified in Blender. UV unwrapping completed smoothly.", status: "completed" },
+            { id: 2, title: "03. Shading & Lighting", quote: '"Light is the shadow of intent."', notes: "Focusing on cinematic rim lights and ambient occlusion pass. Ensure textures match the dark velvet aesthetic.", status: "active" },
+            { id: 3, title: "04. Render Polish", quote: '"Refinement turns raw skill into art."', notes: "Configuring 4K render settings, noise reduction, and volumetric fog.", status: "unreached" },
+            { id: 4, title: "05. Final Release", quote: '"Done is better than perfect, but excellence is timeless."', notes: "Exporting final assets and publishing directly to portfolio.", status: "unreached" }
+        ];
+
+        let activeIndex = 2;
+
+        function openNotebook(index) {
+            activeIndex = index;
+            const drawer = document.getElementById('notebookDrawer');
+            drawer.classList.add('open');
+
+            document.getElementById('drawerTitle').innerText = stonesData[index].title;
+            document.getElementById('drawerQuote').innerText = stonesData[index].quote;
+            document.getElementById('drawerNotes').innerText = stonesData[index].notes;
+            
+            updateStatusButtonUI(stonesData[index].status);
+        }
+
+        function toggleCurrentStoneStatus() {
+            const current = stonesData[activeIndex].status;
+            let next = "unreached";
+            if (current === "unreached") next = "active";
+            else if (current === "active") next = "completed";
+            else if (current === "completed") next = "unreached";
+
+            stonesData[activeIndex].status = next;
+            
+            // Update UI element classes
+            const elements = document.querySelectorAll('.stone-wrapper');
+            elements[activeIndex].className = `stone-wrapper ${next}`;
+            
+            updateStatusButtonUI(next);
+            updateProgressPill();
+        }
+
+        function updateStatusButtonUI(status) {
+            const btn = document.getElementById('statusBtn');
+            btn.innerText = `Status: ${status.charAt(0).toUpperCase() + status.slice(1)}`;
+        }
+
+        function updateProgressPill() {
+            const completedCount = stonesData.filter(s => s.status === 'completed').length;
+            document.getElementById('progressPill').innerText = `${completedCount} / ${stonesData.length} Passed`;
+        }
+
+        // Initialize default notebook view
+        openNotebook(2);
+    </script>
+</body>
+</html>
