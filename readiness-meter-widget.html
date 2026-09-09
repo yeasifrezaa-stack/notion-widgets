@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Document Readiness Meter — Notion Widget</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --daintree: #042B31;
+    --immersed: #1E4D53;
+    --alexandrite: #75979E;
+    --sterling: #A2B8C1;
+    --heaven: #C9D6DD;
+    --vining: #497379;
+
+    /* Soft status accents that still live inside the ocean family */
+    --missing: #C4787A;
+    --progress: #D4A574;
+    --ready: #7BA88A;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #191919; /* Exact Notion dark background so the widget blends seamlessly when embedded */
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--heaven);
+    overflow-x: auto;
+    padding: 40px 20px;
+  }
+
+  /* ========== MAIN WIDGET ========== */
+  .widget {
+    width: 960px;
+    max-width: 100%;
+    height: 248px;
+    background: linear-gradient(
+      135deg,
+      rgba(4, 43, 49, 0.92) 0%,
+      rgba(30, 77, 83, 0.78) 45%,
+      rgba(4, 43, 49, 0.95) 100%
+    );
+    border: 1px solid rgba(117, 151, 158, 0.28);
+    border-radius: 20px;
+    box-shadow:
+      0 0 0 1px rgba(162, 184, 193, 0.06),
+      0 25px 50px -12px rgba(0, 0, 0, 0.55),
+      inset 0 1px 0 rgba(201, 214, 221, 0.08);
+    display: flex;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+
+  /* Ambient haze / floating light particles */
+  .widget::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 18% 40%, rgba(117, 151, 158, 0.12) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 40% at 78% 70%, rgba(73, 115, 121, 0.10) 0%, transparent 50%);
+    pointer-events: none;
+    animation: hazeDrift 14s ease-in-out infinite alternate;
+  }
+
+  @keyframes hazeDrift {
+    0% { opacity: 0.7; transform: translateX(0) scale(1); }
+    100% { opacity: 1; transform: translateX(8px) scale(1.03); }
+  }
+
+  /* ========== LEFT ZONE — STATUS PIPELINE ========== */
+  .pipeline {
+    width: 38%;
+    padding: 26px 22px 26px 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+  }
+
+  .pipeline-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--sterling);
+    margin-bottom: 16px;
+    opacity: 0.8;
+  }
+
+  .segments {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    position: relative;
+  }
+
+  .segment {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    cursor: pointer;
+    padding: 16px 8px 14px;
+    border-radius: 14px;
+    background: linear-gradient(
+      165deg,
+      rgba(30, 77, 83, 0.35) 0%,
+      rgba(4, 43, 49, 0.45) 100%
+    );
+    border: 1px solid rgba(117, 151, 158, 0.18);
+    transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    overflow: hidden;
+  }
+
+  .segment::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+  }
+
+  .segment:hover {
+    border-color: rgba(162, 184, 193, 0.35);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  }
+
+  .segment:hover::before {
+    opacity: 1;
+  }
+
+  .segment.missing:hover::before {
+    background: radial-gradient(circle at 50% 30%, rgba(196, 120, 122, 0.12), transparent 70%);
+  }
+  .segment.progress:hover::before {
+    background: radial-gradient(circle at 50% 30%, rgba(212, 165, 116, 0.12), transparent 70%);
+  }
+  .segment.ready:hover::before {
+    background: radial-gradient(circle at 50% 30%, rgba(123, 168, 138, 0.12), transparent 70%);
+  }
+
+  .segment-count {
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    transition: color 0.55s ease, text-shadow 0.55s ease, transform 0.4s ease;
+    position: relative;
+    z-index: 1;
+  }
+
+  .segment:hover .segment-count {
+    transform: scale(1.06);
+  }
+
+  .segment-label {
+    font-size: 10.5px;
+    font-weight: 500;
+    margin-top: 8px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--sterling);
+    opacity: 0.9;
+    transition: color 0.45s ease, opacity 0.45s ease;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Status-specific colors + refined glow */
+  .segment.missing .segment-count {
+    color: var(--missing);
+    text-shadow: 0 0 20px rgba(196, 120, 122, 0.5);
+  }
+  .segment.progress .segment-count {
+    color: var(--progress);
+    text-shadow: 0 0 18px rgba(212, 165, 116, 0.42);
+  }
+  .segment.ready .segment-count {
+    color: var(--ready);
+    text-shadow: 0 0 18px rgba(123, 168, 138, 0.42);
+  }
+
+  .segment.missing .segment-label { color: #E0A0A2; }
+  .segment.progress .segment-label { color: #E8C9A0; }
+  .segment.ready .segment-label { color: #A8C9B4; }
+
+  /* Soft accent bar at top of each segment */
+  .segment::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 18%;
+    right: 18%;
+    height: 2px;
+    border-radius: 0 0 2px 2px;
+    opacity: 0.7;
+    transition: opacity 0.4s ease, height 0.4s ease;
+  }
+
+  .segment.missing::after {
+    background: linear-gradient(90deg, transparent, var(--missing), transparent);
+  }
+  .segment.progress::after {
+    background: linear-gradient(90deg, transparent, var(--progress), transparent);
+  }
+  .segment.ready::after {
+    background: linear-gradient(90deg, transparent, var(--ready), transparent);
+  }
+
+  .segment:hover::after {
+    opacity: 1;
+    height: 3px;
+  }
+
+  /* Breathing glow on most urgent (Missing when > 0) */
+  .segment.missing.has-items {
+    animation: breatheMissing 3.4s ease-in-out infinite;
+    border-color: rgba(196, 120, 122, 0.28);
+  }
+
+  @keyframes breatheMissing {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(196, 120, 122, 0),
+                  inset 0 0 0 0 rgba(196, 120, 122, 0);
+    }
+    50% {
+      box-shadow: 0 0 24px 1px rgba(196, 120, 122, 0.22),
+                  inset 0 0 12px rgba(196, 120, 122, 0.06);
+    }
+  }
+
+  /* Connecting dots between segments (subtle) */
+  .segments {
+    position: relative;
+  }
+
+  .segments::before,
+  .segments::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--alexandrite);
+    opacity: 0.35;
+    transform: translateY(-50%);
+    z-index: 3;
+    box-shadow: 0 0 8px rgba(117, 151, 158, 0.4);
+    pointer-events: none;
+  }
+
+  .segments::before {
+    left: calc(33.333% - 3px);
+  }
+
+  .segments::after {
+    left: calc(66.666% - 3px);
+  }
+
+  /* Luminous connector line running through the middle */
+  .connector {
+    position: absolute;
+    top: 50%;
+    left: 8%;
+    right: 8%;
+    height: 1.5px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--vining) 10%,
+      var(--alexandrite) 50%,
+      var(--vining) 90%,
+      transparent 100%
+    );
+    transform: translateY(-50%);
+    z-index: 0;
+    overflow: hidden;
+    border-radius: 2px;
+    opacity: 0.55;
+  }
+
+  .connector::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -35%;
+    width: 35%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(201, 214, 221, 0.9),
+      transparent
+    );
+    animation: travelLight 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+
+  @keyframes travelLight {
+    0% { left: -35%; opacity: 0; }
+    12% { opacity: 1; }
+    88% { opacity: 1; }
+    100% { left: 100%; opacity: 0; }
+  }
+
+  /* ========== CENTER ZONE — PRIORITY FOCUS ========== */
+  .priority {
+    width: 36%;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+    border-left: 1px solid rgba(117, 151, 158, 0.15);
+    border-right: 1px solid rgba(117, 151, 158, 0.15);
+  }
+
+  .priority-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .priority-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sterling);
+    opacity: 0.85;
+  }
+
+  .add-topic-btn {
+    background: transparent;
+    border: 1px solid rgba(117, 151, 158, 0.35);
+    color: var(--alexandrite);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.35s ease;
+    font-family: inherit;
+  }
+
+  .add-topic-btn:hover {
+    background: rgba(117, 151, 158, 0.15);
+    border-color: var(--alexandrite);
+    color: var(--heaven);
+    box-shadow: 0 0 12px rgba(117, 151, 158, 0.25);
+  }
+
+  .priority-card {
+    background: linear-gradient(
+      160deg,
+      rgba(30, 77, 83, 0.55) 0%,
+      rgba(4, 43, 49, 0.7) 100%
+    );
+    border: 1px solid rgba(117, 151, 158, 0.22);
+    border-radius: 14px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .priority-card:hover {
+    transform: scale(1.015);
+    border-color: rgba(162, 184, 193, 0.4);
+    box-shadow: 0 0 24px rgba(117, 151, 158, 0.2);
+  }
+
+  .priority-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 20%, rgba(117, 151, 158, 0.12), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+
+  .priority-card:hover::after {
+    opacity: 1;
+  }
+
+  .doc-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--heaven);
+    margin-bottom: 4px;
+    letter-spacing: -0.01em;
+  }
+
+  .doc-context {
+    font-size: 12px;
+    color: var(--sterling);
+    margin-bottom: 10px;
+    line-height: 1.35;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: rgba(196, 120, 122, 0.18);
+    color: var(--missing);
+    border: 1px solid rgba(196, 120, 122, 0.3);
+  }
+
+  .status-pill::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--missing);
+    box-shadow: 0 0 6px var(--missing);
+  }
+
+  /* Why section */
+  .why-section {
+    margin-top: 10px;
+    display: none;
+  }
+
+  .why-section.visible {
+    display: block;
+    animation: fadeSlide 0.45s ease;
+  }
+
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .why-label {
+    font-size: 10px;
+    color: var(--alexandrite);
+    margin-bottom: 4px;
+    letter-spacing: 0.04em;
+  }
+
+  .why-text {
+    font-size: 12px;
+    color: var(--sterling);
+    line-height: 1.4;
+    background: rgba(4, 43, 49, 0.4);
+    border: 1px solid rgba(117, 151, 158, 0.15);
+    border-radius: 8px;
+    padding: 8px 10px;
+    min-height: 36px;
+  }
+
+  /* Extra topics list */
+  .extra-topics {
+    margin-top: 8px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.45s ease;
+  }
+
+  .extra-topics.open {
+    max-height: 120px;
+  }
+
+  .topic-item {
+    font-size: 12px;
+    color: var(--sterling);
+    padding: 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .topic-item span {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--alexandrite);
+  }
+
+  /* ========== RIGHT ZONE — QUICK ACTIONS ========== */
+  .actions {
+    width: 26%;
+    padding: 28px 28px 28px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .action-btn {
+    width: 100%;
+    height: 46px;
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .action-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 30%, rgba(201, 214, 221, 0.12) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+  }
+
+  .action-btn:hover::before {
+    transform: translateX(100%);
+  }
+
+  .btn-update {
+    background: linear-gradient(135deg, var(--immersed) 0%, #2A5F66 100%);
+    color: var(--heaven);
+    border: 1px solid rgba(117, 151, 158, 0.4);
+    box-shadow: 0 0 0 0 rgba(117, 151, 158, 0);
+  }
+
+  .btn-update:hover {
+    background: linear-gradient(135deg, #2A5F66 0%, var(--alexandrite) 100%);
+    box-shadow: 0 0 20px rgba(117, 151, 158, 0.35);
+    transform: translateY(-1px);
+  }
+
+  .btn-add {
+    background: transparent;
+    color: var(--sterling);
+    border: 1px solid rgba(117, 151, 158, 0.35);
+  }
+
+  .btn-add:hover {
+    background: rgba(117, 151, 158, 0.12);
+    color: var(--heaven);
+    border-color: var(--alexandrite);
+    box-shadow: 0 0 16px rgba(117, 151, 158, 0.2);
+    transform: translateY(-1px);
+  }
+
+  .action-btn:active {
+    transform: scale(0.97);
+  }
+
+  /* ========== MODALS ========== */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 20, 24, 0.72);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+  }
+
+  .modal-overlay.visible {
+    display: flex;
+    opacity: 1;
+  }
+
+  .modal {
+    width: 420px;
+    max-width: 92vw;
+    background: linear-gradient(160deg, #0A353C 0%, var(--daintree) 100%);
+    border: 1px solid rgba(117, 151, 158, 0.3);
+    border-radius: 18px;
+    padding: 28px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+    transform: translateY(12px) scale(0.97);
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .modal-overlay.visible .modal {
+    transform: translateY(0) scale(1);
+  }
+
+  .modal h3 {
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--heaven);
+  }
+
+  .modal p {
+    font-size: 13px;
+    color: var(--sterling);
+    margin-bottom: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 12px;
+    color: var(--alexandrite);
+    margin-bottom: 6px;
+    letter-spacing: 0.03em;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    background: rgba(4, 43, 49, 0.6);
+    border: 1px solid rgba(117, 151, 158, 0.3);
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: var(--heaven);
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color: var(--alexandrite);
+    box-shadow: 0 0 0 3px rgba(117, 151, 158, 0.2);
+  }
+
+  .form-group textarea {
+    min-height: 80px;
+    resize: vertical;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .modal-actions button {
+    flex: 1;
+    height: 42px;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .btn-cancel {
+    background: transparent;
+    border: 1px solid rgba(117, 151, 158, 0.35);
+    color: var(--sterling);
+  }
+
+  .btn-cancel:hover {
+    background: rgba(117, 151, 158, 0.1);
+    color: var(--heaven);
+  }
+
+  .btn-confirm {
+    background: linear-gradient(135deg, var(--immersed), var(--alexandrite));
+    border: none;
+    color: var(--heaven);
+  }
+
+  .btn-confirm:hover {
+    box-shadow: 0 0 18px rgba(117, 151, 158, 0.4);
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: linear-gradient(135deg, var(--immersed), #2A5F66);
+    color: var(--heaven);
+    padding: 12px 22px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 200;
+    border: 1px solid rgba(117, 151, 158, 0.3);
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Entrance animations */
+  .widget {
+    animation: widgetIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes widgetIn {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .segment {
+    opacity: 0;
+    animation: segIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .segment:nth-child(1) { animation-delay: 0.15s; }
+  .segment:nth-child(2) { animation-delay: 0.28s; }
+  .segment:nth-child(3) { animation-delay: 0.41s; }
+
+  @keyframes segIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .priority-card {
+    animation: cardIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(12px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .action-btn {
+    opacity: 0;
+    animation: btnIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .btn-update { animation-delay: 0.45s; }
+  .btn-add { animation-delay: 0.55s; }
+
+  @keyframes btnIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="widget" id="widget">
+  <!-- LEFT: Status Pipeline -->
+  <div class="pipeline">
+    <div class="pipeline-title">Status Pipeline</div>
+    <div class="segments">
+      <div class="connector"></div>
+
+      <div class="segment missing has-items" data-status="Missing" id="seg-missing">
+        <div class="segment-count" id="count-missing">2</div>
+        <div class="segment-label">Missing</div>
+      </div>
+
+      <div class="segment progress" data-status="In Progress" id="seg-progress">
+        <div class="segment-count" id="count-progress">1</div>
+        <div class="segment-label">In Progress</div>
+      </div>
+
+      <div class="segment ready" data-status="Ready" id="seg-ready">
+        <div class="segment-count" id="count-ready">2</div>
+        <div class="segment-label">Ready</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER: Priority Focus -->
+  <div class="priority">
+    <div class="priority-header">
+      <div class="priority-title">Priority Focus</div>
+      <button class="add-topic-btn" id="addTopicBtn">+ Topic</button>
+    </div>
+
+    <div class="priority-card" id="priorityCard">
+      <div class="doc-name" id="priorityName">Financial Support Letter</div>
+      <div class="doc-context" id="priorityContext">Required for visa + university financial proof</div>
+      <div class="status-pill" id="priorityPill">Missing</div>
+
+      <div class="why-section visible" id="whySection">
+        <div class="why-label">Why this is priority</div>
+        <div class="why-text" id="whyText">Needed for both visa application and university financial verification. Blocking multiple applications.</div>
+      </div>
+    </div>
+
+    <div class="extra-topics" id="extraTopics"></div>
+  </div>
+
+  <!-- RIGHT: Quick Actions -->
+  <div class="actions">
+    <button class="action-btn btn-update" id="updateStatusBtn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+      </svg>
+      Update Status
+    </button>
+    <button class="action-btn btn-add" id="addDocBtn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      Add Document
+    </button>
+  </div>
+</div>
+
+<!-- Update Status Modal -->
+<div class="modal-overlay" id="updateModal">
+  <div class="modal">
+    <h3>Update Document Status</h3>
+    <p>Change the status of the currently focused document.</p>
+    <div class="form-group">
+      <label>Document</label>
+      <input type="text" id="updateDocName" value="Financial Support Letter" readonly>
+    </div>
+    <div class="form-group">
+      <label>New Status</label>
+      <select id="updateStatusSelect">
+        <option value="Missing">Missing</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Ready">Ready</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('updateModal')">Cancel</button>
+      <button class="btn-confirm" id="confirmUpdate">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Document Modal -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <h3>Add New Document</h3>
+    <p>Create a new document entry and set its initial status.</p>
+    <div class="form-group">
+      <label>Document Name</label>
+      <input type="text" id="newDocName" placeholder="e.g. Bank Statement">
+    </div>
+    <div class="form-group">
+      <label>Used For / Context</label>
+      <input type="text" id="newDocContext" placeholder="e.g. Visa financial proof">
+    </div>
+    <div class="form-group">
+      <label>Initial Status</label>
+      <select id="newDocStatus">
+        <option value="Missing">Missing</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Ready">Ready</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('addModal')">Cancel</button>
+      <button class="btn-confirm" id="confirmAdd">Add Document</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Topic Modal -->
+<div class="modal-overlay" id="topicModal">
+  <div class="modal">
+    <h3>Add Priority Topic</h3>
+    <p>Add another focus item and explain why it matters.</p>
+    <div class="form-group">
+      <label>Topic / Document Name</label>
+      <input type="text" id="topicName" placeholder="e.g. IELTS Score Report">
+    </div>
+    <div class="form-group">
+      <label>Why this is a priority</label>
+      <textarea id="topicWhy" placeholder="Explain the urgency or importance..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('topicModal')">Cancel</button>
+      <button class="btn-confirm" id="confirmTopic">Add Topic</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ========== STATE ==========
+  let state = {
+    missing: 2,
+    progress: 1,
+    ready: 2,
+    current: {
+      name: 'Financial Support Letter',
+      context: 'Required for visa + university financial proof',
+      status: 'Missing',
+      why: 'Needed for both visa application and university financial verification. Blocking multiple applications.'
+    },
+    extraTopics: []
+  };
+
+  // ========== RENDER PIPELINE ==========
+  function renderPipeline() {
+    document.getElementById('count-missing').textContent = state.missing;
+    document.getElementById('count-progress').textContent = state.progress;
+    document.getElementById('count-ready').textContent = state.ready;
+
+    const missSeg = document.getElementById('seg-missing');
+    if (state.missing > 0) {
+      missSeg.classList.add('has-items');
+    } else {
+      missSeg.classList.remove('has-items');
+    }
+  }
+
+  // ========== RENDER PRIORITY ==========
+  function renderPriority() {
+    document.getElementById('priorityName').textContent = state.current.name;
+    document.getElementById('priorityContext').textContent = state.current.context;
+    document.getElementById('whyText').textContent = state.current.why || 'No reason provided yet.';
+
+    const pill = document.getElementById('priorityPill');
+    pill.textContent = state.current.status;
+
+    // Color the pill according to status
+    if (state.current.status === 'Missing') {
+      pill.style.background = 'rgba(196, 120, 122, 0.18)';
+      pill.style.color = 'var(--missing)';
+      pill.style.borderColor = 'rgba(196, 120, 122, 0.3)';
+      pill.querySelector && (pill.style.setProperty('--dot', 'var(--missing)'));
+    } else if (state.current.status === 'In Progress') {
+      pill.style.background = 'rgba(212, 165, 116, 0.18)';
+      pill.style.color = 'var(--progress)';
+      pill.style.borderColor = 'rgba(212, 165, 116, 0.3)';
+    } else {
+      pill.style.background = 'rgba(123, 168, 138, 0.18)';
+      pill.style.color = 'var(--ready)';
+      pill.style.borderColor = 'rgba(123, 168, 138, 0.3)';
+    }
+
+    // Extra topics
+    const container = document.getElementById('extraTopics');
+    if (state.extraTopics.length > 0) {
+      container.classList.add('open');
+      container.innerHTML = state.extraTopics.map(t =>
+        `<div class="topic-item"><span></span>${t.name}</div>`
+      ).join('');
+    } else {
+      container.classList.remove('open');
+      container.innerHTML = '';
+    }
+  }
+
+  // ========== TOAST ==========
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  // ========== MODALS ==========
+  function openModal(id) {
+    document.getElementById(id).classList.add('visible');
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('visible');
+  }
+
+  // ========== EVENT LISTENERS ==========
+  // Pipeline segments → set as priority
+  document.querySelectorAll('.segment').forEach(seg => {
+    seg.addEventListener('click', () => {
+      const status = seg.dataset.status;
+      // Simulate focusing a document of that status
+      if (status === 'Missing') {
+        state.current = {
+          name: 'IELTS Score Report',
+          context: 'Required for all English-taught programs',
+          status: 'Missing',
+          why: 'Mandatory for every English-taught program application.'
+        };
+      } else if (status === 'In Progress') {
+        state.current = {
+          name: 'CV / Resume',
+          context: 'Internship + scholarship applications',
+          status: 'In Progress',
+          why: 'Currently being refined for multiple applications.'
+        };
+      } else {
+        state.current = {
+          name: 'Passport',
+          context: 'All university applications',
+          status: 'Ready',
+          why: 'Already verified and uploaded.'
+        };
+      }
+      renderPriority();
+      showToast(`Focused on ${status} documents`);
+    });
+  });
+
+  // Priority card click → open update
+  document.getElementById('priorityCard').addEventListener('click', (e) => {
+    if (e.target.closest('.add-topic-btn')) return;
+    document.getElementById('updateDocName').value = state.current.name;
+    document.getElementById('updateStatusSelect').value = state.current.status;
+    openModal('updateModal');
+  });
+
+  // Update Status button
+  document.getElementById('updateStatusBtn').addEventListener('click', () => {
+    document.getElementById('updateDocName').value = state.current.name;
+    document.getElementById('updateStatusSelect').value = state.current.status;
+    openModal('updateModal');
+  });
+
+  // Confirm Update
+  document.getElementById('confirmUpdate').addEventListener('click', () => {
+    const newStatus = document.getElementById('updateStatusSelect').value;
+    const oldStatus = state.current.status;
+
+    if (newStatus === oldStatus) {
+      closeModal('updateModal');
+      return;
+    }
+
+    // Adjust counts
+    if (oldStatus === 'Missing') state.missing = Math.max(0, state.missing - 1);
+    if (oldStatus === 'In Progress') state.progress = Math.max(0, state.progress - 1);
+    if (oldStatus === 'Ready') state.ready = Math.max(0, state.ready - 1);
+
+    if (newStatus === 'Missing') state.missing += 1;
+    if (newStatus === 'In Progress') state.progress += 1;
+    if (newStatus === 'Ready') state.ready += 1;
+
+    state.current.status = newStatus;
+    renderPipeline();
+    renderPriority();
+    closeModal('updateModal');
+    showToast(`Status updated to ${newStatus}`);
+  });
+
+  // Add Document button
+  document.getElementById('addDocBtn').addEventListener('click', () => {
+    document.getElementById('newDocName').value = '';
+    document.getElementById('newDocContext').value = '';
+    document.getElementById('newDocStatus').value = 'Missing';
+    openModal('addModal');
+  });
+
+  // Confirm Add Document
+  document.getElementById('confirmAdd').addEventListener('click', () => {
+    const name = document.getElementById('newDocName').value.trim();
+    const context = document.getElementById('newDocContext').value.trim() || 'No context provided';
+    const status = document.getElementById('newDocStatus').value;
+
+    if (!name) {
+      showToast('Please enter a document name');
+      return;
+    }
+
+    if (status === 'Missing') state.missing += 1;
+    if (status === 'In Progress') state.progress += 1;
+    if (status === 'Ready') state.ready += 1;
+
+    // Optionally make it the new priority if Missing
+    if (status === 'Missing') {
+      state.current = {
+        name,
+        context,
+        status,
+        why: 'Newly added — please set priority reason.'
+      };
+    }
+
+    renderPipeline();
+    renderPriority();
+    closeModal('addModal');
+    showToast(`“${name}” added as ${status}`);
+  });
+
+  // Add Topic
+  document.getElementById('addTopicBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('topicName').value = '';
+    document.getElementById('topicWhy').value = '';
+    openModal('topicModal');
+  });
+
+  document.getElementById('confirmTopic').addEventListener('click', () => {
+    const name = document.getElementById('topicName').value.trim();
+    const why = document.getElementById('topicWhy').value.trim();
+
+    if (!name) {
+      showToast('Please enter a topic name');
+      return;
+    }
+
+    state.extraTopics.push({ name, why });
+    // Also update the main why if desired, but keep main card
+    renderPriority();
+    closeModal('topicModal');
+    showToast(`Topic “${name}” added`);
+  });
+
+  // Close modals on overlay click
+  document.querySelectorAll('.modal-overlay').forEach(ov => {
+    ov.addEventListener('click', (e) => {
+      if (e.target === ov) ov.classList.remove('visible');
+    });
+  });
+
+  // Initial render
+  renderPipeline();
+  renderPriority();
+</script>
+</body>
+</html>
