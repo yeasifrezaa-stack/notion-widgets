@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compact Glowy Glassy Widget</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-panel: rgba(18, 13, 30, 0.82);
+            --bg-card: rgba(26, 18, 43, 0.65);
+            --text-light: #f3e8ff;
+            --text-muted: #d8b4fe;
+            --primary: #9333ea;
+            --accent-glow: #e879f9;
+            --neon-pink: #ec4899;
+            --neon-violet: #a855f7;
+            --border: rgba(232, 121, 249, 0.3);
+            --border-glow: rgba(232, 121, 249, 0.75);
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #191919;
+            color: var(--text-light);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Hide all scrollbars */
+        ::-webkit-scrollbar {
+            width: 0 !important;
+            height: 0 !important;
+            display: none !important;
+        }
+        * {
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+        }
+
+        .widget-container {
+            width: 100%;
+            max-width: 680px;
+            background: var(--bg-panel);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border: 1px solid rgba(232, 121, 249, 0.18);
+            border-radius: 18px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            animation: containerGlowPulse 6s ease-in-out infinite alternate;
+            /* Soft outer fade so edges blend into Notion dark */
+            box-shadow: 
+                0 20px 50px rgba(0, 0, 0, 0.45),
+                0 0 60px rgba(168, 85, 247, 0.1),
+                0 0 120px rgba(25, 25, 25, 0.8),
+                inset 0 0 30px rgba(232, 121, 249, 0.08);
+        }
+
+        @keyframes containerGlowPulse {
+            0% { 
+                box-shadow: 
+                    0 20px 50px rgba(0, 0, 0, 0.45),
+                    0 0 40px rgba(168, 85, 247, 0.12),
+                    0 0 100px rgba(25, 25, 25, 0.7),
+                    inset 0 0 20px rgba(232, 121, 249, 0.08); 
+            }
+            100% { 
+                box-shadow: 
+                    0 20px 50px rgba(0, 0, 0, 0.45),
+                    0 0 55px rgba(232, 121, 249, 0.28),
+                    0 0 120px rgba(25, 25, 25, 0.75),
+                    inset 0 0 30px rgba(232, 121, 249, 0.15); 
+            }
+        }
+
+        /* Navigation Tabs with Neon Glow */
+        .nav-tabs {
+            display: flex;
+            background: rgba(10, 7, 18, 0.75);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--border);
+            padding: 4px;
+            gap: 4px;
+        }
+        .nav-tabs button {
+            flex: 1;
+            padding: 8px 6px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.35s ease;
+            text-shadow: 0 0 4px rgba(216, 180, 254, 0.3);
+        }
+        .nav-tabs button:hover {
+            color: #fff;
+            background: rgba(147, 51, 234, 0.25);
+            text-shadow: 0 0 10px var(--accent-glow), 0 0 20px var(--primary);
+            box-shadow: 0 0 12px rgba(232, 121, 249, 0.25);
+        }
+        .nav-tabs button.active {
+            background: linear-gradient(135deg, var(--primary), var(--neon-pink));
+            color: #fff;
+            text-shadow: 0 0 10px #fff, 0 0 20px var(--accent-glow);
+            box-shadow: 0 0 18px rgba(236, 72, 153, 0.6), 0 0 8px rgba(168, 85, 247, 0.8);
+            animation: tabActiveGlow 2.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes tabActiveGlow {
+            0% { box-shadow: 0 0 12px rgba(236, 72, 153, 0.5), 0 0 6px rgba(168, 85, 247, 0.6); }
+            100% { box-shadow: 0 0 22px rgba(236, 72, 153, 0.8), 0 0 12px rgba(232, 121, 249, 0.9); }
+        }
+
+        /* Sections */
+        .section {
+            display: none;
+            padding: 16px;
+            animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        h2 { 
+            margin: 0 0 2px 0; 
+            font-size: 15px; 
+            color: var(--text-light); 
+            text-shadow: 0 0 10px rgba(232, 121, 249, 0.6), 0 0 20px rgba(147, 51, 234, 0.4); 
+            animation: titleFloat 4s ease-in-out infinite alternate;
+        }
+        @keyframes titleFloat {
+            0% { text-shadow: 0 0 8px rgba(232, 121, 249, 0.5), 0 0 16px rgba(147, 51, 234, 0.3); }
+            100% { text-shadow: 0 0 14px rgba(232, 121, 249, 0.8), 0 0 24px rgba(236, 72, 153, 0.6); }
+        }
+        .subtitle { font-size: 11px; color: var(--text-muted); margin-bottom: 14px; text-shadow: 0 0 4px rgba(216, 180, 254, 0.2); }
+
+        /* Inputs & Controls with Glow */
+        input, select, textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px 12px;
+            margin: 4px 0 10px 0;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: rgba(10, 7, 18, 0.6);
+            backdrop-filter: blur(10px);
+            color: var(--text-light);
+            font-size: 12px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent-glow);
+            box-shadow: 0 0 14px rgba(232, 121, 249, 0.5), inset 0 0 6px rgba(147, 51, 234, 0.3);
+            background: rgba(10, 7, 18, 0.85);
+        }
+
+        label { font-size: 10px; color: var(--text-muted); font-weight: 600; display: block; text-shadow: 0 0 3px rgba(216, 180, 254, 0.25); }
+
+        .action-btn {
+            padding: 8px 14px;
+            background: linear-gradient(135deg, var(--primary), var(--neon-pink));
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(147, 51, 234, 0.45);
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+            transition: all 0.3s ease;
+        }
+        .action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 22px rgba(232, 121, 249, 0.7), 0 0 15px rgba(236, 72, 153, 0.8);
+            filter: brightness(1.1);
+        }
+
+        .danger-btn {
+            padding: 5px 10px;
+            background: rgba(244, 63, 94, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(244, 63, 94, 0.4);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 10px;
+            transition: all 0.25s ease;
+        }
+        .danger-btn:hover { background: #f43f5e; color: #fff; box-shadow: 0 0 12px #f43f5e, 0 0 4px #fff; }
+
+        .secondary-btn {
+            padding: 5px 10px;
+            background: rgba(147, 51, 234, 0.2);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 10px;
+            transition: all 0.25s ease;
+        }
+        .secondary-btn:hover { background: rgba(147, 51, 234, 0.4); color: #fff; border-color: var(--accent-glow); box-shadow: 0 0 10px rgba(232, 121, 249, 0.4); }
+
+        /* Floating Refresh Button Banner */
+        .refresh-banner {
+            display: none;
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            background: linear-gradient(135deg, #ec4899, #9333ea);
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(236, 72, 153, 0.8), 0 0 10px rgba(168, 85, 247, 0.8);
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            z-index: 100;
+            animation: pulseRefresh 1.5s infinite alternate;
+            border: 1px solid rgba(255,255,255,0.4);
+            text-shadow: 0 0 6px #fff;
+        }
+        @keyframes pulseRefresh {
+            0% { transform: scale(1); box-shadow: 0 0 12px rgba(236, 72, 153, 0.6), 0 0 6px rgba(168, 85, 247, 0.6); }
+            100% { transform: scale(1.05); box-shadow: 0 0 25px rgba(232, 121, 249, 0.9), 0 0 14px rgba(236, 72, 153, 0.9); }
+        }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1.1fr; gap: 12px; }
+        @media(max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+
+        .panel {
+            background: var(--bg-card);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.35), inset 0 0 15px rgba(232, 121, 249, 0.05);
+            transition: all 0.35s ease;
+        }
+        .panel:hover { 
+            border-color: var(--border-glow); 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.45), 0 0 15px rgba(232, 121, 249, 0.25), inset 0 0 20px rgba(232, 121, 249, 0.1);
+        }
+
+        /* Core Nodes with Still & Hover Glow Animations */
+        .node-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px; }
+        .node-pill {
+            background: rgba(18, 13, 30, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.35s ease;
+            box-shadow: 0 0 8px rgba(168, 85, 247, 0.08);
+            animation: subGlowPulse 4s ease-in-out infinite alternate;
+        }
+        @keyframes subGlowPulse {
+            0% { border-color: rgba(232, 121, 249, 0.2); box-shadow: 0 0 6px rgba(168, 85, 247, 0.1); }
+            100% { border-color: rgba(232, 121, 249, 0.4); box-shadow: 0 0 12px rgba(232, 121, 249, 0.22); }
+        }
+        .node-pill:hover, .node-pill.active {
+            border-color: var(--accent-glow);
+            background: rgba(147, 51, 234, 0.25);
+            box-shadow: 0 0 16px rgba(232, 121, 249, 0.5), inset 0 0 10px rgba(168, 85, 247, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .ai-box {
+            margin-top: 10px;
+            padding: 10px 12px;
+            background: rgba(147, 51, 234, 0.1);
+            backdrop-filter: blur(10px);
+            border-left: 3px solid var(--accent-glow);
+            border-radius: 0 8px 8px 0;
+            font-size: 11px;
+            line-height: 1.5;
+            box-shadow: 0 0 12px rgba(168, 85, 247, 0.12);
+            text-shadow: 0 0 3px rgba(216, 180, 254, 0.2);
+        }
+
+        /* Radar Tuners Custom UI */
+        .radar-card-list { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; margin-bottom: 12px; }
+        .radar-pill-item {
+            background: rgba(18, 13, 30, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.35s ease;
+        }
+        .radar-pill-item:hover, .radar-pill-item.active {
+            border-color: var(--accent-glow);
+            background: rgba(147, 51, 234, 0.25);
+            box-shadow: 0 0 14px rgba(232, 121, 249, 0.4);
+            transform: translateX(2px);
+        }
+
+        /* Timeline */
+        .timeline-box { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+        .timeline-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        .timeline-card:hover {
+            border-color: var(--accent-glow);
+            box-shadow: 0 4px 18px rgba(232, 121, 249, 0.25);
+        }
+
+        /* Secure Vault */
+        .vault-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin-top: 10px; }
+        .vault-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        .vault-card:hover {
+            border-color: var(--accent-glow);
+            box-shadow: 0 6px 20px rgba(232, 121, 249, 0.3);
+        }
+        .privacy-tag {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            text-shadow: 0 0 6px rgba(52, 211, 153, 0.6);
+            box-shadow: 0 0 8px rgba(52, 211, 153, 0.2);
+        }
+
+        /* AI Guide Chat */
+        .chat-box {
+            height: 200px;
+            background: rgba(10, 7, 18, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: inset 0 0 15px rgba(168, 85, 247, 0.1);
+        }
+        .chat-msg { padding: 8px 10px; border-radius: 8px; font-size: 11px; max-width: 85%; line-height: 1.4; text-shadow: 0 0 3px rgba(255,255,255,0.15); }
+        .msg-ai { background: var(--bg-card); border: 1px solid var(--border); align-self: flex-start; box-shadow: 0 0 10px rgba(168,85,247,0.1); }
+        .msg-user { background: linear-gradient(135deg, var(--primary), var(--neon-pink)); color: #fff; align-self: flex-end; box-shadow: 0 0 12px rgba(236, 72, 153, 0.4); text-shadow: 0 0 6px rgba(255,255,255,0.6); }
+        .chat-row { display: flex; gap: 6px; }
+        .chat-row input { margin: 0; }
+    </style>
+</head>
+<body>
+
+<!-- Floating Refresh Button -->
+<div id="refresh-banner" class="refresh-banner" onclick="triggerRefresh()">
+    🔄 Refresh Changes & Re-analyze AI ✨
+</div>
+
+<div class="widget-container">
+    <div class="nav-tabs">
+        <button class="active" onclick="switchTab('core', event)">📊 Core</button>
+        <button onclick="switchTab('radar', event)">🎯 Radar</button>
+        <button onclick="switchTab('timeline', event)">⏱️ Timeline</button>
+        <button onclick="switchTab('archive', event)">📁 Vault</button>
+        <button onclick="switchTab('ai', event)">🤖 AI Guide</button>
+    </div>
+
+    <!-- Core Graph Section -->
+    <div id="core" class="section active">
+        <h2>Core Graph Matrix</h2>
+        <div class="subtitle">Click any node to load metrics, customize titles, and evaluate goals. 💜✨</div>
+
+        <div class="grid-2">
+            <div>
+                <div class="panel" style="margin-bottom: 10px;">
+                    <h3 style="margin:0 0 8px 0; font-size:12px; color:var(--accent-glow); text-shadow:0 0 8px rgba(232,121,249,0.5);">Active Nodes</h3>
+                    <div class="node-grid" id="core-nodes-container"></div>
+                </div>
+
+                <div class="panel">
+                    <h3 style="margin:0 0 8px 0; font-size:12px; color:var(--accent-glow); text-shadow:0 0 8px rgba(232,121,249,0.5);">➕ Add Node</h3>
+                    <label>Title</label>
+                    <input type="text" id="new-node-name" placeholder="e.g., UI Design">
+                    <label>Purpose</label>
+                    <textarea id="new-node-notes" placeholder="Define objective..." rows="1"></textarea>
+                    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 4px;">
+                        <div><label>Intensity</label><input type="number" id="new-node-int" placeholder="80" min="0" max="100"></div>
+                        <div><label>Consistency</label><input type="number" id="new-node-con" placeholder="85" min="0" max="100"></div>
+                        <div><label>Output</label><input type="number" id="new-node-out" placeholder="90" min="0" max="100"></div>
+                    </div>
+                    <button class="action-btn" onclick="addNewCoreNode()" style="width:100%; margin-top:8px;">Create ✨</button>
+                </div>
+            </div>
+
+            <div>
+                <div id="core-inspector-panel" class="panel" style="display: none; margin-bottom: 10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-size:12px; font-weight:bold; color:var(--accent-glow); text-shadow:0 0 8px rgba(232,121,249,0.5);">Node Customizer</span>
+                        <button class="danger-btn" onclick="deleteActiveNode()">Delete</button>
+                    </div>
+
+                    <label>Title</label>
+                    <input type="text" id="edit-node-title" oninput="markModified()">
+                    <label>Purpose</label>
+                    <textarea id="edit-node-purpose" rows="1" oninput="markModified()"></textarea>
+
+                    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+                        <div><label>Intensity</label><input type="number" id="edit-int" oninput="markModified()" min="0" max="100"></div>
+                        <div><label>Consistency</label><input type="number" id="edit-con" oninput="markModified()" min="0" max="100"></div>
+                        <div><label>Output</label><input type="number" id="edit-out" oninput="markModified()" min="0" max="100"></div>
+                    </div>
+
+                    <div style="background: rgba(10,7,18,0.5); padding: 8px; border-radius: 8px; margin-top: 8px; box-shadow: inset 0 0 10px rgba(168,85,247,0.15);">
+                        <canvas id="coreLineChart" style="max-height:120px;"></canvas>
+                    </div>
+                </div>
+
+                <div id="core-empty-state" class="panel" style="text-align:center; padding: 30px 15px; color: var(--text-muted); font-size:11px;">
+                    👆 Click any node to inspect and view metrics! ✨
+                </div>
+
+                <div class="ai-box" id="core-ai-summary">
+                    🤖 <strong>Graph AI:</strong> Select a node for live analysis! 🚀💜
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Radar Tuner Section -->
+    <div id="radar" class="section">
+        <h2>Interactive Radar Tuner</h2>
+        <div class="subtitle">Select a topic to input your 3 custom sub-metrics or rename via Customization. 🎯✨</div>
+
+        <div class="grid-2">
+            <div>
+                <div class="panel" style="margin-bottom: 10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                        <h3 style="margin:0; font-size:12px; color:var(--accent-glow); text-shadow:0 0 8px rgba(232,121,249,0.5);">Axes Topics</h3>
+                        <button class="action-btn" onclick="openAddRadarModal()" style="padding: 4px 10px; font-size:10px;">+ Add</button>
+                    </div>
+                    <div class="radar-card-list" id="radar-list-container"></div>
+                </div>
+
+                <div id="radar-inspector" class="panel" style="display:none;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                        <span id="inspector-topic-title" style="font-size:11px; font-weight:bold; color:var(--accent-glow); text-shadow:0 0 8px rgba(232,121,249,0.5);">Configure Details</span>
+                        <div style="display:flex; gap:4px;">
+                            <button class="secondary-btn" onclick="openCustomizationPrompt()">Rename</button>
+                            <button class="danger-btn" onclick="removeActiveRadarAxis()">Remove</button>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:6px;">
+                        <label id="label-sub-0">Sub-metric 1</label>
+                        <input type="number" id="sub-input-0" oninput="updateActiveRadarDetails()" min="0" max="100">
+                    </div>
+                    <div style="margin-bottom:6px;">
+                        <label id="label-sub-1">Sub-metric 2</label>
+                        <input type="number" id="sub-input-1" oninput="updateActiveRadarDetails()" min="0" max="100">
+                    </div>
+                    <div style="margin-bottom:2px;">
+                        <label id="label-sub-2">Sub-metric 3</label>
+                        <input type="number" id="sub-input-2" oninput="updateActiveRadarDetails()" min="0" max="100">
+                    </div>
+                </div>
+
+                <div id="radar-empty-state" class="panel" style="text-align:center; padding: 25px 15px; color: var(--text-muted); font-size:11px;">
+                    👆 Click any radar axis to input sub-metrics! ✨
+                </div>
+            </div>
+
+            <div>
+                <div class="panel" style="display:flex; flex-direction:column; justify-content:center; align-items:center; margin-bottom:10px;">
+                    <div style="width:100%; max-width:210px;">
+                        <canvas id="radarChartCanvas"></canvas>
+                    </div>
+                </div>
+
+                <div class="ai-box" id="radar-ai-summary">
+                    🤖 <strong>Radar AI:</strong> Tuners synced dynamically. Tap 'Refresh' to compute! 💜✨
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline Section -->
+    <div id="timeline" class="section">
+        <h2>Custom Timeline Layer</h2>
+        <div class="subtitle">Track milestones, start dates, and completion deadlines. ⏱️✨</div>
+
+        <div class="panel" style="margin-bottom: 12px;">
+            <h3 style="margin:0 0 8px 0; font-size:12px; color:var(--accent-glow); text-shadow:0 0 8px rgba(232,121,249,0.5);">➕ Add Milestone</h3>
+            <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap: 6px;">
+                <div><label>Title</label><input type="text" id="t-title" placeholder="Milestone name"></div>
+                <div><label>Start</label><input type="date" id="t-date" onchange="markModified()"></div>
+                <div><label>Deadline</label><input type="date" id="t-deadline" onchange="markModified()"></div>
+            </div>
+            <button class="action-btn" onclick="addTimelineMilestone()" style="margin-top:6px; width:100%;">Add Milestone ✨</button>
+        </div>
+
+        <div class="timeline-box" id="timeline-container"></div>
+    </div>
+
+    <!-- Secure File Vault Section -->
+    <div id="archive" class="section">
+        <h2>Secure File Vault</h2>
+        <span class="privacy-tag">🔒 100% Client-Side Privacy</span>
+        <div class="subtitle">Upload files and get instant local glass-surface summaries. ✨</div>
+
+        <div class="panel" style="margin-bottom: 12px;">
+            <h3 style="margin:0 0 8px 0; font-size:12px; color:var(--accent-glow); text-shadow:0 0 8px rgba(232,121,249,0.5);">📂 Add File & Format</h3>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div><label>Format Type</label><input type="text" id="custom-format-input" placeholder="e.g. .md, .json"></div>
+                <div><label>Choose File</label><input type="file" id="local-file-input" onchange="markModified()" style="padding: 5px;"></div>
+            </div>
+            <button class="action-btn" onclick="uploadAndParseFile()" style="margin-top:6px; width:100%;">Parse & Store ✨</button>
+        </div>
+
+        <div class="vault-grid" id="vault-grid"></div>
+    </div>
+
+    <!-- AI Guide Section -->
+    <div id="ai" class="section">
+        <h2>Intelligent AI Guide</h2>
+        <div class="subtitle">Real-time assistant monitoring all widget interactions. 😄💜</div>
+
+        <div class="chat-box" id="chat-box">
+            <div class="chat-msg msg-ai">Hello! 💜 I am your glowing glassy assistant. Hit 'Refresh' whenever you update your widgets! ✨</div>
+        </div>
+        <div class="chat-row">
+            <input type="text" id="chat-input" placeholder="Ask about metrics or vault..." onkeydown="if(event.key==='Enter') sendChatMessage()">
+            <button class="action-btn" onclick="sendChatMessage()">Send</button>
+            <button class="action-btn" onclick="triggerRefresh()" style="background:var(--neon-pink);">Refresh</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let coreTopics = {
+        'Fitness': { intensity: 85, consistency: 90, output: 88, notes: 'Rooftop high-intensity strength routine.', history: [65, 75, 88] },
+        'Coding': { intensity: 90, consistency: 85, output: 92, notes: 'Python backend development and SQL.', history: [70, 82, 92] }
+    };
+    let activeNodeKey = null;
+
+    let radarAxes = [
+        { name: 'Execution', details: [{ label: 'Tasks', val: 80 }, { label: 'Hours', val: 85 }, { label: 'Efficiency', val: 75 }] },
+        { name: 'Strategy', details: [{ label: 'Plans', val: 90 }, { label: 'Tests', val: 82 }, { label: 'Speed', val: 88 }] },
+        { name: 'Creativity', details: [{ label: 'Assets', val: 95 }, { label: 'Polish', val: 88 }, { label: 'Original', val: 90 }] },
+        { name: 'Resilience', details: [{ label: 'Grit', val: 70 }, { label: 'Streak', val: 80 }, { label: 'Recovery', val: 75 }] },
+        { name: 'Agility', details: [{ label: 'Velocity', val: 85 }, { label: 'Adapt', val: 90 }, { label: 'Fix Rate', val: 88 }] }
+    ];
+    let activeRadarIndex = null;
+
+    let milestones = [
+        { title: 'Core Dashboard Initialized', date: '2026-06-01', deadline: '2026-06-10' }
+    ];
+
+    let fileVault = [
+        { name: 'project_spec.md', format: '📄 Markdown (.md)', summary: 'Local safe archive containing layout rules.' }
+    ];
+
+    let lineChart = null, radarChart = null;
+
+    function switchTab(id, e) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        e.target.classList.add('active');
+        
+        if(id === 'radar') {
+            if(!radarChart) {
+                initRadarChart();
+            } else {
+                radarChart.resize();
+            }
+            renderRadarList();
+        }
+    }
+
+    function markModified() {
+        document.getElementById('refresh-banner').style.display = 'block';
+    }
+
+    function triggerRefresh() {
+        document.getElementById('refresh-banner').style.display = 'none';
+        
+        if(activeNodeKey && coreTopics[activeNodeKey]) {
+            let newTitle = document.getElementById('edit-node-title').value.trim();
+            let newPurpose = document.getElementById('edit-node-purpose').value.trim();
+            let intVal = parseInt(document.getElementById('edit-int').value);
+            let conVal = parseInt(document.getElementById('edit-con').value);
+            let outVal = parseInt(document.getElementById('edit-out').value);
+
+            if(!isNaN(intVal)) coreTopics[activeNodeKey].intensity = intVal;
+            if(!isNaN(conVal)) coreTopics[activeNodeKey].consistency = conVal;
+            if(!isNaN(outVal)) coreTopics[activeNodeKey].output = outVal;
+            if(newPurpose) coreTopics[activeNodeKey].notes = newPurpose;
+
+            if(newTitle && newTitle !== activeNodeKey) {
+                coreTopics[newTitle] = coreTopics[activeNodeKey];
+                delete coreTopics[activeNodeKey];
+                activeNodeKey = newTitle;
+            }
+
+            let avg = Math.round((coreTopics[activeNodeKey].intensity + coreTopics[activeNodeKey].consistency + coreTopics[activeNodeKey].output) / 3);
+            coreTopics[activeNodeKey].history.push(avg);
+            renderCoreNodes();
+            renderLineChart(activeNodeKey);
+            updateCoreAISummary(activeNodeKey, coreTopics[activeNodeKey]);
+        }
+
+        if(radarChart) {
+            radarChart.data.labels = radarAxes.map(a => a.name);
+            radarChart.data.datasets[0].data = radarAxes.map(a => calculateAxisScore(a));
+            radarChart.update();
+            updateRadarAISummary();
+        }
+
+        appendChatMessage("🔄 Refresh executed successfully! All glowing compact glassy components updated. ✨", "msg-ai");
+    }
+
+    function renderCoreNodes() {
+        let container = document.getElementById('core-nodes-container');
+        container.innerHTML = '';
+        for(let key in coreTopics) {
+            let item = coreTopics[key];
+            let avg = Math.round((item.intensity + item.consistency + item.output) / 3);
+            let pill = document.createElement('div');
+            pill.className = `node-pill ${activeNodeKey === key ? 'active' : ''}`;
+            pill.innerHTML = `<div style="font-weight:600; font-size:12px; text-shadow:0 0 5px rgba(232,121,249,0.3);">⭐ ${key}</div><div style="font-size:10px; color:var(--text-muted);">${avg}/100</div>`;
+            pill.onclick = () => selectCoreNode(key);
+            container.appendChild(pill);
+        }
+    }
+
+    function addNewCoreNode() {
+        let name = document.getElementById('new-node-name').value.trim();
+        let notes = document.getElementById('new-node-notes').value.trim() || 'No purpose defined.';
+        let intensity = parseInt(document.getElementById('new-node-int').value);
+        let consistency = parseInt(document.getElementById('new-node-con').value);
+        let output = parseInt(document.getElementById('new-node-out').value);
+
+        if(!name || isNaN(intensity) || isNaN(consistency) || isNaN(output)) return alert('Please fill in all node fields.');
+
+        let avg = Math.round((intensity + consistency + output) / 3);
+        coreTopics[name] = { intensity, consistency, output, notes, history: [Math.max(0, avg-10), avg] };
+
+        document.getElementById('new-node-name').value = '';
+        document.getElementById('new-node-notes').value = '';
+        document.getElementById('new-node-int').value = '';
+        document.getElementById('new-node-con').value = '';
+        document.getElementById('new-node-out').value = '';
+
+        renderCoreNodes();
+        selectCoreNode(name);
+        markModified();
+    }
+
+    function selectCoreNode(key) {
+        activeNodeKey = key;
+        renderCoreNodes();
+        
+        document.getElementById('core-empty-state').style.display = 'none';
+        document.getElementById('core-inspector-panel').style.display = 'block';
+
+        let data = coreTopics[key];
+        document.getElementById('edit-node-title').value = key;
+        document.getElementById('edit-node-purpose').value = data.notes;
+        document.getElementById('edit-int').value = data.intensity;
+        document.getElementById('edit-con').value = data.consistency;
+        document.getElementById('edit-out').value = data.output;
+
+        renderLineChart(key);
+        updateCoreAISummary(key, data);
+    }
+
+    function deleteActiveNode() {
+        if(!activeNodeKey) return;
+        delete coreTopics[activeNodeKey];
+        activeNodeKey = null;
+        document.getElementById('core-inspector-panel').style.display = 'none';
+        document.getElementById('core-empty-state').style.display = 'block';
+        if(lineChart) lineChart.destroy();
+        renderCoreNodes();
+        markModified();
+    }
+
+    function renderLineChart(key) {
+        let ctx = document.getElementById('coreLineChart').getContext('2d');
+        if(lineChart) lineChart.destroy();
+        let history = coreTopics[key].history;
+        lineChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: history.map((_, i) => `P${i+1}`),
+                datasets: [{ label: key, data: history, borderColor: '#e879f9', backgroundColor: 'rgba(232,121,249,0.2)', fill: true, tension: 0.35, pointBackgroundColor: '#ec4899', pointBorderColor: '#fff', pointHoverRadius: 6 }]
+            },
+            options: { responsive: true, scales: { y: { grid: { color: 'rgba(232,121,249,0.1)' }, ticks: { color: '#f3e8ff', font: {size: 9} }, beginAtZero: true, max: 100 }, x: { grid: { display: false }, ticks: { color: '#f3e8ff', font: {size: 9} } } }, plugins: { legend: { display: false } } }
+        });
+    }
+
+    function updateCoreAISummary(key, data) {
+        let avg = Math.round((data.intensity + data.consistency + data.output)/3);
+        document.getElementById('core-ai-summary').innerHTML = `
+            🤖 <strong>[${key}] Report:</strong> Score <strong>${avg}/100</strong>.<br>
+            • <em>Objective:</em> ${data.notes}<br>
+            • <em>Metrics:</em> Int ${data.intensity}%, Con ${data.consistency}%, Out ${data.output}%. ✨
+        `;
+    }
+
+    function calculateAxisScore(axis) {
+        if(!axis.details || axis.details.length === 0) return 50;
+        let sum = axis.details.reduce((acc, curr) => acc + (isNaN(curr.val) ? 0 : curr.val), 0);
+        return Math.round(sum / axis.details.length);
+    }
+
+    function renderRadarList() {
+        let container = document.getElementById('radar-list-container');
+        container.innerHTML = '';
+        radarAxes.forEach((axis, index) => {
+            let score = calculateAxisScore(axis);
+            let pill = document.createElement('div');
+            pill.className = `radar-pill-item ${activeRadarIndex === index ? 'active' : ''}`;
+            pill.innerHTML = `
+                <div>
+                    <div style="font-weight:600; font-size:12px; color:var(--text-light); text-shadow:0 0 5px rgba(232,121,249,0.3);">${axis.name}</div>
+                    <div style="font-size:10px; color:var(--text-muted);">Score: ${score}/100</div>
+                </div>
+                <div style="font-size:10px; background:rgba(147,51,234,0.3); padding:2px 6px; border-radius:4px; color:#f3e8ff; box-shadow:0 0 8px rgba(168,85,247,0.3);">⚙️</div>
+            `;
+            pill.onclick = () => selectRadarAxis(index);
+            container.appendChild(pill);
+        });
+    }
+
+    function selectRadarAxis(index) {
+        activeRadarIndex = index;
+        renderRadarList();
+
+        document.getElementById('radar-empty-state').style.display = 'none';
+        document.getElementById('radar-inspector').style.display = 'block';
+
+        let axis = radarAxes[index];
+        document.getElementById('inspector-topic-title').innerText = `Config: ${axis.name}`;
+
+        for(let i=0; i<3; i++) {
+            let detail = axis.details[i] || { label: `Sub ${i+1}`, val: 50 };
+            document.getElementById(`label-sub-${i}`).innerText = detail.label;
+            document.getElementById(`sub-input-${i}`).value = detail.val;
+        }
+    }
+
+    function updateActiveRadarDetails() {
+        if(activeRadarIndex === null || !radarAxes[activeRadarIndex]) return;
+        let axis = radarAxes[activeRadarIndex];
+
+        for(let i=0; i<3; i++) {
+            let val = parseInt(document.getElementById(`sub-input-${i}`).value);
+            if(!axis.details[i]) {
+                axis.details[i] = { label: `Sub ${i+1}`, val: 0 };
+            }
+            axis.details[i].val = isNaN(val) ? 0 : val;
+        }
+
+        renderRadarList();
+        if(radarChart) {
+            radarChart.data.datasets[0].data = radarAxes.map(a => calculateAxisScore(a));
+            radarChart.update();
+        }
+        markModified();
+    }
+
+    function openCustomizationPrompt() {
+        if(activeRadarIndex === null || !radarAxes[activeRadarIndex]) return;
+        let currentName = radarAxes[activeRadarIndex].name;
+        let newName = prompt("Enter custom name for this radar topic:", currentName);
+        if(newName && newName.trim() !== "") {
+            radarAxes[activeRadarIndex].name = newName.trim();
+            document.getElementById('inspector-topic-title').innerText = `Config: ${radarAxes[activeRadarIndex].name}`;
+            renderRadarList();
+            if(radarChart) {
+                radarChart.data.labels = radarAxes.map(a => a.name);
+                radarChart.update();
+            }
+            markModified();
+        }
+    }
+
+    function openAddRadarModal() {
+        let name = prompt("Enter new radar topic name:");
+        if(!name || name.trim() === "") return;
+        
+        let sub1 = prompt("Sub-metric 1 label:", "Sub 1");
+        let sub2 = prompt("Sub-metric 2 label:", "Sub 2");
+        let sub3 = prompt("Sub-metric 3 label:", "Sub 3");
+
+        radarAxes.push({
+            name: name.trim(),
+            details: [
+                { label: sub1 || 'Sub 1', val: 75 },
+                { label: sub2 || 'Sub 2', val: 80 },
+                { label: sub3 || 'Sub 3', val: 85 }
+            ]
+        });
+
+        renderRadarList();
+        if(radarChart) {
+            radarChart.data.labels = radarAxes.map(a => a.name);
+            radarChart.data.datasets[0].data = radarAxes.map(a => calculateAxisScore(a));
+            radarChart.update();
+        }
+        selectRadarAxis(radarAxes.length - 1);
+        markModified();
+    }
+
+    function removeActiveRadarAxis() {
+        if(activeRadarIndex === null || !radarAxes[activeRadarIndex]) return;
+        if(radarAxes.length <= 3) {
+            alert("A radar chart requires at least 3 axes!");
+            return;
+        }
+        radarAxes.splice(activeRadarIndex, 1);
+        activeRadarIndex = null;
+        document.getElementById('radar-inspector').style.display = 'none';
+        document.getElementById('radar-empty-state').style.display = 'block';
+
+        renderRadarList();
+        if(radarChart) {
+            radarChart.data.labels = radarAxes.map(a => a.name);
+            radarChart.data.datasets[0].data = radarAxes.map(a => calculateAxisScore(a));
+            radarChart.update();
+        }
+        markModified();
+    }
+
+    function initRadarChart() {
+        let ctx = document.getElementById('radarChartCanvas').getContext('2d');
+        if(radarChart) radarChart.destroy();
+        radarChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: radarAxes.map(a => a.name),
+                datasets: [{ label: 'Balance', data: radarAxes.map(a => calculateAxisScore(a)), backgroundColor: 'rgba(232,121,249,0.25)', borderColor: '#e879f9', pointBackgroundColor: '#ec4899', pointBorderColor: '#fff', pointHoverRadius: 6 }]
+            },
+            options: { responsive: true, maintainAspectRatio: true, scales: { r: { angleLines: { color: 'rgba(232,121,249,0.2)' }, grid: { color: 'rgba(232,121,249,0.2)' }, pointLabels: { color: '#f3e8ff', font: { size: 9, weight: 'bold' } }, ticks: { display: false, max: 100 } } }, plugins: { legend: { display: false } } }
+        });
+        updateRadarAISummary();
+    }
+
+    function updateRadarAISummary() {
+        let scores = radarAxes.map(a => calculateAxisScore(a));
+        let avg = Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+        document.getElementById('radar-ai-summary').innerHTML = `
+            🤖 <strong>Radar Equilibrium:</strong> <strong>${avg}%</strong> synchronization across ${radarAxes.length} tuners. Tap 'Refresh' to update! 💜✨
+        `;
+    }
+
+    function renderTimeline() {
+        let container = document.getElementById('timeline-container');
+        container.innerHTML = '';
+        milestones.forEach((m, i) => {
+            container.innerHTML += `<div class="timeline-card">
+                <div>
+                    <div style="font-size:10px; color:var(--neon-pink); font-weight:bold; margin-bottom:2px; text-shadow:0 0 5px rgba(236,72,153,0.5);">📅 ${m.date} → ⏰ ${m.deadline}</div>
+                    <div style="font-weight:600; font-size:12px; text-shadow:0 0 4px rgba(255,255,255,0.2);">${m.title}</div>
+                </div>
+                <button class="danger-btn" onclick="deleteMilestone(${i})">Remove</button>
+            </div>`;
+        });
+    }
+
+    function addTimelineMilestone() {
+        let title = document.getElementById('t-title').value.trim();
+        let date = document.getElementById('t-date').value;
+        let deadline = document.getElementById('t-deadline').value;
+        if(!title || !date || !deadline) return;
+        milestones.push({ title, date, deadline });
+        document.getElementById('t-title').value = '';
+        document.getElementById('t-date').value = '';
+        document.getElementById('t-deadline').value = '';
+        renderTimeline();
+        markModified();
+    }
+
+    function deleteMilestone(i) {
+        milestones.splice(i, 1);
+        renderTimeline();
+        markModified();
+    }
+
+    function uploadAndParseFile() {
+        let format = document.getElementById('custom-format-input').value.trim() || '📄 Custom File';
+        let input = document.getElementById('local-file-input');
+        if(input.files.length === 0) return alert('Please choose a file.');
+        
+        let file = input.files[0];
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            let snippet = e.target.result.substring(0, 40) + '...';
+            fileVault.push({ name: file.name, format: format, summary: `Parsed OK. Preview: "${snippet}"` });
+            input.value = '';
+            document.getElementById('custom-format-input').value = '';
+            renderVault();
+            markModified();
+        };
+        reader.readAsText(file);
+    }
+
+    function renderVault() {
+        let grid = document.getElementById('vault-grid');
+        grid.innerHTML = '';
+        fileVault.forEach((f, i) => {
+            grid.innerHTML += `<div class="vault-card">
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <span style="font-size:10px; color:var(--accent-glow); font-weight:bold; text-shadow:0 0 6px rgba(232,121,249,0.5);">${f.format}</span>
+                        <button class="danger-btn" onclick="deleteVaultFile(${i})">Delete</button>
+                    </div>
+                    <div style="font-weight:bold; font-size:11px; word-break:break-all; margin-bottom:4px; text-shadow:0 0 4px rgba(255,255,255,0.2);">📁 ${f.name}</div>
+                    <div style="font-size:10px; color:#d8b4fe; background:rgba(10,7,18,0.5); padding:6px; border-radius:6px; border-left:2px solid var(--neon-pink); box-shadow:inset 0 0 8px rgba(236,72,153,0.15);">🤖 ${f.summary}</div>
+                </div>
+            </div>`;
+        });
+    }
+
+    function deleteVaultFile(i) {
+        fileVault.splice(i, 1);
+        renderVault();
+        markModified();
+    }
+
+    function sendChatMessage() {
+        let input = document.getElementById('chat-input');
+        let text = input.value.trim();
+        if(!text) return;
+        appendChatMessage(text, 'msg-user');
+        input.value = '';
+        setTimeout(() => appendChatMessage("💜 I'm tracking your glowing glassy workspace. Hit 'Refresh' anytime! 😄✨", "msg-ai"), 300);
+    }
+
+    function appendChatMessage(text, cls) {
+        let box = document.getElementById('chat-box');
+        box.innerHTML += `<div class="chat-msg ${cls}">${text}</div>`;
+        box.scrollTop = box.scrollHeight;
+    }
+
+    renderCoreNodes();
+    renderTimeline();
+    renderVault();
+</script>
+
+</body>
+</html>
