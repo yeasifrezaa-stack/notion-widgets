@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aesthetic Velvet Glass Matrix • Palette Edition</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --rapt: #46323A;
+      --exclusively: #6A5161;
+      --dianthus: #8D6C85;
+      --plum: #B38DAB;
+      --lovely-pink: #D9C0D5;
+      
+      --bg-deep: #191919;
+      --canvas-bg: rgba(70, 50, 58, 0.45);
+      --card-bg: rgba(106, 81, 97, 0.35);
+      --card-hover: rgba(141, 108, 133, 0.5);
+      --text-main: #F4EBEB;
+      --text-muted: #D9C0D5;
+      
+      --glass-border: rgba(217, 192, 213, 0.22);
+      --glass-glow: rgba(179, 141, 171, 0.35);
+      --font-serif: 'Cormorant Garamond', serif;
+      --font-sans: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+
+    body {
+      background-color: var(--bg-deep);
+      background-image: none;
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Ambient Background Floating Orbs */
+    .ambient-orb {
+      position: absolute; border-radius: 50%; filter: blur(70px); z-index: 0; pointer-events: none;
+      animation: driftOrb 14s infinite alternate ease-in-out;
+    }
+    .orb-1 { width: 340px; height: 340px; background: rgba(141, 108, 133, 0.15); top: 5%; left: 8%; }
+    .orb-2 { width: 380px; height: 380px; background: rgba(179, 141, 171, 0.1); bottom: 5%; right: 8%; animation-delay: -7s; }
+
+    @keyframes driftOrb {
+      0% { transform: translateY(0) scale(1) rotate(0deg); }
+      100% { transform: translateY(-35px) scale(1.12) rotate(10deg); }
+    }
+
+    /* True Frosted Glass Panel */
+    .portal-canvas {
+      width: 100%;
+      max-width: 980px;
+      min-height: 720px;
+      position: relative;
+      background: var(--canvas-bg);
+      backdrop-filter: blur(35px);
+      -webkit-backdrop-filter: blur(35px);
+      border: 1px solid var(--glass-border);
+      border-radius: 36px;
+      box-shadow: 
+        0 40px 100px rgba(0, 0, 0, 0.5),
+        inset 0 0 40px rgba(217, 192, 213, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 2;
+      animation: fadeInCanvas 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes fadeInCanvas {
+      from { opacity: 0; transform: translateY(20px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .portal-nav {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-bottom: 20px; border-bottom: 1px solid rgba(217, 192, 213, 0.15);
+      margin-bottom: 24px; z-index: 10;
+    }
+
+    .brand-tag {
+      font-family: var(--font-serif); font-size: 1.2rem; letter-spacing: 3px;
+      color: var(--lovely-pink); text-transform: uppercase; font-weight: 600;
+      display: flex; align-items: center; gap: 10px;
+      text-shadow: 0 0 15px rgba(217, 192, 213, 0.4);
+    }
+    .brand-tag span { color: var(--plum); font-size: 1rem; animation: pulseSparkle 3s infinite ease-in-out; }
+
+    @keyframes pulseSparkle {
+      0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.7; filter: drop-shadow(0 0 2px var(--lovely-pink)); }
+      50% { transform: scale(1.35) rotate(180deg); opacity: 1; filter: drop-shadow(0 0 12px var(--lovely-pink)); }
+    }
+
+    .page-controls { display: flex; gap: 12px; align-items: center; }
+
+    .nav-btn {
+      background: rgba(106, 81, 97, 0.5); backdrop-filter: blur(10px);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main); padding: 8px 18px; border-radius: 20px;
+      font-family: var(--font-sans); font-size: 0.75rem; font-weight: 500; cursor: pointer; 
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .nav-btn:hover { 
+      background: var(--dianthus); border-color: var(--lovely-pink);
+      transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 25px var(--glass-glow); 
+    }
+    .page-indicator { font-family: var(--font-serif); font-size: 1.05rem; font-style: italic; color: var(--lovely-pink); }
+
+    .view-container { position: relative; flex: 1; display: flex; }
+    
+    .page-view {
+      position: absolute; inset: 0; opacity: 0; pointer-events: none;
+      transform: translateY(20px) scale(0.97); transition: all 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex; flex-direction: column;
+    }
+    .page-view.active { opacity: 1; pointer-events: all; transform: translateY(0) scale(1); }
+
+    /* PYRAMID VIEW */
+    .pyramid-view { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; height: 100%; position: relative; }
+    
+    .golden-thread {
+      position: absolute; top: 15px; bottom: 15px; width: 2px;
+      background: linear-gradient(to top, transparent, var(--dianthus), transparent);
+      z-index: 1; transition: all 0.4s ease;
+    }
+    .golden-thread.active {
+      background: linear-gradient(to top, transparent, var(--lovely-pink), #fff);
+      box-shadow: 0 0 25px var(--lovely-pink); width: 3px;
+    }
+
+    .pyramid-tier {
+      position: relative; background: var(--card-bg); backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border); border-radius: 20px; padding: 14px 24px;
+      display: flex; flex-direction: column; align-items: center; cursor: pointer; z-index: 2;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255,255,255,0.1);
+      animation: floatTier 5s ease-in-out infinite;
+    }
+    .pyramid-tier:nth-child(2) { animation-delay: 0s; width: 260px; }
+    .pyramid-tier:nth-child(3) { animation-delay: 0.8s; width: 380px; }
+    .pyramid-tier:nth-child(4) { animation-delay: 1.6s; width: 500px; }
+    .pyramid-tier:nth-child(5) { animation-delay: 2.4s; width: 620px; }
+    .pyramid-tier:nth-child(6) { animation-delay: 3.2s; width: 740px; }
+
+    @keyframes floatTier {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    .pyramid-tier:hover { 
+      transform: translateY(-8px) scale(1.02) !important; 
+      background: var(--card-hover);
+      border-color: var(--lovely-pink); 
+      box-shadow: 0 22px 50px rgba(0, 0, 0, 0.4), 0 0 30px var(--glass-glow), inset 0 1px 0 rgba(255,255,255,0.25); 
+      animation-play-state: paused;
+    }
+
+    .tier-badge { font-family: var(--font-sans); font-size: 0.65rem; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 2px; transition: color 0.3s; }
+    .pyramid-tier:hover .tier-badge { color: var(--lovely-pink); text-shadow: 0 0 10px var(--lovely-pink); }
+    .tier-name { font-family: var(--font-serif); font-size: 1.25rem; font-weight: 600; color: var(--text-main); letter-spacing: 0.5px; }
+
+    .turn-page-btn {
+      margin-top: 16px; background: linear-gradient(135deg, var(--exclusively), var(--dianthus));
+      border: 1px solid var(--glass-border); color: #fff; padding: 12px 32px;
+      border-radius: 30px; font-family: var(--font-sans); font-size: 0.8rem; font-weight: 600; letter-spacing: 1.5px;
+      cursor: pointer; box-shadow: 0 10px 30px rgba(106, 81, 97, 0.4); transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .turn-page-btn:hover { transform: scale(1.06) translateY(-3px); box-shadow: 0 18px 45px var(--glass-glow); border-color: var(--lovely-pink); }
+
+    /* WORKSPACE GRID */
+    .workspace-grid { display: grid; grid-template-columns: 1fr 1.25fr; gap: 20px; height: 100%; }
+
+    .diagnostic-panel {
+      background: rgba(70, 50, 58, 0.35); backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border); border-radius: 24px;
+      padding: 22px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; max-height: 560px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+    .diag-title { 
+      font-family: var(--font-serif); font-size: 1.35rem; font-weight: 600; color: var(--text-main); 
+      display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(217, 192, 213, 0.2); padding-bottom: 10px; 
+    }
+
+    .q-group { display: flex; flex-direction: column; gap: 6px; position: relative; }
+    .q-label { font-family: var(--font-sans); font-size: 0.68rem; color: var(--text-muted); letter-spacing: 1.5px; font-weight: 600; text-transform: uppercase; }
+    
+    /* CUSTOM AESTHETIC DROPDOWN SELECTOR */
+    .custom-select-wrapper {
+      position: relative; user-select: none; width: 100%;
+    }
+    .custom-select-trigger {
+      background: rgba(25, 25, 25, 0.75); backdrop-filter: blur(10px);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main); padding: 11px 16px; border-radius: 14px;
+      font-family: var(--font-sans); font-size: 0.82rem; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    .custom-select-trigger::after {
+      content: '▾'; color: var(--lovely-pink); font-size: 0.9rem; transition: transform 0.35s ease;
+    }
+    .custom-select-wrapper.open .custom-select-trigger {
+      border-color: var(--lovely-pink); background: rgba(70, 50, 58, 0.85);
+      box-shadow: 0 0 20px var(--glass-glow), inset 0 1px 0 rgba(255,255,255,0.15);
+    }
+    .custom-select-wrapper.open .custom-select-trigger::after {
+      transform: rotate(180deg);
+    }
+
+    /* AESTHETIC DROPOUT ANIMATION */
+    .custom-options {
+      position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+      background: rgba(25, 25, 25, 0.95); backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid var(--glass-border); border-radius: 16px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(179, 141, 171, 0.15);
+      overflow: hidden; z-index: 100;
+      opacity: 0; transform: translateY(-10px) scale(0.98); pointer-events: none;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      max-height: 220px; overflow-y: auto;
+    }
+    .custom-select-wrapper.open .custom-options {
+      opacity: 1; transform: translateY(0) scale(1); pointer-events: all;
+    }
+
+    .custom-option {
+      padding: 10px 16px; font-size: 0.8rem; color: var(--text-muted); cursor: pointer;
+      transition: all 0.25s ease; border-bottom: 1px solid rgba(217, 192, 213, 0.05);
+    }
+    .custom-option:last-child { border-bottom: none; }
+    .custom-option:hover {
+      background: rgba(141, 108, 133, 0.4); color: var(--lovely-pink);
+      padding-left: 20px; text-shadow: 0 0 8px var(--lovely-pink);
+    }
+    .custom-option.selected {
+      background: rgba(179, 141, 171, 0.25); color: var(--text-main); font-weight: 600;
+    }
+
+    .q-custom-input {
+      background: rgba(25, 25, 25, 0.85); border: 1px solid var(--glass-border);
+      color: var(--text-main); padding: 10px 14px; border-radius: 12px;
+      font-family: var(--font-sans); font-size: 0.82rem; outline: none; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: none; margin-top: 6px; border-left: 3px solid var(--lovely-pink);
+    }
+    .q-custom-input.active { display: block; animation: slideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* AI PANEL */
+    .ai-panel {
+      background: linear-gradient(145deg, rgba(70, 50, 58, 0.4), rgba(25, 25, 25, 0.65));
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid var(--glass-border); border-radius: 24px; padding: 22px;
+      display: flex; flex-direction: column; gap: 14px; position: relative;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+    .ai-panel-header {
+      display: flex; justify-content: space-between; align-items: center;
+      font-family: var(--font-serif); font-size: 1.05rem; color: var(--text-main);
+      letter-spacing: 1px; border-bottom: 1px solid rgba(217, 192, 213, 0.2); padding-bottom: 10px; font-weight: 600;
+    }
+    .ai-status-tag {
+      font-size: 0.62rem; font-family: var(--font-sans); background: rgba(106, 81, 97, 0.4); border: 1px solid var(--lovely-pink);
+      padding: 4px 10px; border-radius: 12px; color: var(--lovely-pink); font-weight: 600; letter-spacing: 1px;
+      animation: pulseGlow 3s infinite ease-in-out;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 5px rgba(217, 192, 213, 0.15); }
+      50% { box-shadow: 0 0 20px rgba(217, 192, 213, 0.5); }
+    }
+
+    .ai-response-box {
+      flex: 1; background: rgba(20, 20, 20, 0.7); border: 1px solid rgba(217, 192, 213, 0.15);
+      border-radius: 16px; padding: 16px; font-size: 0.85rem; line-height: 1.7;
+      color: var(--text-main); overflow-y: auto; max-height: 380px; white-space: pre-line;
+      box-shadow: inset 0 0 25px rgba(0,0,0,0.6);
+    }
+    .ai-response-box b { color: var(--lovely-pink); font-weight: 600; text-shadow: 0 0 8px rgba(217, 192, 213, 0.3); }
+    .ai-response-box h4 {
+      color: var(--lovely-pink); font-family: var(--font-serif); font-size: 1.1rem;
+      letter-spacing: 1px; margin-top: 14px; margin-bottom: 4px; text-transform: uppercase; font-weight: 600;
+      text-shadow: 0 0 10px rgba(217, 192, 213, 0.3);
+    }
+
+    .analyze-btn-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; gap: 14px; }
+    .analyze-trigger-btn {
+      background: linear-gradient(135deg, var(--exclusively), var(--dianthus));
+      border: 1px solid var(--glass-border); color: #ffffff; padding: 14px 32px;
+      border-radius: 30px; font-family: var(--font-sans); font-size: 0.8rem; font-weight: 600; letter-spacing: 1.5px;
+      cursor: pointer; box-shadow: 0 10px 30px rgba(106, 81, 97, 0.4); transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: pulseBtn 3s infinite ease-in-out;
+    }
+    .analyze-trigger-btn:hover { transform: scale(1.06) translateY(-3px); box-shadow: 0 18px 45px var(--glass-glow); border-color: var(--lovely-pink); }
+    @keyframes pulseBtn { 
+      0%, 100% { box-shadow: 0 0 15px rgba(217, 192, 213, 0.25); transform: scale(1); } 
+      50% { box-shadow: 0 0 35px rgba(217, 192, 213, 0.65); transform: scale(1.03); } 
+    }
+
+    .ai-chat-bar { display: flex; gap: 8px; }
+    .ai-chat-input {
+      flex: 1; background: rgba(25, 25, 25, 0.75); border: 1px solid var(--glass-border);
+      border-radius: 14px; padding: 11px 16px; color: var(--text-main);
+      font-size: 0.82rem; outline: none; font-family: var(--font-sans); transition: all 0.3s;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    .ai-chat-input:focus { border-color: var(--lovely-pink); background: rgba(70, 50, 58, 0.9); box-shadow: 0 0 20px var(--glass-glow); }
+    .ai-send-btn {
+      background: var(--dianthus); border: 1px solid var(--glass-border);
+      color: var(--text-main); padding: 0 18px; border-radius: 14px;
+      cursor: pointer; font-family: var(--font-sans); font-size: 0.9rem; transition: all 0.3s;
+    }
+    .ai-send-btn:hover { background: var(--lovely-pink); color: var(--rapt); border-color: var(--lovely-pink); transform: scale(1.05); box-shadow: 0 0 15px var(--lovely-pink); }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--dianthus); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--lovely-pink); }
+  </style>
+</head>
+<body>
+
+  <div class="ambient-orb orb-1"></div>
+  <div class="ambient-orb orb-2"></div>
+
+  <div class="portal-canvas">
+    
+    <div class="portal-nav">
+      <div class="brand-tag"><span>✦</span> Velvet Palette Matrix</div>
+      <div class="page-controls">
+        <button class="nav-btn" id="coverBtn">🌸 Pyramid Deck</button>
+        <button class="nav-btn" id="prevBtn">‹ Prev</button>
+        <span class="page-indicator" id="pageNumber">Page 0 / 5</span>
+        <button class="nav-btn" id="nextBtn">Next ›</button>
+      </div>
+    </div>
+
+    <div class="view-container">
+
+      <!-- PYRAMID COVER PAGE -->
+      <div class="page-view pyramid-view active" id="page-0">
+        <div class="golden-thread" id="thread"></div>
+        <div class="pyramid-tier" data-page="1"><span class="tier-badge">Apex Layer • Page 1</span><span class="tier-name">North Star (5-10 Year Vision)</span></div>
+        <div class="pyramid-tier" data-page="2"><span class="tier-badge">Strategic Tier • Page 2</span><span class="tier-name">3-Year Vision & Milestones</span></div>
+        <div class="pyramid-tier" data-page="3"><span class="tier-badge">Action Tier • Page 3</span><span class="tier-name">1-Year Tactical Goals</span></div>
+        <div class="pyramid-tier" data-page="4"><span class="tier-badge">Sprint Tier • Page 4</span><span class="tier-name">This Month Focus</span></div>
+        <div class="pyramid-tier" data-page="5"><span class="tier-badge">Foundation Tier • Page 5</span><span class="tier-name">This Week Execution</span></div>
+        <button class="turn-page-btn" id="turnPageCover">Open Velvet Workspace ✨</button>
+      </div>
+
+      <!-- WORKSPACE VIEW -->
+      <div class="page-view" id="workspace-view">
+        <div class="workspace-grid">
+          
+          <div class="diagnostic-panel">
+            <div class="diag-title" id="diagTitle"><span>🌹</span> Situation Diagnostic</div>
+            <div id="questionsContainer" style="display: flex; flex-direction: column; gap: 14px;"></div>
+          </div>
+
+          <div class="ai-panel">
+            <div class="ai-panel-header">
+              <span>✨ Gemini Palette Core</span>
+              <span class="ai-status-tag" id="aiStatus">WAITING FOR ANALYSIS</span>
+            </div>
+            
+            <div class="ai-response-box" id="aiResponse">
+              <div class="analyze-btn-container">
+                <p style="font-size: 0.84rem; color: var(--text-muted); font-weight: 500;">Configure your 5 diagnostic parameters on the left, then click below to trigger Gemini's deep analysis.</p>
+                <button class="analyze-trigger-btn" id="triggerAnalyzeBtn">⚡ ANALYZE MATRIX & GENERATE ROADMAP</button>
+              </div>
+            </div>
+
+            <div class="ai-chat-bar">
+              <input type="text" class="ai-chat-input" id="aiCustomQuery" placeholder="Ask Gemini a follow-up question...">
+              <button class="ai-send-btn" id="aiSendBtn">➔</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let currentPage = 1;
+    
+    const layerDiagnostics = {
+      1: {
+        title: "North Star (5-10 Year) Diagnostic",
+        questions: [
+          { id: "q1", label: "1. Primary Ultimate Direction", options: ["High-Ticket Creative / Tech Independence", "Top-Tier University & Academic Mastery", "Global Brand & Entrepreneurship", "Personal Mastery & Physical Peak", "Custom Input..."] },
+          { id: "q2", label: "2. Current Foundational Level", options: ["Beginner (Building Foundations)", "Intermediate (Solid Execution)", "Advanced (Refining Mastery)", "Custom Input..."] },
+          { id: "q3", label: "3. Largest Long-Term Bottleneck", options: ["Lack of Clear Step-by-Step Roadmap", "Inconsistent Daily Discipline", "Distraction & Energy Management", "Overthinking & Scope Creep", "Custom Input..."] },
+          { id: "q4", label: "4. Vision Risk Appetite", options: ["Aggressive & High-Impact", "Calculated & Steady", "Unconventional & Disruptive", "Custom Input..."] },
+          { id: "q5", label: "5. Daily Deep Work Capacity", options: ["1-2 Hours (Tight Schedule)", "3-4 Hours (Balanced Flow)", "5+ Hours (Full Immersion)", "Custom Input..."] }
+        ]
+      },
+      2: {
+        title: "3-Year Vision Diagnostic",
+        questions: [
+          { id: "q1", label: "1. Key 3-Year Milestone", options: ["University Acceptance & Exam Distinction", "Commercial Creative / Blender 3D Portfolio", "Full-Stack Backend Code Mastery", "Elite Athletic Physical Conditioning", "Custom Input..."] },
+          { id: "q2", label: "2. Current Milestone Stage", options: ["Early Stage (0-25% Complete)", "Midway (40-60% Complete)", "Final Sprint (75%+ Complete)", "Custom Input..."] },
+          { id: "q3", label: "3. Main Potential Threat", options: ["Academic Overload & Fatigue", "Procrastination / Social Media", "Lack of High-Level Mentorship", "Inability to Prioritize Tasks", "Custom Input..."] },
+          { id: "q4", label: "4. Sprint Style Preference", options: ["Rigid Daily Schedules", "Flexible Goal Sprints", "Intense Weekend Marathons", "Custom Input..."] },
+          { id: "q5", label: "5. Quality Standard", options: ["Top 1% World-Class Standard", "High Quality Commercial Standard", "Sufficient for Immediate Goals", "Custom Input..."] }
+        ]
+      },
+      3: {
+        title: "1-Year Tactical Diagnostic",
+        questions: [
+          { id: "q1", label: "1. Primary 1-Year Focus", options: ["O Level Exam Top Marks", "High-End Upscaled Video & 3D Art", "Python Backend & Technical Skills", "Structured Core Physical Routine", "Custom Input..."] },
+          { id: "q2", label: "2. Energy & Momentum", options: ["Low (Feeling Burnout)", "Moderate (Steady & Consistent)", "High (Peak Momentum)", "Custom Input..."] },
+          { id: "q3", label: "3. Environment Discipline", options: ["High Distraction Space", "Clean Distraction-Free Deck", "Chaotic / Variable Workspace", "Custom Input..."] },
+          { id: "q4", label: "4. Execution Velocity", options: ["Methodical & Slow", "Fast Iteration & Testing", "Reactive / Last-Minute Sprints", "Custom Input..."] },
+          { id: "q5", label: "5. Habit Regularity", options: ["Inconsistent (50% Days)", "Regular (80% Days)", "Ironclad (100% Daily Lock-In)", "Custom Input..."] }
+        ]
+      },
+      4: {
+        title: "This Month Sprint Diagnostic",
+        questions: [
+          { id: "q1", label: "1. This Month's Main Sprint", options: ["Python Backend & SQL Analytics", "Commercial Video Ad Project", "Intensive Exam Subject Prep", "Core Fitness & Rooftop Routine", "Custom Input..."] },
+          { id: "q2", label: "2. Sprint Timeline Position", options: ["Week 1: Planning & Setup", "Week 2-3: Deep Execution", "Week 4: Polish & Final Delivery", "Custom Input..."] },
+          { id: "q3", label: "3. Target Completion Confidence", options: ["Uncertain (<40% Confidence)", "Moderate (60-80% Confidence)", "Extremely High (90%+ Lock)", "Custom Input..."] },
+          { id: "q4", label: "4. Largest Daily Energy Drain", options: ["Phone / Social Media Friction", "Physical Fatigue / Sleep Deficit", "Task Switching / Multitasking", "Custom Input..."] },
+          { id: "q5", label: "5. Workout Commitment Level", options: ["100 Crunches + 30m Rooftop", "200 Crunches + 1h Rooftop", "Variable / Unscheduled", "Custom Input..."] }
+        ]
+      },
+      5: {
+        title: "This Week Execution Diagnostic",
+        questions: [
+          { id: "q1", label: "1. Today's Top Non-Negotiable", options: ["High-Impact Study & Revision", "Creative Design & Render Block", "Backend Code Architecture", "Physical Recovery & Core Routine", "Custom Input..."] },
+          { id: "q2", label: "2. Target Focus Block Duration", options: ["30-Minute Micro Sprints", "60-Minute Deep Flow Blocks", "2+ Hour Marathon Sessions", "Custom Input..."] },
+          { id: "q3", label: "3. Current Mental Clarity", options: ["Distracted / Brain Fog", "Calm & Neutral", "Hyper-Focused Laser", "Custom Input..."] },
+          { id: "q4", label: "4. Surrounding Distraction Level", options: ["Quiet & Controlled Room", "Medium / Notifications Active", "High / Frequent Interruptions", "Custom Input..."] },
+          { id: "q5", label: "5. Daily Exercise Target Today", options: ["100 Crunches Minimum", "Full 200 Crunches + Rooftop", "Rest & Active Stretch", "Custom Input..."] }
+        ]
+      }
+    };
+
+    let userSelections = JSON.parse(localStorage.getItem('gemini_palette_selections_v1')) || {
+      1: { q1: 0, q1Custom: "", q2: 0, q2Custom: "", q3: 0, q3Custom: "", q4: 0, q4Custom: "", q5: 0, q5Custom: "" },
+      2: { q1: 0, q1Custom: "", q2: 0, q2Custom: "", q3: 0, q3Custom: "", q4: 0, q4Custom: "", q5: 0, q5Custom: "" },
+      3: { q1: 0, q1Custom: "", q2: 0, q2Custom: "", q3: 0, q3Custom: "", q4: 0, q4Custom: "", q5: 0, q5Custom: "" },
+      4: { q1: 0, q1Custom: "", q2: 0, q2Custom: "", q3: 0, q3Custom: "", q4: 0, q4Custom: "", q5: 0, q5Custom: "" },
+      5: { q1: 0, q1Custom: "", q2: 0, q2Custom: "", q3: 0, q3Custom: "", q4: 0, q4Custom: "", q5: 0, q5Custom: "" }
+    };
+
+    function saveSelections() { localStorage.setItem('gemini_palette_selections_v1', JSON.stringify(userSelections)); }
+
+    const pageView0 = document.getElementById('page-0');
+    const workspaceView = document.getElementById('workspace-view');
+    const pageNumberDisplay = document.getElementById('pageNumber');
+    const thread = document.getElementById('thread');
+
+    function updatePage(newPage) {
+      currentPage = newPage;
+      pageNumberDisplay.innerText = `Page ${currentPage} / 5`;
+      if (currentPage === 0) {
+        pageView0.classList.add('active'); workspaceView.classList.remove('active');
+      } else {
+        pageView0.classList.remove('active'); workspaceView.classList.add('active');
+        renderDiagnosticWorkspace(currentPage);
+      }
+    }
+
+    document.getElementById('coverBtn').addEventListener('click', () => updatePage(0));
+    document.getElementById('prevBtn').addEventListener('click', () => updatePage(Math.max(0, currentPage - 1)));
+    document.getElementById('nextBtn').addEventListener('click', () => updatePage(Math.min(5, currentPage + 1)));
+    document.getElementById('turnPageCover').addEventListener('click', () => updatePage(1));
+
+    document.querySelectorAll('.pyramid-tier').forEach(tier => {
+      tier.addEventListener('click', () => updatePage(parseInt(tier.dataset.page)));
+      tier.addEventListener('mouseenter', () => { if (tier.dataset.page !== "1") thread.classList.add('active'); });
+      tier.addEventListener('mouseleave', () => thread.classList.remove('active'));
+    });
+
+    const diagTitle = document.getElementById('diagTitle');
+    const questionsContainer = document.getElementById('questionsContainer');
+    const aiResponse = document.getElementById('aiResponse');
+    const aiStatus = document.getElementById('aiStatus');
+
+    function renderDiagnosticWorkspace(page) {
+      const config = layerDiagnostics[page];
+      diagTitle.innerHTML = `<span>🌹</span> ${config.title}`;
+      questionsContainer.innerHTML = '';
+
+      config.questions.forEach((q, idx) => {
+        const qKey = `q${idx+1}`;
+        const customKey = `${qKey}Custom`;
+        const qDiv = document.createElement('div');
+        qDiv.className = 'q-group';
+        
+        const selVal = userSelections[page][qKey];
+        const isCustomSelected = selVal === (q.options.length - 1);
+        const selectedText = q.options[selVal];
+
+        let optionsHTML = q.options.map((opt, optIdx) => 
+          `<div class="custom-option ${selVal == optIdx ? 'selected' : ''}" data-value="${optIdx}">${opt}</div>`
+        ).join('');
+
+        qDiv.innerHTML = `
+          <label class="q-label">${q.label}</label>
+          <div class="custom-select-wrapper" data-qid="${qKey}" data-lastindex="${q.options.length - 1}">
+            <div class="custom-select-trigger">${selectedText}</div>
+            <div class="custom-options">${optionsHTML}</div>
+          </div>
+          <input type="text" class="q-custom-input ${isCustomSelected ? 'active' : ''}" data-customid="${customKey}" placeholder="Type your custom input here..." value="${userSelections[page][customKey]}">
+        `;
+        questionsContainer.appendChild(qDiv);
+      });
+
+      resetAnalyzePromptState();
+
+      document.querySelectorAll('.custom-select-wrapper').forEach(wrapper => {
+        const trigger = wrapper.querySelector('.custom-select-trigger');
+        const qid = wrapper.dataset.qid;
+        const lastIdx = parseInt(wrapper.dataset.lastindex);
+        const customInput = wrapper.nextElementSibling;
+
+        trigger.addEventListener('click', (e) => {
+          e.stopPropagation();
+          document.querySelectorAll('.custom-select-wrapper').forEach(w => {
+            if (w !== wrapper) w.classList.remove('open');
+          });
+          wrapper.classList.toggle('open');
+        });
+
+        wrapper.querySelectorAll('.custom-option').forEach(option => {
+          option.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const val = parseInt(option.dataset.value);
+            userSelections[currentPage][qid] = val;
+            trigger.textContent = option.textContent;
+            
+            wrapper.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+            wrapper.classList.remove('open');
+
+            if (val === lastIdx) {
+              customInput.classList.add('active');
+              customInput.focus();
+            } else {
+              customInput.classList.remove('active');
+            }
+            saveSelections();
+            resetAnalyzePromptState();
+          });
+        });
+
+        const customField = wrapper.nextElementSibling;
+        if (customField && customField.classList.contains('q-custom-input')) {
+          customField.addEventListener('input', (e) => {
+            const customId = e.target.dataset.customid;
+            userSelections[currentPage][customId] = e.target.value;
+            saveSelections();
+            resetAnalyzePromptState();
+          });
+        }
+      });
+
+      document.addEventListener('click', () => {
+        document.querySelectorAll('.custom-select-wrapper').forEach(w => w.classList.remove('open'));
+      });
+    }
+
+    function resetAnalyzePromptState() {
+      aiStatus.innerText = "READY FOR ANALYSIS";
+      aiResponse.innerHTML = `
+        <div class="analyze-btn-container">
+          <p style="font-size: 0.84rem; color: var(--text-muted); font-weight: 500;">All 5 parameters and custom inputs are logged. Click below to analyze your data across this layer.</p>
+          <button class="analyze-trigger-btn" id="triggerAnalyzeBtn">⚡ ANALYZE MATRIX & GENERATE ROADMAP</button>
+        </div>
+      `;
+      document.getElementById('triggerAnalyzeBtn').addEventListener('click', runGeminiAnalysis);
+    }
+
+    function getResolvedValue(page, qIndex, config) {
+      const qKey = `q${qIndex}`;
+      const selVal = userSelections[page][qKey];
+      const lastIdx = config.questions[qIndex - 1].options.length - 1;
+      
+      if (selVal === lastIdx) {
+        return userSelections[page][`${qKey}Custom`] || "Custom Goal";
+      }
+      return config.questions[qIndex - 1].options[selVal];
+    }
+
+    function runGeminiAnalysis() {
+      aiStatus.innerText = "ANALYZING ALL 5 INPUTS...";
+      aiResponse.style.opacity = "0.3";
+
+      setTimeout(() => {
+        const p = currentPage;
+        const config = layerDiagnostics[p];
+
+        const p1 = getResolvedValue(p, 1, config);
+        const p2 = getResolvedValue(p, 2, config);
+        const p3 = getResolvedValue(p, 3, config);
+        const p4 = getResolvedValue(p, 4, config);
+        const p5 = getResolvedValue(p, 5, config);
+
+        const combinedText = (p1 + " " + p2 + " " + p3 + " " + p4 + " " + p5).toLowerCase();
+
+        let output = `<b>GEMINI VELVET SYNTHESIS [PAGE ${p}: ${config.title.toUpperCase()}]</b>\n\n`;
+        output += `<b>Synthesized Inputs:</b>\n`;
+        output += `1. <i>${p1}</i>\n2. <i>${p2}</i>\n3. <i>${p3}</i>\n4. <i>${p4}</i>\n5. <i>${p5}</i>\n\n`;
+
+        output += `<h4>🎯 STRATEGIC VELVET ROADMAP</h4>`;
+
+        if (combinedText.includes("code") || combinedText.includes("python") || combinedText.includes("backend") || combinedText.includes("sql") || combinedText.includes("development") || combinedText.includes("programming")) {
+          output += `1. <b>Architecture & Modular Setup:</b> Based on your objective of <i>"${p1}"</i>, map out clean structural endpoints before writing code.\n`;
+          output += `2. <b>Systematic Isolation:</b> Given your bottleneck of <i>"${p3}"</i>, isolate bugs with pinpoint unit testing rather than broad rewrites.\n`;
+          output += `3. <b>Protected Flow Blocks:</b> Maximize your <i>"${p5}"</i> capacity by eliminating notification friction and locking in deep work.`;
+        } 
+        else if (combinedText.includes("art") || combinedText.includes("blender") || combinedText.includes("video") || combinedText.includes("render") || combinedText.includes("design") || combinedText.includes("creative")) {
+          output += `1. <b>Silhouette & Staging Phase:</b> For your goal of <i>"${p1}"</i>, establish lighting and spatial hierarchy before fine texturing.\n`;
+          output += `2. <b>Pipeline Acceleration:</b> To counter <i>"${p3}"</i>, use low-sample proxies during active iteration stages.\n`;
+          output += `3. <b>Final Polish Protocol:</b> Dedicate the tail-end of your <i>"${p5}"</i> window strictly to grading, upscaling, and visual polish.`;
+        }
+        else if (combinedText.includes("exam") || combinedText.includes("study") || combinedText.includes("o level") || combinedText.includes("academic") || combinedText.includes("school")) {
+          output += `1. <b>Active Recall Protocol:</b> To achieve <i>"${p1}"</i>, test yourself without looking at notes to expose knowledge gaps instantly.\n`;
+          output += `2. <b>Timed Simulation:</b> Combat <i>"${p3}"</i> by practicing under strict exam conditions to build natural speed.\n`;
+          output += `3. <b>Targeted Revision Blocks:</b> Allocate your daily <i>"${p5}"</i> schedule specifically to correcting past-paper errors.`;
+        }
+        else if (combinedText.includes("fit") || combinedText.includes("workout") || combinedText.includes("crunches") || combinedText.includes("rooftop") || combinedText.includes("physical") || combinedText.includes("muscle")) {
+          output += `1. <b>Mechanical Tension & Pacing:</b> To reach your physical target of <i>"${p1}"</i>, prioritize slow eccentric control over rushed volume.\n`;
+          output += `2. <b>Friction Reduction:</b> Overcome <i>"${p3}"</i> by organizing your workout gear and playlist in advance.\n`;
+          output += `3. <b>Recovery & Routine Lock:</b> Maintain consistency across your <i>"${p5}"</i> target windows by balancing core work and rest.`;
+        }
+        else {
+          output += `1. <b>Target Deconstruction:</b> Your core focus is <i>"${p1}"</i> within a <i>"${p2}"</i> environment. Strip away peripheral noise.\n`;
+          output += `2. <b>Bottleneck Safeguards:</b> Your primary obstacle is <i>"${p3}"</i>. Build absolute behavioral boundaries.\n`;
+          output += `3. <b>Execution Velocity:</b> Apply a <i>"${p4}"</i> rhythm while protecting your <i>"${p5}"</i> focus blocks.`;
+        }
+
+        output += `\n<h4>⚠️ CRITICAL TRAPS TO AVOID</h4>`;
+        output += `• <b>The Friction Trap:</b> Allowing <i>"${p3}"</i> to derail momentum instead of establishing firm system rules.\n`;
+        output += `• <b>Over-Planning Loop:</b> Spending excessive time theorizing about <i>"${p1}"</i> instead of executing iterations.\n`;
+        output += `• <b>Context Bleed:</b> Letting external distractions infiltrate your <i>"${p5}"</i> execution slots.\n`;
+
+        output += `\n<h4>💡 VELVET TACTICAL HACK</h4>`;
+        if (combinedText.includes("code") || combinedText.includes("python")) {
+          output += `• <b>The Rubber-Duck Diagnostic:</b> Speak your bug or logic flow aloud; verbalizing code logic instantly exposes structural syntax flaws.`;
+        } else if (combinedText.includes("art") || combinedText.includes("design") || combinedText.includes("video")) {
+          output += `• <b>The 10% Thumbnail Rule:</b> Shrink your view to a tiny thumbnail. If the overall lighting and silhouette look muddy at 10% size, high-res details won't save it.`;
+        } else if (combinedText.includes("exam") || combinedText.includes("study")) {
+          output += `• <b>Inverted Marking:</b> Grade your practice papers line-by-line using official examiner mark schemes to internalize exactly what yields full credit.`;
+        } else {
+          output += `• <b>The 300-Second Rule:</b> Commit to executing your custom objective for just 5 minutes straight without stopping. Psychological friction vanishes once motion begins.`;
+        }
+
+        aiResponse.innerHTML = output;
+        aiResponse.style.opacity = "1";
+        aiStatus.innerText = "ANALYSIS COMPLETE";
+      }, 400);
+    }
+
+    const aiCustomQuery = document.getElementById('aiCustomQuery');
+    const aiSendBtn = document.getElementById('aiSendBtn');
+
+    function handleGeminiChat() {
+      const query = aiCustomQuery.value.trim();
+      if (!query) return;
+
+      aiStatus.innerText = "GEMINI THINKING...";
+      const currentText = aiResponse.innerHTML;
+      const coreGoal = getResolvedValue(currentPage, 1, layerDiagnostics[currentPage]);
+      
+      aiCustomQuery.value = '';
+
+      setTimeout(() => {
+        let answer = `\n\n---------------------------------------\n`;
+        answer += `<b>💬 VELVET RESPONSE TO:</b> <i>"${query}"</i>\n\n`;
+        
+        answer += `Analyzing relative to <b>"${coreGoal}"</b>: To resolve this cleanly, cut away hesitation. Isolate the core variable, execute a rapid micro-test, and refine your approach immediately. Adjust your parameters and push forward.`;
+
+        aiResponse.innerHTML = currentText + answer;
+        aiResponse.scrollTop = aiResponse.scrollHeight;
+        aiStatus.innerText = "ANALYSIS COMPLETE";
+      }, 350);
+    }
+
+    aiSendBtn.addEventListener('click', handleGeminiChat);
+    aiCustomQuery.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleGeminiChat();
+    });
+  </script>
+</body>
+</html>
