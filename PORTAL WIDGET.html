@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aetherial Portal Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --notion-bg: #191919;
+      --obsidian: #080a0f;
+      --widget-bg: rgba(4, 43, 49, 0.75);
+      --card-bg: rgba(30, 77, 83, 0.45);
+      --card-hover: rgba(73, 115, 121, 0.65);
+      --text-main: #C9D6DD;
+      --text-muted: #A2B8C1;
+      --accent-glow: #75979E;
+      --electric-violet: #a855f7;
+      --neon-cyan: #22d3ee;
+      --border-glow: rgba(117, 151, 158, 0.35);
+      --font-heading: 'Cinzel', serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-body); }
+
+    body {
+      background-color: var(--notion-bg);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 24px;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* --- VIBRANT GLOWY AMBIENT BACKGROUND --- */
+    .ambient-universe {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .aurora-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.5;
+      animation: floatOrb 12s ease-in-out infinite alternate;
+    }
+
+    .orb-1 {
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, rgba(117, 151, 158, 0.4) 0%, rgba(4, 43, 49, 0.2) 70%, transparent 100%);
+      top: 10%;
+      left: 15%;
+      animation-delay: 0s;
+    }
+
+    .orb-2 {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(168, 85, 247, 0.25) 0%, rgba(30, 77, 83, 0.15) 70%, transparent 100%);
+      bottom: 10%;
+      right: 15%;
+      animation-delay: -4s;
+    }
+
+    .orb-3 {
+      width: 350px;
+      height: 350px;
+      background: radial-gradient(circle, rgba(34, 211, 238, 0.2) 0%, transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: pulseCore 8s ease-in-out infinite alternate;
+    }
+
+    @keyframes floatOrb {
+      0% { transform: translateY(-30px) scale(0.9) rotate(0deg); }
+      100% { transform: translateY(40px) scale(1.15) rotate(20deg); }
+    }
+
+    @keyframes pulseCore {
+      0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.3; }
+      100% { transform: translate(-50%, -50%) scale(1.4); opacity: 0.7; }
+    }
+
+    /* --- MAIN WIDGET CONTAINER --- */
+    .command-hub {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 940px;
+      background: var(--widget-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 20px;
+      border: 1px solid var(--border-glow);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8), 
+                  0 0 40px rgba(117, 151, 158, 0.15),
+                  inset 0 0 20px rgba(117, 151, 158, 0.05);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: entranceSlide 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes entranceSlide {
+      from { opacity: 0; transform: translateY(30px) scale(0.97); filter: blur(10px); }
+      to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+    }
+
+    /* --- HEADER --- */
+    .hub-header {
+      padding: 24px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      border-bottom: 1px solid var(--border-glow);
+      background: rgba(4, 43, 49, 0.4);
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .hub-title {
+      font-family: var(--font-heading);
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: 1.5px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-shadow: 0 0 20px rgba(117, 151, 158, 0.5);
+    }
+
+    .hub-title span {
+      animation: pinPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes pinPulse {
+      0%, 100% { transform: rotate(-10deg) scale(1); filter: drop-shadow(0 0 5px var(--accent-glow)); }
+      50% { transform: rotate(10deg) scale(1.2); filter: drop-shadow(0 0 15px var(--electric-violet)); }
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    /* Controls & Filters */
+    .hub-controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .search-wrapper {
+      position: relative;
+      flex-grow: 1;
+    }
+
+    .search-input {
+      width: 100%;
+      background: rgba(8, 10, 15, 0.6);
+      border: 1px solid var(--border-glow);
+      color: var(--text-main);
+      padding: 10px 16px 10px 38px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 20px rgba(34, 211, 238, 0.3), inset 0 0 10px rgba(34, 211, 238, 0.1);
+      background: rgba(8, 10, 15, 0.85);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: rgba(30, 77, 83, 0.3);
+      border: 1px solid var(--border-glow);
+      color: var(--text-muted);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .filter-btn.active, .filter-btn:hover {
+      background: var(--card-hover);
+      color: var(--text-main);
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 15px rgba(34, 211, 238, 0.25);
+      transform: translateY(-2px);
+    }
+
+    /* --- LINKS STAGE GRID --- */
+    .links-stage {
+      padding: 28px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 16px;
+      max-height: 520px;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+
+    .links-stage::-webkit-scrollbar {
+      width: 6px;
+    }
+    .links-stage::-webkit-scrollbar-thumb {
+      background: rgba(117, 151, 158, 0.25);
+      border-radius: 10px;
+    }
+
+    .link-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--border-glow);
+      border-radius: 14px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+      animation: cardFadeIn 0.5s ease forwards;
+    }
+
+    @keyframes cardFadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .link-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+      transition: 0.6s;
+    }
+
+    .link-card:hover::before {
+      left: 100%;
+    }
+
+    .link-card:hover {
+      background: var(--card-hover);
+      border-color: var(--neon-cyan);
+      transform: translateY(-5px) scale(1.01);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 
+                  0 0 20px rgba(34, 211, 238, 0.3);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .card-icon {
+      font-size: 1.5rem;
+      filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
+    }
+
+    .category-badge {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(8, 10, 15, 0.6);
+      color: var(--text-muted);
+      border: 1px solid var(--border-glow);
+    }
+
+    .card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .card-title {
+      font-family: var(--font-heading);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: 0.5px;
+      transition: color 0.3s ease;
+    }
+
+    .link-card:hover .card-title {
+      color: var(--neon-cyan);
+      text-shadow: 0 0 10px rgba(34, 211, 238, 0.4);
+    }
+
+    .card-url {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      opacity: 0.8;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(162, 184, 193, 0.12);
+      padding-top: 10px;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    .quick-launch-text {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      transition: color 0.2s ease;
+    }
+
+    .link-card:hover .quick-launch-text {
+      color: var(--text-main);
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 6px;
+      opacity: 0;
+      transform: translateX(5px);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .link-card:hover .card-actions {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .mini-btn {
+      background: rgba(8, 10, 15, 0.8);
+      border: 1px solid var(--border-glow);
+      color: var(--text-main);
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      font-size: 0.7rem;
+      transition: all 0.2s ease;
+    }
+
+    .mini-btn:hover {
+      background: var(--electric-violet);
+      border-color: var(--electric-violet);
+      box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+      color: #fff;
+    }
+
+    /* --- FOOTER STATUS --- */
+    .hub-footer {
+      padding: 14px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border-glow);
+      background: rgba(4, 43, 49, 0.5);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .pulse-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--neon-cyan);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--neon-cyan);
+      animation: ringPulse 2s infinite;
+    }
+
+    @keyframes ringPulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(34, 211, 238, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); }
+    }
+
+    .icon-btn {
+      background: rgba(30, 77, 83, 0.6);
+      border: 1px solid var(--border-glow);
+      color: var(--text-main);
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .icon-btn:hover {
+      background: var(--card-hover);
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 15px rgba(34, 211, 238, 0.4);
+      transform: translateY(-2px);
+    }
+
+    /* --- MODAL STYLING --- */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 10, 15, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+      animation: fadeInModal 0.3s ease forwards;
+    }
+
+    @keyframes fadeInModal {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal-card {
+      background: rgba(4, 43, 49, 0.95);
+      border: 1px solid var(--neon-cyan);
+      border-radius: 16px;
+      width: 90%; max-width: 440px;
+      padding: 28px;
+      display: flex; flex-direction: column; gap: 16px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.9), 
+                  0 0 30px rgba(34, 211, 238, 0.25);
+      animation: scaleUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes scaleUpModal {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+    .form-group label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+
+    .form-group input, .form-group select {
+      background: rgba(8, 10, 15, 0.7);
+      border: 1px solid var(--border-glow);
+      color: var(--text-main);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+    }
+
+    .form-group input:focus, .form-group select:focus {
+      outline: none;
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 15px rgba(34, 211, 238, 0.3);
+    }
+
+    .modal-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .primary-btn {
+      background: linear-gradient(135deg, var(--card-hover), var(--accent-glow));
+      border: 1px solid var(--neon-cyan);
+      color: var(--text-main);
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.8rem;
+      letter-spacing: 0.5px;
+      transition: all 0.3s ease;
+    }
+
+    .primary-btn:hover {
+      background: var(--neon-cyan);
+      color: var(--obsidian);
+      box-shadow: 0 0 20px rgba(34, 211, 238, 0.6);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Glowing Backdrop Orbs -->
+  <div class="ambient-universe">
+    <div class="aurora-orb orb-1"></div>
+    <div class="aurora-orb orb-2"></div>
+    <div class="aurora-orb orb-3"></div>
+  </div>
+
+  <div class="command-hub">
+    <!-- Header -->
+    <header class="hub-header">
+      <div class="header-top">
+        <div class="hub-title">
+          <span>📌</span> Important Links
+        </div>
+        <div class="header-actions">
+          <button class="icon-btn" onclick="openAddModal()" title="Add Portal Link">➕</button>
+        </div>
+      </div>
+      <div class="hub-controls">
+        <div class="search-wrapper">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" class="search-input" placeholder="Search portals & resources..." oninput="renderPortals()">
+        </div>
+        <div class="filter-group">
+          <button class="filter-btn active" onclick="setFilter('All', this)">All</button>
+          <button class="filter-btn" onclick="setFilter('Academics', this)">Academics</button>
+          <button class="filter-btn" onclick="setFilter('Professional', this)">Professional</button>
+          <button class="filter-btn" onclick="setFilter('Resources', this)">Resources</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Links Stage Grid -->
+    <div class="links-stage" id="linksGrid"></div>
+
+    <!-- Footer -->
+    <footer class="hub-footer">
+      <div class="pulse-indicator">
+        <div class="pulse-dot"></div>
+        <span id="portalCount">Loading portals...</span>
+      </div>
+      <span style="font-family: var(--font-heading); letter-spacing: 1px;">AETHERIAL HUB v3.0</span>
+    </footer>
+  </div>
+
+  <!-- ADD / EDIT MODAL -->
+  <div class="modal-overlay" id="portalModal">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-glow); padding-bottom: 10px;">
+        <h3 id="modalTitle" style="font-family: var(--font-heading); font-size: 1rem; color: var(--text-main); letter-spacing: 1px;">Add New Portal</h3>
+        <button class="icon-btn" onclick="closeModal()" style="width: 28px; height: 28px; font-size: 0.8rem;">✕</button>
+      </div>
+      <input type="hidden" id="editIndex" value="-1">
+      <div class="form-group">
+        <label>Portal Title</label>
+        <input type="text" id="portalTitleInput" placeholder="e.g. University Portals">
+      </div>
+      <div class="form-group">
+        <label>Target URL</label>
+        <input type="text" id="portalUrlInput" placeholder="https://example.com">
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="form-group">
+          <label>Category</label>
+          <select id="portalCategoryInput">
+            <option value="Academics">Academics</option>
+            <option value="Professional">Professional</option>
+            <option value="Resources">Resources</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Emoji Icon</label>
+          <input type="text" id="portalIconInput" placeholder="🏛️" value="🔗">
+        </div>
+      </div>
+      <div class="modal-buttons">
+        <button class="filter-btn" onclick="closeModal()">Cancel</button>
+        <button class="primary-btn" onclick="savePortal()">Save Portal</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Initial portal data precisely aligned with user's concept
+    let portals = [
+      { title: "University Portals", url: "https://portal.university.edu", category: "Academics", icon: "🏛️" },
+      { title: "Scholarship Portal", url: "https://scholarships.gov", category: "Academics", icon: "💰" },
+      { title: "IELTS", url: "https://ielts.org", category: "Academics", icon: "📝" },
+      { title: "Common Application", url: "https://commonapp.org", category: "Academics", icon: "📄" },
+      { title: "LinkedIn", url: "https://linkedin.com", category: "Professional", icon: "🌐" },
+      { title: "GitHub", url: "https://github.com", category: "Professional", icon: "🐙" },
+      { title: "Document Drive", url: "https://drive.google.com", category: "Resources", icon: "📂" }
+    ];
+
+    let currentFilter = 'All';
+
+    function setFilter(category, btn) {
+      currentFilter = category;
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        if (!b.getAttribute('onclick').includes('Close') && !b.getAttribute('onclick').includes('Save')) {
+          b.classList.remove('active');
+        }
+      });
+      btn.classList.add('active');
+      renderPortals();
+    }
+
+    function renderPortals() {
+      const grid = document.getElementById('linksGrid');
+      const searchVal = document.getElementById('searchInput').value.toLowerCase();
+      grid.innerHTML = '';
+
+      const filtered = portals.filter(p => {
+        const matchesCat = currentFilter === 'All' || p.category === currentFilter;
+        const matchesSearch = p.title.toLowerCase().includes(searchVal) || p.url.toLowerCase().includes(searchVal);
+        return matchesCat && matchesSearch;
+      });
+
+      document.getElementById('portalCount').innerText = `${filtered.length} Active Portal${filtered.length === 1 ? '' : 's'}`;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px; font-size: 0.85rem; letter-spacing: 0.5px;">No matching portals found 🌌</div>`;
+        return;
+      }
+
+      filtered.forEach((portal) => {
+        const trueIndex = portals.indexOf(portal);
+        const cardHTML = `
+          <a href="${portal.url}" target="_blank" class="link-card" onclick="event.stopPropagation()">
+            <div class="card-top">
+              <span class="card-icon">${portal.icon}</span>
+              <span class="category-badge">${portal.category}</span>
+            </div>
+            <div class="card-body">
+              <div class="card-title">${portal.title}</div>
+              <div class="card-url">${portal.url}</div>
+            </div>
+            <div class="card-footer" onclick="event.preventDefault()">
+              <div class="quick-launch-text">
+                <span>⚡</span> Quick Launch
+              </div>
+              <div class="card-actions">
+                <button class="mini-btn" onclick="openEditModal(${trueIndex})" title="Edit">✏️</button>
+                <button class="mini-btn" onclick="deletePortal(${trueIndex})" title="Delete">🗑️</button>
+              </div>
+            </div>
+          </a>
+        `;
+        grid.insertAdjacentHTML('beforeend', cardHTML);
+      });
+    }
+
+    function openAddModal() {
+      document.getElementById('modalTitle').innerText = "➕ Add New Portal";
+      document.getElementById('editIndex').value = -1;
+      document.getElementById('portalTitleInput').value = '';
+      document.getElementById('portalUrlInput').value = '';
+      document.getElementById('portalCategoryInput').value = 'Academics';
+      document.getElementById('portalIconInput').value = '🔗';
+      document.getElementById('portalModal').classList.add('active');
+    }
+
+    function openEditModal(index) {
+      const portal = portals[index];
+      document.getElementById('modalTitle').innerText = "✏️ Edit Portal";
+      document.getElementById('editIndex').value = index;
+      document.getElementById('portalTitleInput').value = portal.title;
+      document.getElementById('portalUrlInput').value = portal.url;
+      document.getElementById('portalCategoryInput').value = portal.category;
+      document.getElementById('portalIconInput').value = portal.icon;
+      document.getElementById('portalModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('portalModal').classList.remove('active');
+    }
+
+    function savePortal() {
+      const index = parseInt(document.getElementById('editIndex').value);
+      const title = document.getElementById('portalTitleInput').value.trim();
+      let url = document.getElementById('portalUrlInput').value.trim();
+      const category = document.getElementById('portalCategoryInput').value;
+      const icon = document.getElementById('portalIconInput').value.trim() || '🔗';
+
+      if (!title || !url) {
+        alert("⚠️ Please provide both a title and a valid URL.");
+        return;
+      }
+
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
+
+      if (index === -1) {
+        portals.push({ title, url, category, icon });
+      } else {
+        portals[index] = { title, url, category, icon };
+      }
+
+      closeModal();
+      renderPortals();
+    }
+
+    function deletePortal(index) {
+      if (confirm("🗑️ Are you sure you want to remove this portal?")) {
+        portals.splice(index, 1);
+        renderPortals();
+      }
+    }
+
+    // Initial render
+    renderPortals();
+  </script>
+</body>
+</html>
