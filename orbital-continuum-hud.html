@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Orbital Continuum HUD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+  /* ============================================================
+     TOKENS
+     The four palette colors are used individually as flat fills.
+     They only ever meet directly at the center seam. Every other
+     "mix" you see is one color's own glass tint layered on top of
+     one flat ground — never two different hues averaged together.
+  ============================================================ */
+  :root{
+    --black-feather: #0B2224;
+    --black-feather-rgb: 11,34,36;
+    --after-storm: #336269;
+    --after-storm-rgb: 51,98,105;
+    --aqua-bloom: #93D4D8;
+    --aqua-bloom-rgb: 147,212,216;
+    --socialist: #941D1D;
+    --socialist-rgb: 148,29,29;
+
+    /* accessible text tokens, verified against every surface they're
+       used on (see build notes at the bottom of this file) */
+    --text-primary: #EFFBFC;
+    --text-secondary: #CFE9EB;
+    --caption-on-teal: #E3F4F5;
+    --title-on-teal: #B3E2E5;
+    --plate-digit: #04090A;
+
+    --font-ui: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
+
+    /* Notion's own page background. Notion's defaults are #ffffff
+       (light) and #191919 (dark) — this auto-matches via
+       prefers-color-scheme. If your workspace uses a custom page
+       color, replace the two values below with it so the seam
+       between page and widget disappears completely. */
+    --notion-bg: #ffffff;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --notion-bg: #191919; }
+  }
+
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+
+  body{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:36px 18px;
+    font-family: var(--font-ui);
+    color: var(--text-primary);
+    /* Only the base fill changed to match Notion's canvas. The two
+       gradient layers stacked above it are untouched. */
+    background:
+      radial-gradient(120% 140% at 50% 0%, rgba(255,255,255,0.35), rgba(255,255,255,0) 45%),
+      radial-gradient(140% 160% at 50% 100%, rgba(51,98,105,0.18), rgba(51,98,105,0) 55%),
+      var(--notion-bg);
+  }
+
+  .stage{ width:100%; max-width:1040px; }
+
+  .sr-only{
+    position:absolute; width:1px; height:1px;
+    padding:0; margin:-1px; overflow:hidden;
+    clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
+
+  button{ font-family:inherit; }
+
+  :focus-visible{
+    outline:none;
+    box-shadow: 0 0 0 2px rgba(var(--black-feather-rgb),.9), 0 0 0 4px var(--aqua-bloom);
+    border-radius:8px;
+  }
+
+  /* ============================================================
+     OUTER GLASS SHELL
+  ============================================================ */
+  .hud{
+    position:relative;
+    display:flex;
+    align-items:stretch;
+    border-radius:26px;
+    padding:14px;
+    background: rgba(var(--black-feather-rgb), 0.55);
+    border:1px solid rgba(var(--aqua-bloom-rgb), 0.28);
+    box-shadow:
+      0 30px 60px -20px rgba(6,16,17,0.55),
+      0 0 0 1px rgba(var(--black-feather-rgb), 0.4) inset,
+      0 0 70px rgba(var(--aqua-bloom-rgb), 0.12);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    transform-style: preserve-3d;
+    transition: transform .25s ease-out;
+    will-change: transform;
+  }
+
+  .spotlight{
+    position:absolute; inset:14px;
+    border-radius:20px;
+    pointer-events:none;
+    z-index:5;
+    opacity:0;
+    transition:opacity .35s ease;
+    background: radial-gradient(280px 280px at var(--mx,50%) var(--my,50%),
+                rgba(var(--aqua-bloom-rgb), 0.16), transparent 65%);
+    mix-blend-mode: screen;
+  }
+  .hud:hover .spotlight{ opacity:1; }
+  @media (prefers-reduced-motion: reduce){ .spotlight{ display:none; } }
+
+  /* ============================================================
+     SHARED: module shells, headers, pills, badges
+  ============================================================ */
+  .module{
+    position:relative;
+    flex:1 1 50%;
+    border-radius:20px;
+    padding:20px 22px 18px;
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+  }
+
+  .module-header{
+    display:flex; align-items:center; gap:8px;
+    margin-bottom:14px;
+  }
+  .module-title{
+    margin:0;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    font-weight:600;
+    color: var(--title-on-teal);
+  }
+  .module-right .module-title{ color: var(--aqua-bloom); text-shadow: 0 0 12px rgba(var(--aqua-bloom-rgb),.5); }
+  .module-count{
+    margin-left:auto;
+    font-family:var(--font-mono);
+    font-size:10px;
+    color: var(--text-secondary);
+    background: rgba(var(--black-feather-rgb),.3);
+    border:1px solid rgba(var(--aqua-bloom-rgb),.2);
+    padding:3px 8px;
+    border-radius:999px;
+  }
+  .module-right .module-count{ background: rgba(var(--after-storm-rgb),.3); }
+
+  .status-dot{ width:7px; height:7px; border-radius:50%; flex:none; }
+  .status-dot.live{
+    background: var(--socialist);
+    box-shadow: 0 0 8px 2px rgba(var(--socialist-rgb),.75);
+    animation: blinkDot 1.6s ease-in-out infinite;
+  }
+  .status-dot.orbit{
+    background: var(--aqua-bloom);
+    box-shadow: 0 0 8px 2px rgba(var(--aqua-bloom-rgb),.7);
+    animation: blinkDot 2.4s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce){ .status-dot{ animation:none; } }
+
+  .pill{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:10.5px; font-weight:600;
+    letter-spacing:.05em;
+    padding:5px 10px 5px 8px;
+    border-radius:999px;
+    white-space:nowrap;
+    border:1px solid transparent;
+    color: var(--text-primary);
+  }
+  .pill::before{ content:''; width:6px; height:6px; border-radius:50%; flex:none; background:currentColor; }
+  .pill-progress{ background: rgba(var(--aqua-bloom-rgb), .20); border-color: rgba(var(--aqua-bloom-rgb), .55); box-shadow:0 0 14px rgba(var(--aqua-bloom-rgb),.25); }
+  .pill-awaiting{ background: rgba(var(--after-storm-rgb), .45); border-color: rgba(var(--after-storm-rgb), .85); }
+  .pill-notstarted{ background: rgba(var(--black-feather-rgb), .65); border-color: rgba(var(--aqua-bloom-rgb), .18); color: var(--text-secondary); }
+  .pill-urgent{ background: rgba(var(--socialist-rgb), .35); border-color: rgba(var(--socialist-rgb), .85); color:#FFEDEA; box-shadow:0 0 16px rgba(var(--socialist-rgb),.4); }
+
+  .badge{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:15px; height:15px; border-radius:4px;
+    font-size:9px; font-weight:700; font-family:var(--font-mono);
+    flex:none;
+  }
+  .badge-high{ background:var(--socialist); color:#fff; }
+  .badge-medium{ background:var(--aqua-bloom); color:var(--plate-digit); }
+  .badge-low{ background:rgba(var(--aqua-bloom-rgb),.22); color:var(--text-secondary); border:1px solid rgba(var(--aqua-bloom-rgb),.3); }
+
+  .icon-btn{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:26px; height:26px; border-radius:8px;
+    background: rgba(var(--black-feather-rgb),.3);
+    border:1px solid rgba(var(--aqua-bloom-rgb),.22);
+    color: var(--text-secondary);
+    cursor:pointer; font-size:12px; line-height:1;
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .icon-btn:hover{ background: rgba(var(--aqua-bloom-rgb),.18); color:var(--text-primary); border-color:rgba(var(--aqua-bloom-rgb),.45); }
+  .icon-btn.danger:hover{ background: rgba(var(--socialist-rgb),.35); border-color:rgba(var(--socialist-rgb),.7); color:#FFEDEA; }
+
+  .field{ display:flex; flex-direction:column; gap:3px; }
+  .field label{ font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--text-secondary); }
+  .field input, .field textarea, .field select{
+    font-family:var(--font-ui);
+    font-size:12px;
+    color: var(--text-primary);
+    background: rgba(var(--black-feather-rgb),.4);
+    border:1px solid rgba(var(--aqua-bloom-rgb),.3);
+    border-radius:8px;
+    padding:7px 9px;
+    width:100%;
+  }
+  .field textarea{ resize:vertical; min-height:44px; font-family:var(--font-ui); }
+  .field input:focus-visible, .field textarea:focus-visible, .field select:focus-visible{
+    box-shadow:0 0 0 2px rgba(var(--black-feather-rgb),.9), 0 0 0 4px var(--aqua-bloom);
+  }
+  .form-row{ display:flex; gap:8px; }
+  .form-row .field{ flex:1; min-width:0; }
+  .form-actions{ display:flex; gap:8px; margin-top:8px; }
+
+  .btn{
+    font-family:var(--font-ui);
+    font-size:11px; font-weight:600; letter-spacing:.03em;
+    padding:7px 13px; border-radius:9px; cursor:pointer;
+    border:1px solid rgba(var(--aqua-bloom-rgb),.4);
+    background: rgba(var(--aqua-bloom-rgb),.16);
+    color: var(--text-primary);
+    transition: background .15s ease;
+  }
+  .btn:hover{ background: rgba(var(--aqua-bloom-rgb),.28); }
+  .btn-ghost{ background:transparent; border-color:rgba(var(--aqua-bloom-rgb),.25); color:var(--text-secondary); }
+  .btn-ghost:hover{ background: rgba(var(--black-feather-rgb),.3); }
+  .btn-danger{ border-color:rgba(var(--socialist-rgb),.6); color:#FFEDEA; background:rgba(var(--socialist-rgb),.22); }
+  .btn-danger:hover{ background: rgba(var(--socialist-rgb),.4); }
+  .btn-block{ width:100%; display:flex; align-items:center; justify-content:center; gap:6px; }
+
+  .empty-state{
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; gap:10px; padding:14px; color: var(--text-secondary); font-size:12px;
+  }
+
+  /* ============================================================
+     LEFT MODULE — Live Interview Radar (After the Storm ground)
+  ============================================================ */
+  .module-left{
+    background: linear-gradient(180deg, rgba(var(--after-storm-rgb),1), rgba(38,74,80,1));
+    box-shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 -18px 40px rgba(6,16,17,.35) inset;
+  }
+  .module-left.urgent{ animation: urgentPulse 2.6s ease-in-out infinite; }
+
+  .radar-core{ display:flex; justify-content:center; align-items:center; margin-bottom:8px; }
+
+  .prep-ring{ position:relative; width:186px; height:186px; flex:none; }
+  .ring-svg{ position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); }
+  .ring-track{ fill:none; stroke: rgba(var(--black-feather-rgb), .45); stroke-width:6; }
+  .ring-fill{
+    fill:none; stroke: var(--aqua-bloom); stroke-width:6; stroke-linecap:round;
+    filter: drop-shadow(0 0 6px rgba(var(--aqua-bloom-rgb),.9));
+    transition: stroke-dashoffset .8s ease;
+  }
+  .ring-rotator{ position:absolute; inset:0; animation: ringRotate 9s linear infinite; }
+  .ring-light{
+    position:absolute; top:4px; left:50%;
+    width:7px; height:7px; border-radius:50%;
+    transform:translateX(-50%);
+    background: var(--aqua-bloom);
+    box-shadow:0 0 12px 4px rgba(var(--aqua-bloom-rgb),.9);
+  }
+  @media (prefers-reduced-motion: reduce){ .ring-rotator{ animation:none; } }
+
+  .ticker{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-align:center; }
+
+  .ticker-plate{
+    display:flex; align-items:baseline; gap:3px;
+    background: rgba(var(--aqua-bloom-rgb), .30);
+    border:1px solid rgba(var(--aqua-bloom-rgb),.45);
+    border-radius:10px;
+    padding:5px 9px 4px;
+    box-shadow: 0 0 18px rgba(var(--aqua-bloom-rgb),.2), inset 0 1px 0 rgba(255,255,255,.25);
+  }
+  .ticker-unit{ display:flex; flex-direction:column; align-items:center; position:relative; overflow:hidden; border-radius:3px; }
+  .ticker-num{
+    font-family:var(--font-mono); font-weight:800; font-size:27px;
+    line-height:1; letter-spacing:.01em;
+    background: linear-gradient(180deg, #02060A 0%, var(--plate-digit) 60%, var(--black-feather) 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .ticker-unit::after{
+    content:''; position:absolute; top:-20%; left:-160%; width:60%; height:140%;
+    background:linear-gradient(100deg, transparent, rgba(255,255,255,.6), transparent);
+    transform:skewX(-18deg);
+    animation: shineSweep 5s ease-in-out infinite;
+    mix-blend-mode:overlay;
+    pointer-events:none;
+  }
+  @media (prefers-reduced-motion: reduce){ .ticker-unit::after{ display:none; } }
+  .ticker-colon{ font-family:var(--font-mono); font-size:20px; font-weight:700; color: var(--plate-digit); opacity:.75; transform:translateY(-2px); }
+  .ticker-labels{ display:flex; gap:10px; justify-content:center; }
+  .ticker-labels span{ font-size:8.5px; letter-spacing:.1em; font-weight:600; color: var(--caption-on-teal); min-width:30px; text-align:center; white-space:nowrap; }
+  .prep-pct{ font-size:9.5px; letter-spacing:.12em; font-weight:600; color: var(--caption-on-teal); }
+
+  .interview-panel{ margin-top:12px; }
+
+  .focus-card{
+    display:flex; align-items:center; gap:8px;
+    width:100%;
+    background: rgba(var(--black-feather-rgb), .48);
+    border:1px solid rgba(var(--aqua-bloom-rgb), .25);
+    border-radius:14px;
+    padding:9px 10px;
+  }
+  .focus-toggle{
+    flex:1; min-width:0; display:flex; align-items:center; gap:8px;
+    background:transparent; border:none; padding:0; margin:0;
+    cursor:pointer; text-align:left; color:inherit;
+  }
+  .focus-main{ flex:1; min-width:0; }
+  .focus-name{ font-size:13px; font-weight:600; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .focus-org{ font-size:11px; color: var(--text-secondary); margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  /* the status pill and edit icon are siblings of .focus-toggle, never
+     nested inside it — a <button> must never contain another focusable
+     control, or keyboard/screen-reader users lose access to it */
+  .focus-side{ display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex:none; }
+  button.pill{ appearance:none; -webkit-appearance:none; cursor:pointer; font-family:inherit; }
+  .time-remaining{ font-family:var(--font-mono); font-size:9.5px; letter-spacing:.03em; color: var(--text-secondary); }
+  .chevron{ font-size:14px; color:var(--text-secondary); transition: transform .3s ease; flex:none; }
+  .focus-card.open .chevron{ transform:rotate(180deg); }
+  .focus-actions{ display:flex; gap:6px; flex:none; }
+  @media (prefers-reduced-motion: reduce){ .chevron{ transition:none; } }
+
+  .drawer{ max-height:0; opacity:0; overflow:hidden; transition: max-height .45s ease, opacity .35s ease, margin-top .45s ease; margin-top:0; }
+  .drawer.open{ max-height:640px; opacity:1; margin-top:10px; }
+  @media (prefers-reduced-motion: reduce){ .drawer{ transition:none; } }
+
+  .drawer-section{ margin-bottom:14px; }
+  .drawer-section:last-child{ margin-bottom:0; }
+  .drawer-heading{ display:flex; align-items:center; justify-content:between; gap:6px; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--caption-on-teal); margin-bottom:8px; }
+
+  .checklist{ list-style:none; margin:0 0 8px; padding:0; display:flex; flex-direction:column; gap:6px; }
+  .checklist-item{ display:flex; align-items:center; gap:8px; background:rgba(var(--black-feather-rgb),.28); border:1px solid rgba(var(--aqua-bloom-rgb),.18); border-radius:9px; padding:6px 8px; }
+  .checklist-item input[type="checkbox"]{ width:15px; height:15px; accent-color:var(--aqua-bloom); flex:none; cursor:pointer; }
+  .checklist-item label{ flex:1; font-size:11.5px; color:var(--text-primary); word-break:break-word; cursor:pointer; }
+  .checklist-item.done label{ color:var(--text-secondary); text-decoration:line-through; text-decoration-color:rgba(var(--aqua-bloom-rgb),.6); }
+  .checklist-add{ display:flex; gap:6px; }
+  .checklist-add input{ flex:1; }
+
+  .flash-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(110px,1fr)); gap:8px; }
+  /* .flashcard is a plain, non-interactive positioning wrapper. It holds
+     two SIBLING buttons (flip trigger + delete) — never one inside the
+     other, so both stay independently reachable by keyboard and AT. */
+  .flashcard{ height:112px; position:relative; }
+  .flash-flip-trigger{
+    display:block; width:100%; height:100%;
+    background:transparent; border:none; padding:0; margin:0; cursor:pointer;
+    perspective:800px; text-align:left; color:inherit; font-family:inherit;
+  }
+  .flash-inner{ position:relative; width:100%; height:100%; transition: transform .55s cubic-bezier(.4,.2,.2,1); transform-style:preserve-3d; }
+  .flashcard.flipped .flash-inner{ transform:rotateY(180deg); }
+  @media (prefers-reduced-motion: reduce){ .flash-inner{ transition:none; } }
+  .flash-face{
+    position:absolute; inset:0; border-radius:12px; padding:9px;
+    font-size:10.5px; line-height:1.35; display:flex; align-items:center;
+    overflow:hidden; word-break:break-word;
+    backface-visibility:hidden; -webkit-backface-visibility:hidden;
+  }
+  .flash-front{ background: rgba(var(--aqua-bloom-rgb), .14); border:1px solid rgba(var(--aqua-bloom-rgb), .35); color:var(--text-primary); }
+  .flash-back{ background: rgba(var(--black-feather-rgb), .8); border:1px solid rgba(var(--aqua-bloom-rgb), .3); color:var(--text-secondary); transform:rotateY(180deg); }
+  .flash-remove{ position:absolute; top:4px; right:4px; width:18px; height:18px; border-radius:50%; z-index:2; font-size:10px; padding:0; }
+  .flash-add-form{ margin-top:8px; }
+
+  .queue{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .queue-chip{
+    display:flex; flex-direction:column; align-items:flex-start; gap:1px;
+    background: rgba(var(--black-feather-rgb), .3);
+    border:1px solid rgba(var(--aqua-bloom-rgb), .22);
+    border-radius:10px; padding:6px 10px; cursor:pointer;
+    color: var(--text-secondary); text-align:left;
+  }
+  .queue-chip:hover{ border-color: rgba(var(--aqua-bloom-rgb),.5); color:var(--text-primary); }
+  .queue-chip strong{ font-size:10.5px; font-weight:600; color:inherit; }
+  .queue-chip span{ font-size:9px; font-family:var(--font-mono); }
+  .queue-add{ display:flex; align-items:center; justify-content:center; gap:4px; font-size:10.5px; }
+
+  /* ============================================================
+     CENTER SEAM
+  ============================================================ */
+  .seam{ position:relative; width:22px; flex:none; display:flex; align-items:center; justify-content:center; }
+  .seam::before{
+    content:''; width:2px; height:100%;
+    background: linear-gradient(180deg, rgba(var(--aqua-bloom-rgb),.9) 0%, var(--after-storm) 22%, var(--black-feather) 55%, var(--after-storm) 82%, rgba(var(--aqua-bloom-rgb),.9) 100%);
+    box-shadow: 0 0 16px rgba(var(--aqua-bloom-rgb),.55);
+    animation: seamGlow 4s ease-in-out infinite;
+  }
+  .seam-pulse{
+    position:absolute; left:50%; top:50%; width:5px; height:5px; border-radius:50%;
+    background: var(--aqua-bloom); box-shadow:0 0 14px 4px rgba(var(--aqua-bloom-rgb),.85);
+    transform:translate(-50%,-50%); animation: seamTravel 5s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce){ .seam::before, .seam-pulse{ animation:none; } }
+
+  /* ============================================================
+     RIGHT MODULE — Career Trajectory Horizon (Black Feather ground)
+  ============================================================ */
+  .module-right{ background: linear-gradient(180deg, rgba(var(--black-feather-rgb),1), #050f10); }
+
+  .tether-wrap{ position:relative; flex:1; padding-left:20px; display:flex; }
+  .tether-line{ position:absolute; left:5px; top:2px; bottom:2px; width:2px; background: rgba(var(--after-storm-rgb), .55); border-radius:2px; }
+  .tether-light{
+    position:absolute; left:50%; top:0; width:6px; height:6px; border-radius:50%;
+    transform:translate(-50%,-50%); background: var(--aqua-bloom);
+    box-shadow: 0 0 10px 3px rgba(var(--aqua-bloom-rgb),.8);
+    animation: tetherTravel 4.5s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce){ .tether-light{ animation:none; opacity:0; } }
+
+  .node-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:12px; width:100%; }
+  .node-item{ position:relative; padding-left:20px; transition:opacity .3s ease, filter .3s ease; }
+  .node-item.dimmed{ opacity:.32; filter:saturate(.7); }
+
+  .node-btn{
+    width:100%; display:flex; align-items:center; gap:8px;
+    background:transparent; border:none; padding:0; margin:0;
+    cursor:pointer; text-align:left; color:inherit;
+  }
+  .node-dot{ position:absolute; left:-20px; top:11px; transform:translateX(-50%); width:11px; height:11px; border-radius:50%; flex:none; transition: transform .25s ease; }
+  .node-item.priority-high .node-dot{ background:var(--socialist); box-shadow:0 0 10px 3px rgba(var(--socialist-rgb),.75); }
+  .node-item.priority-medium .node-dot{ background:var(--aqua-bloom); box-shadow:0 0 9px 2px rgba(var(--aqua-bloom-rgb),.6); }
+  .node-item.priority-low .node-dot{ background:#6c8b8f; box-shadow:0 0 6px 2px rgba(var(--after-storm-rgb),.4); }
+  .node-item.active .node-dot{ transform:translateX(-50%) scale(1.35); }
+
+  .node-title{ font-size:12px; font-weight:600; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .node-date{ font-size:10px; color:var(--text-secondary); margin-left:auto; font-family:var(--font-mono); flex:none; padding-left:8px; }
+
+  .node-detail{ max-height:0; opacity:0; overflow:hidden; transition: max-height .4s ease, opacity .3s ease, margin-top .4s ease; margin-top:0; }
+  .node-item.active .node-detail{ max-height:400px; opacity:1; margin-top:8px; }
+  @media (prefers-reduced-motion: reduce){ .node-detail{ transition:none; } }
+  .node-detail-inner{
+    background: rgba(var(--after-storm-rgb), .30);
+    border:1px solid rgba(var(--aqua-bloom-rgb), .25);
+    border-radius:12px; padding:10px 12px;
+    box-shadow: 0 12px 24px -8px rgba(0,0,0,.5);
+  }
+  .node-detail-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px; flex-wrap:wrap; }
+  .node-detail-date{ font-family:var(--font-mono); font-size:10px; color:var(--text-secondary); }
+  .node-notes{ font-size:11px; line-height:1.5; color:var(--text-secondary); margin:0 0 9px; word-break:break-word; white-space:pre-wrap; }
+  .node-detail-actions{ display:flex; gap:6px; flex-wrap:wrap; }
+
+  .node-add-row{ margin-top:2px; }
+
+  /* ============================================================
+     ANIMATIONS
+  ============================================================ */
+  @keyframes blinkDot{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+  @keyframes ringRotate{ to{ transform:rotate(360deg); } }
+  @keyframes shineSweep{ 0%{ left:-160%; } 35%{ left:220%; } 100%{ left:220%; } }
+  @keyframes seamGlow{ 0%,100%{ opacity:.75; } 50%{ opacity:1; } }
+  @keyframes seamTravel{ 0%{ top:6%; opacity:0; } 12%{ opacity:1; } 88%{ opacity:1; } 100%{ top:94%; opacity:0; } }
+  @keyframes tetherTravel{ 0%{ top:4%; opacity:0; } 12%{ opacity:1; } 88%{ opacity:1; } 100%{ top:96%; opacity:0; } }
+  @keyframes urgentPulse{ 0%,100%{ box-shadow: 0 0 0 0 rgba(var(--socialist-rgb),0); } 50%{ box-shadow: inset 0 0 55px 6px rgba(var(--socialist-rgb),.28); } }
+
+  @media (prefers-reduced-motion: reduce){
+    .hud{ transition:none; }
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; }
+  }
+
+  /* ============================================================
+     RESPONSIVE
+  ============================================================ */
+  @media (max-width:760px){
+    .hud{ flex-direction:column; border-radius:22px; }
+    .seam{ width:100%; height:18px; }
+    .seam::before{ width:100%; height:2px; background:linear-gradient(90deg, rgba(var(--aqua-bloom-rgb),.9), var(--after-storm) 22%, var(--black-feather) 55%, var(--after-storm) 82%, rgba(var(--aqua-bloom-rgb),.9)); }
+    .seam-pulse{ display:none; }
+    .module{ border-radius:16px; }
+    .prep-ring{ width:160px; height:160px; }
+    .flash-grid{ grid-template-columns:repeat(auto-fill, minmax(130px,1fr)); }
+  }
+</style>
+</head>
+<body>
+
+<noscript>
+  <div style="max-width:600px;margin:60px auto;padding:20px 24px;border-radius:14px;background:#0B2224;color:#EFFBFC;font-family:system-ui,sans-serif;font-size:14px;line-height:1.5;">
+    This widget needs JavaScript enabled to show your interview countdown and career timeline. Please enable JavaScript in your browser to use it.
+  </div>
+</noscript>
+
+<div class="stage">
+  <div class="hud" id="hud">
+    <div class="spotlight" id="spotlight"></div>
+
+    <!-- ============ LEFT MODULE ============ -->
+    <section class="module module-left" id="moduleLeft" aria-labelledby="leftTitle">
+      <div class="module-header">
+        <span class="status-dot live" aria-hidden="true"></span>
+        <h2 class="module-title" id="leftTitle">Live Interview Radar</h2>
+        <span class="module-count" id="queueCount"></span>
+      </div>
+
+      <div id="interviewSection"><!-- rendered by JS --></div>
+
+      <p class="sr-only" id="urgencyAnnouncer" aria-live="polite"></p>
+    </section>
+
+    <div class="seam" aria-hidden="true"><div class="seam-pulse"></div></div>
+
+    <!-- ============ RIGHT MODULE ============ -->
+    <section class="module module-right" id="moduleRight" aria-labelledby="rightTitle">
+      <div class="module-header">
+        <span class="status-dot orbit" aria-hidden="true"></span>
+        <h2 class="module-title" id="rightTitle">Career Trajectory Horizon</h2>
+        <span class="module-count" id="achievedCount"></span>
+      </div>
+
+      <div class="tether-wrap">
+        <div class="tether-line" aria-hidden="true"><div class="tether-light"></div></div>
+        <div style="flex:1; min-width:0;" id="milestoneSection"><!-- rendered by JS --></div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ================================================================
+     UTILITIES
+  ================================================================ */
+  function esc(str){
+    return String(str == null ? '' : str).replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+  function uid(prefix){ return prefix + '_' + Math.random().toString(36).slice(2,9); }
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function clampPct(n){ return Math.max(0, Math.min(100, Math.round(n))); }
+
+  // Build a Date from separate <input type="date"> / <input type="time">
+  // values using LOCAL time (avoids the classic UTC-midnight off-by-one bug).
+  function localDateFromInputs(dateStr, timeStr){
+    if (!dateStr) return null;
+    var dp = dateStr.split('-').map(Number);
+    var tp = (timeStr || '00:00').split(':').map(Number);
+    return new Date(dp[0], dp[1]-1, dp[2], tp[0]||0, tp[1]||0);
+  }
+  function toDateInputValue(d){
+    return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+  }
+  function toTimeInputValue(d){
+    return pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  var STORAGE_KEY = 'orbital-continuum-hud-v2';
+
+  function hasWorkingStorage(){
+    try{
+      var t = '__oc_test__';
+      window.localStorage.setItem(t,'1');
+      window.localStorage.removeItem(t);
+      return true;
+    }catch(e){ return false; }
+  }
+  var STORAGE_OK = hasWorkingStorage();
+
+  function saveState(){
+    if (!STORAGE_OK) return;
+    try{ window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    catch(e){ /* storage full or blocked — app keeps working in-memory */ }
+  }
+
+  function defaultState(){
+    var now = new Date();
+    var soon = new Date(now.getTime() + 5*86400000 + 3*3600000);
+    var later = new Date(now.getTime() + 20*86400000 + 9*3600000);
+    return {
+      interviews: [
+        {
+          id: uid('iv'), name:'Senior Product Designer', org:'Meridian Labs',
+          date: soon.toISOString(), status:'progress',
+          checklist:[
+            { id:uid('ck'), text:'Research the interview panel on LinkedIn', done:true },
+            { id:uid('ck'), text:'Prep 3 STAR stories', done:true },
+            { id:uid('ck'), text:'Write 3 questions to ask them', done:false }
+          ],
+          flashcards:[
+            { id:uid('fc'), q:'Tell me about a time you led through ambiguity.', a:'STAR: platform migration, no spec — drove alignment, shipped in 6 weeks.' },
+            { id:uid('fc'), q:'Why this company?', a:'Mission overlap + team ships fast. Reference their recent systems talk.' }
+          ]
+        },
+        {
+          id: uid('iv'), name:'Design Lead', org:'Northwind Studio',
+          date: later.toISOString(), status:'notstarted',
+          checklist:[], flashcards:[]
+        }
+      ],
+      activeInterviewId: null,
+      milestones: [
+        { id:uid('ms'), title:'Led design-system overhaul', date:'Q1 2025', priority:'high', status:'progress', notes:'Consolidated six product lines into one component library, cutting design debt by roughly 40%.' },
+        { id:uid('ms'), title:'Staff Designer promotion case', date:'Q3 2025', priority:'high', status:'progress', notes:'Building the case around systems leadership and cross-team mentorship.' },
+        { id:uid('ms'), title:'Conference talk proposal', date:'Nov 2025', priority:'medium', status:'notstarted', notes:'Draft a submission on scalable design systems before the CFP closes.' },
+        { id:uid('ms'), title:'Mentor two junior designers', date:'Ongoing', priority:'low', status:'progress', notes:'Weekly 1:1s focused on portfolio storytelling and critique skills.' }
+      ]
+    };
+  }
+
+  function loadState(){
+    if (!STORAGE_OK) return defaultState();
+    try{
+      var raw = window.localStorage.getItem(STORAGE_KEY);
+      if (!raw) return defaultState();
+      var parsed = JSON.parse(raw);
+      if (!parsed || !Array.isArray(parsed.interviews) || !Array.isArray(parsed.milestones)) return defaultState();
+      return parsed;
+    }catch(e){ return defaultState(); }
+  }
+
+  var state = loadState();
+  var ui = {
+    drawerOpen: false,
+    editingInterview: false,
+    addingInterview: false,
+    addingFlashcard: false,
+    activeNodeId: null,
+    editingNodeId: null,
+    addingNode: false,
+    focusAfterRender: null
+  };
+
+  var PILLS = {
+    notstarted: { label:'Not Started', cls:'pill-notstarted' },
+    progress:   { label:'In Progress', cls:'pill-progress' },
+    awaiting:   { label:'Awaiting Result', cls:'pill-awaiting' },
+    achieved:   { label:'Achieved', cls:'pill-progress' }
+  };
+  var PRIORITY_LABEL = { high:'High priority', medium:'Medium priority', low:'Low priority' };
+  var PRIORITY_BADGE = { high:'H', medium:'M', low:'L' };
+
+  /* ================================================================
+     DERIVED HELPERS
+  ================================================================ */
+  function getActiveInterview(){
+    if (!state.interviews.length) return null;
+    var found = state.interviews.find(function(iv){ return iv.id === state.activeInterviewId; });
+    if (found) return found;
+    // default: soonest upcoming interview, else the first one
+    var future = state.interviews.filter(function(iv){ return new Date(iv.date) > new Date(); });
+    future.sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
+    return future[0] || state.interviews[0];
+  }
+  function prepPercentFor(iv){
+    if (!iv || !iv.checklist.length) return 0;
+    var done = iv.checklist.filter(function(c){ return c.done; }).length;
+    return clampPct(done / iv.checklist.length * 100);
+  }
+
+  /* ================================================================
+     RENDER — Left module
+  ================================================================ */
+  var lastAnnouncedDays = null;
+
+  function renderInterviewSection(){
+    var root = document.getElementById('interviewSection');
+    var active = getActiveInterview();
+    document.getElementById('queueCount').textContent = state.interviews.length + (state.interviews.length === 1 ? ' interview' : ' interviews');
+
+    if (!active){
+      if (ui.addingInterview){
+        root.innerHTML = '<div class="interview-panel">' + renderNewInterviewForm() + '</div>';
+      } else {
+        root.innerHTML =
+          '<div class="empty-state">' +
+            '<div>No interview scheduled yet.</div>' +
+            '<button class="btn" data-action="add-interview" id="addInterviewEmptyBtn">+ Add your next interview</button>' +
+          '</div>';
+      }
+      document.getElementById('moduleLeft').classList.remove('urgent');
+      applyFocusAfterRender();
+      return;
+    }
+
+    var pct = prepPercentFor(active);
+    var R = 82, CIRC = 2*Math.PI*R;
+    var offset = (CIRC * (1 - pct/100)).toFixed(2);
+    var pill = PILLS[active.status] || PILLS.notstarted;
+    var others = state.interviews.filter(function(iv){ return iv.id !== active.id; });
+
+    var html = '';
+    html += '<div class="radar-core">';
+    html += '  <div class="prep-ring">';
+    html += '    <svg class="ring-svg" viewBox="0 0 186 186" aria-hidden="true" focusable="false">';
+    html += '      <circle class="ring-track" cx="93" cy="93" r="' + R + '"></circle>';
+    html += '      <circle class="ring-fill" cx="93" cy="93" r="' + R + '" style="stroke-dasharray:' + CIRC.toFixed(2) + ';stroke-dashoffset:' + offset + '"></circle>';
+    html += '    </svg>';
+    html += '    <div class="ring-rotator" aria-hidden="true"><div class="ring-light"></div></div>';
+    html += '    <div class="ticker">';
+    html += '      <div class="ticker-plate">';
+    html += '        <div class="ticker-unit"><span class="ticker-num" id="tD">00</span></div>';
+    html += '        <span class="ticker-colon">:</span>';
+    html += '        <div class="ticker-unit"><span class="ticker-num" id="tH">00</span></div>';
+    html += '        <span class="ticker-colon">:</span>';
+    html += '        <div class="ticker-unit"><span class="ticker-num" id="tM">00</span></div>';
+    html += '      </div>';
+    html += '      <div class="ticker-labels"><span>Days</span><span>Hrs</span><span>Min</span></div>';
+    html += '      <div class="prep-pct">' + pct + '% PREP</div>';
+    html += '    </div>';
+    html += '  </div>';
+    html += '</div>';
+
+    html += '<div class="interview-panel">';
+    if (ui.editingInterview){
+      html += renderInterviewEditForm(active);
+    } else {
+      html += '  <div class="focus-card' + (ui.drawerOpen?' open':'') + '">';
+      html += '    <button class="focus-toggle" data-action="toggle-drawer" aria-expanded="' + (ui.drawerOpen?'true':'false') + '" aria-controls="drawer">';
+      html += '      <div class="focus-main">';
+      html += '        <div class="focus-name">' + esc(active.name || 'Untitled interview') + '</div>';
+      html += '        <div class="focus-org">' + esc(active.org || 'No organization set') + '</div>';
+      html += '      </div>';
+      html += '      <span class="chevron" aria-hidden="true">⌄</span>';
+      html += '    </button>';
+      html += '    <div class="focus-side">';
+      html += '      <button type="button" class="pill ' + pill.cls + '" data-action="cycle-status" aria-label="Status: ' + pill.label + '. Activate to advance to the next status.">' + pill.label + '</button>';
+      html += '      <span class="time-remaining" id="focusTimeLabel">calculating…</span>';
+      html += '    </div>';
+      html += '    <div class="focus-actions">';
+      html += '      <button class="icon-btn" data-action="edit-interview" aria-label="Edit interview details">✎</button>';
+      html += '    </div>';
+      html += '  </div>';
+
+      html += '  <div class="drawer' + (ui.drawerOpen?' open':'') + '" id="drawer">';
+      html += renderChecklist(active);
+      html += renderFlashcards(active);
+      html += '  </div>';
+
+      html += renderQueue(others);
+    }
+    html += '</div>';
+
+    root.innerHTML = html;
+
+    updateCountdown(active); // sets initial numbers immediately
+    applyFocusAfterRender();
+  }
+
+  function renderInterviewEditForm(iv){
+    var d = new Date(iv.date);
+    var html = '';
+    html += '<form data-form="edit-interview" novalidate>';
+    html += '  <div class="form-row">';
+    html += '    <div class="field"><label for="editName">Role</label><input id="editName" name="name" type="text" required value="' + esc(iv.name) + '" /></div>';
+    html += '    <div class="field"><label for="editOrg">Organization</label><input id="editOrg" name="org" type="text" required value="' + esc(iv.org) + '" /></div>';
+    html += '  </div>';
+    html += '  <div class="form-row">';
+    html += '    <div class="field"><label for="editDate">Date</label><input id="editDate" name="date" type="date" required value="' + toDateInputValue(d) + '" /></div>';
+    html += '    <div class="field"><label for="editTime">Time</label><input id="editTime" name="time" type="time" required value="' + toTimeInputValue(d) + '" /></div>';
+    html += '  </div>';
+    html += '  <div class="form-actions">';
+    html += '    <button type="submit" class="btn">Save</button>';
+    html += '    <button type="button" class="btn btn-ghost" data-action="cancel-edit-interview">Cancel</button>';
+    html += '    <button type="button" class="btn btn-danger" data-action="delete-interview" style="margin-left:auto;">Remove</button>';
+    html += '  </div>';
+    html += '</form>';
+    return html;
+  }
+
+  function renderChecklist(iv){
+    var html = '<div class="drawer-section">';
+    html += '  <div class="drawer-heading">Prep checklist</div>';
+    if (iv.checklist.length){
+      html += '  <ul class="checklist">';
+      iv.checklist.forEach(function(item){
+        html += '    <li class="checklist-item' + (item.done?' done':'') + '">';
+        html += '      <input type="checkbox" id="' + item.id + '" data-action="toggle-checklist" data-id="' + item.id + '" ' + (item.done?'checked':'') + ' />';
+        html += '      <label for="' + item.id + '">' + esc(item.text) + '</label>';
+        html += '      <button class="icon-btn danger" data-action="remove-checklist-item" data-id="' + item.id + '" aria-label="Remove task: ' + esc(item.text) + '">✕</button>';
+        html += '    </li>';
+      });
+      html += '  </ul>';
+    }
+    html += '  <form class="checklist-add" data-form="add-checklist-item">';
+    html += '    <input type="text" name="text" placeholder="Add a prep task…" aria-label="New prep task" required />';
+    html += '    <button type="submit" class="btn">Add</button>';
+    html += '  </form>';
+    html += '</div>';
+    return html;
+  }
+
+  function renderFlashcards(iv){
+    var html = '<div class="drawer-section">';
+    html += '  <div class="drawer-heading">Talking points — tap a card to flip</div>';
+    html += '  <div class="flash-grid">';
+    iv.flashcards.forEach(function(card){
+      var flipped = ui.flippedCardId === card.id;
+      html += '    <div class="flashcard' + (flipped?' flipped':'') + '">';
+      html += '      <button class="icon-btn danger flash-remove" data-action="remove-flashcard" data-id="' + card.id + '" aria-label="Delete flashcard">✕</button>';
+      html += '      <button type="button" class="flash-flip-trigger" data-action="flip-flashcard" data-id="' + card.id + '" aria-pressed="' + (flipped?'true':'false') + '" aria-label="Flashcard, tap to flip. Front: ' + esc(card.q) + '">';
+      html += '        <span class="flash-inner">';
+      html += '          <span class="flash-face flash-front" aria-hidden="' + (flipped?'true':'false') + '">' + esc(card.q) + '</span>';
+      html += '          <span class="flash-face flash-back" aria-hidden="' + (flipped?'false':'true') + '">' + esc(card.a) + '</span>';
+      html += '        </span>';
+      html += '      </button>';
+      html += '    </div>';
+    });
+    html += '  </div>';
+    if (!iv.flashcards.length){
+      html += '  <p style="font-size:11px;color:var(--text-secondary);margin:6px 0 0;">No talking points yet — add one below.</p>';
+    }
+    if (ui.addingFlashcard){
+      html += '  <form class="flash-add-form" data-form="add-flashcard">';
+      html += '    <div class="field" style="margin-bottom:6px;"><label for="fcQ">Prompt</label><input id="fcQ" name="q" type="text" required placeholder="e.g. Why this role?" /></div>';
+      html += '    <div class="field"><label for="fcA">Your answer</label><textarea id="fcA" name="a" required placeholder="Your talking point…"></textarea></div>';
+      html += '    <div class="form-actions"><button type="submit" class="btn">Add card</button><button type="button" class="btn btn-ghost" data-action="cancel-add-flashcard">Cancel</button></div>';
+      html += '  </form>';
+    } else {
+      html += '  <button class="btn btn-ghost" style="margin-top:8px;" data-action="add-flashcard">+ Add talking point</button>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function renderQueue(others){
+    var html = '<div class="queue">';
+    others.forEach(function(iv){
+      var d = new Date(iv.date);
+      var label = d.toLocaleDateString(undefined, { month:'short', day:'numeric' });
+      html += '  <button class="queue-chip" data-action="select-interview" data-id="' + iv.id + '" aria-label="Switch to ' + esc(iv.name) + ' at ' + esc(iv.org) + '">';
+      html += '    <strong>' + esc(iv.org || iv.name) + '</strong><span>' + label + '</span>';
+      html += '  </button>';
+    });
+    if (ui.addingInterview){
+      html += renderNewInterviewForm();
+    } else {
+      html += '  <button class="queue-chip queue-add" data-action="add-interview">+ Add interview</button>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function renderNewInterviewForm(){
+    var d = new Date();
+    var html = '<form data-form="add-interview" style="flex-basis:100%;">';
+    html += '  <div class="form-row">';
+    html += '    <div class="field"><label for="newName">Role</label><input id="newName" name="name" type="text" required /></div>';
+    html += '    <div class="field"><label for="newOrg">Organization</label><input id="newOrg" name="org" type="text" required /></div>';
+    html += '  </div>';
+    html += '  <div class="form-row">';
+    html += '    <div class="field"><label for="newDate">Date</label><input id="newDate" name="date" type="date" required value="' + toDateInputValue(d) + '" /></div>';
+    html += '    <div class="field"><label for="newTime">Time</label><input id="newTime" name="time" type="time" required value="09:00" /></div>';
+    html += '  </div>';
+    html += '  <div class="form-actions"><button type="submit" class="btn">Add</button><button type="button" class="btn btn-ghost" data-action="cancel-add-interview">Cancel</button></div>';
+    html += '</form>';
+    return html;
+  }
+
+  function updateCountdown(iv){
+    var elD = document.getElementById('tD'), elH = document.getElementById('tH'), elM = document.getElementById('tM');
+    var timeLabel = document.getElementById('focusTimeLabel');
+    var moduleLeft = document.getElementById('moduleLeft');
+    var announcer = document.getElementById('urgencyAnnouncer');
+    if (!elD || !iv) return;
+
+    var diff = new Date(iv.date) - new Date();
+    if (diff <= 0){
+      elD.textContent='00'; elH.textContent='00'; elM.textContent='00';
+      if (timeLabel) timeLabel.textContent = 'interview window is now';
+      moduleLeft.classList.remove('urgent');
+      return;
+    }
+    var days = Math.floor(diff/86400000);
+    var hours = Math.floor((diff%86400000)/3600000);
+    var mins = Math.floor((diff%3600000)/60000);
+    elD.textContent = pad(days); elH.textContent = pad(hours); elM.textContent = pad(mins);
+    var urgent = days < 7;
+    if (timeLabel) timeLabel.textContent = (urgent ? 'Urgent — ' : '') + days + 'd ' + hours + 'h remaining';
+    moduleLeft.classList.toggle('urgent', urgent);
+
+    if (announcer && days !== lastAnnouncedDays){
+      lastAnnouncedDays = days;
+      announcer.textContent = (iv.name || 'Interview') + ' is in ' + days + ' day' + (days===1?'':'s') + (urgent ? ', less than a week away' : '') + '.';
+    }
+  }
+
+  /* ================================================================
+     RENDER — Right module
+  ================================================================ */
+  function renderMilestoneSection(){
+    var root = document.getElementById('milestoneSection');
+    var achieved = state.milestones.filter(function(m){ return m.status === 'achieved'; }).length;
+    document.getElementById('achievedCount').textContent = achieved + ' / ' + state.milestones.length + ' achieved';
+
+    if (!state.milestones.length && !ui.addingNode){
+      root.innerHTML =
+        '<div class="empty-state">' +
+          '<div>No milestones yet.</div>' +
+          '<button class="btn" data-action="add-node">+ Add your first milestone</button>' +
+        '</div>';
+      return;
+    }
+
+    var html = '<ul class="node-list">';
+    state.milestones.forEach(function(m){
+      var isActive = ui.activeNodeId === m.id;
+      var isEditing = ui.editingNodeId === m.id;
+      var isDimmed = ui.activeNodeId && !isActive;
+      var pill = PILLS[m.status] || PILLS.notstarted;
+
+      html += '<li class="node-item priority-' + m.priority + (isActive?' active':'') + (isDimmed?' dimmed':'') + '">';
+      html += '  <button class="node-btn" data-action="toggle-node" data-id="' + m.id + '" aria-expanded="' + (isActive?'true':'false') + '">';
+      html += '    <span class="node-dot" aria-hidden="true"></span>';
+      html += '    <span class="badge badge-' + m.priority + '" aria-hidden="true">' + PRIORITY_BADGE[m.priority] + '</span>';
+      html += '    <span class="sr-only">' + PRIORITY_LABEL[m.priority] + '.</span>';
+      html += '    <span class="node-title">' + esc(m.title) + '</span>';
+      html += '    <span class="node-date">' + esc(m.date) + '</span>';
+      html += '  </button>';
+
+      html += '  <div class="node-detail">';
+      if (isActive){
+        if (isEditing){
+          html += renderNodeEditForm(m);
+        } else {
+          html += '    <div class="node-detail-inner">';
+          html += '      <div class="node-detail-row">';
+          html += '        <span class="node-detail-date">' + esc(m.date) + '</span>';
+          html += '        <span class="pill ' + pill.cls + '">' + pill.label + '</span>';
+          html += '      </div>';
+          html += '      <p class="node-notes">' + esc(m.notes || 'No notes yet.') + '</p>';
+          html += '      <div class="node-detail-actions">';
+          html += '        <button class="btn" data-action="cycle-node-status" data-id="' + m.id + '">Advance status</button>';
+          html += '        <button class="btn btn-ghost" data-action="edit-node" data-id="' + m.id + '">Edit</button>';
+          html += '        <button class="btn btn-danger" data-action="delete-node" data-id="' + m.id + '">Delete</button>';
+          html += '      </div>';
+          html += '    </div>';
+        }
+      }
+      html += '  </div>';
+      html += '</li>';
+    });
+    html += '</ul>';
+
+    html += '<div class="node-add-row">';
+    if (ui.addingNode){
+      html += '<div class="node-detail-inner" style="margin-top:10px;">' + renderNewNodeForm() + '</div>';
+    } else {
+      html += '<button class="btn btn-ghost btn-block" style="margin-top:10px;" data-action="add-node">+ Add milestone</button>';
+    }
+    html += '</div>';
+
+    root.innerHTML = html;
+    applyFocusAfterRender();
+  }
+
+  function renderNodeEditForm(m){
+    var html = '<div class="node-detail-inner">';
+    html += '<form data-form="edit-node" data-id="' + m.id + '">';
+    html += '  <div class="field" style="margin-bottom:6px;"><label for="editNodeTitle">Title</label><input id="editNodeTitle" name="title" type="text" required value="' + esc(m.title) + '" /></div>';
+    html += '  <div class="form-row">';
+    html += '    <div class="field"><label for="editNodeDate">Date label</label><input id="editNodeDate" name="date" type="text" required value="' + esc(m.date) + '" placeholder="e.g. Q1 2025" /></div>';
+    html += '    <div class="field"><label for="editNodePriority">Priority</label>';
+    html += '      <select id="editNodePriority" name="priority">';
+    ['high','medium','low'].forEach(function(p){ html += '<option value="' + p + '"' + (m.priority===p?' selected':'') + '>' + PRIORITY_LABEL[p] + '</option>'; });
+    html += '      </select></div>';
+    html += '  </div>';
+    html += '  <div class="field" style="margin:8px 0;"><label for="editNodeNotes">Notes</label><textarea id="editNodeNotes" name="notes">' + esc(m.notes) + '</textarea></div>';
+    html += '  <div class="form-actions"><button type="submit" class="btn">Save</button><button type="button" class="btn btn-ghost" data-action="cancel-edit-node">Cancel</button></div>';
+    html += '</form></div>';
+    return html;
+  }
+
+  function renderNewNodeForm(){
+    var html = '<form data-form="add-node">';
+    html += '  <div class="field" style="margin-bottom:6px;"><label for="newNodeTitle">Title</label><input id="newNodeTitle" name="title" type="text" required placeholder="e.g. Ship v2 of the design system" /></div>';
+    html += '  <div class="form-row">';
+    html += '    <div class="field"><label for="newNodeDate">Date label</label><input id="newNodeDate" name="date" type="text" required placeholder="e.g. Q2 2026" /></div>';
+    html += '    <div class="field"><label for="newNodePriority">Priority</label>';
+    html += '      <select id="newNodePriority" name="priority"><option value="high">High priority</option><option value="medium" selected>Medium priority</option><option value="low">Low priority</option></select></div>';
+    html += '  </div>';
+    html += '  <div class="field" style="margin:8px 0;"><label for="newNodeNotes">Notes</label><textarea id="newNodeNotes" name="notes" placeholder="Why this matters, next steps…"></textarea></div>';
+    html += '  <div class="form-actions"><button type="submit" class="btn">Add milestone</button><button type="button" class="btn btn-ghost" data-action="cancel-add-node">Cancel</button></div>';
+    html += '</form>';
+    return html;
+  }
+
+  /* ================================================================
+     FOCUS MANAGEMENT
+  ================================================================ */
+  function applyFocusAfterRender(){
+    if (!ui.focusAfterRender) return;
+    var el = document.querySelector(ui.focusAfterRender);
+    ui.focusAfterRender = null;
+    if (el) el.focus();
+  }
+
+  /* ================================================================
+     MASTER RENDER + PERSIST
+  ================================================================ */
+  function render(){ renderInterviewSection(); renderMilestoneSection(); }
+  function commit(){ saveState(); render(); }
+
+  /* ================================================================
+     EVENT DELEGATION — clicks
+  ================================================================ */
+  document.addEventListener('click', function(e){
+    var el = e.target.closest('[data-action]');
+    if (!el) return;
+    var action = el.dataset.action;
+    var id = el.dataset.id;
+
+    switch(action){
+      case 'toggle-drawer':
+        ui.drawerOpen = !ui.drawerOpen;
+        render();
+        break;
+      case 'edit-interview':
+        ui.editingInterview = true;
+        ui.focusAfterRender = '#editName';
+        render();
+        break;
+      case 'cancel-edit-interview':
+        ui.editingInterview = false;
+        render();
+        break;
+      case 'delete-interview': {
+        var active = getActiveInterview();
+        if (active && window.confirm('Remove "' + active.name + '"? This cannot be undone.')){
+          state.interviews = state.interviews.filter(function(iv){ return iv.id !== active.id; });
+          state.activeInterviewId = null;
+          ui.editingInterview = false;
+          commit();
+        }
+        break;
+      }
+      case 'cycle-status': {
+        var iv = getActiveInterview();
+        if (!iv) break;
+        var order = ['notstarted','progress','awaiting'];
+        var idx = order.indexOf(iv.status);
+        iv.status = order[(idx+1) % order.length];
+        commit();
+        break;
+      }
+      case 'add-interview':
+        ui.addingInterview = true;
+        ui.focusAfterRender = '#newName';
+        render();
+        break;
+      case 'cancel-add-interview':
+        ui.addingInterview = false;
+        render();
+        break;
+      case 'select-interview':
+        state.activeInterviewId = id;
+        ui.drawerOpen = false;
+        ui.editingInterview = false;
+        commit();
+        break;
+      case 'toggle-checklist': /* handled by change listener, no-op here */
+        break;
+      case 'remove-checklist-item': {
+        var iv2 = getActiveInterview();
+        if (iv2) iv2.checklist = iv2.checklist.filter(function(c){ return c.id !== id; });
+        commit();
+        break;
+      }
+      case 'add-flashcard':
+        ui.addingFlashcard = true;
+        ui.focusAfterRender = '#fcQ';
+        render();
+        break;
+      case 'cancel-add-flashcard':
+        ui.addingFlashcard = false;
+        render();
+        break;
+      case 'flip-flashcard':
+        ui.flippedCardId = (ui.flippedCardId === id) ? null : id;
+        render();
+        break;
+      case 'remove-flashcard': {
+        var iv3 = getActiveInterview();
+        if (iv3) iv3.flashcards = iv3.flashcards.filter(function(c){ return c.id !== id; });
+        commit();
+        break;
+      }
+      case 'toggle-node':
+        ui.activeNodeId = (ui.activeNodeId === id) ? null : id;
+        ui.editingNodeId = null;
+        render();
+        break;
+      case 'cycle-node-status': {
+        var m = state.milestones.find(function(x){ return x.id === id; });
+        if (!m) break;
+        var mOrder = ['notstarted','progress','achieved'];
+        var mIdx = mOrder.indexOf(m.status);
+        m.status = mOrder[(mIdx+1) % mOrder.length];
+        commit();
+        break;
+      }
+      case 'edit-node':
+        ui.editingNodeId = id;
+        ui.focusAfterRender = '#editNodeTitle';
+        render();
+        break;
+      case 'cancel-edit-node':
+        ui.editingNodeId = null;
+        render();
+        break;
+      case 'delete-node': {
+        var mm = state.milestones.find(function(x){ return x.id === id; });
+        if (mm && window.confirm('Delete "' + mm.title + '"? This cannot be undone.')){
+          state.milestones = state.milestones.filter(function(x){ return x.id !== id; });
+          ui.activeNodeId = null;
+          commit();
+        }
+        break;
+      }
+      case 'add-node':
+        ui.addingNode = true;
+        ui.focusAfterRender = '#newNodeTitle';
+        render();
+        break;
+      case 'cancel-add-node':
+        ui.addingNode = false;
+        render();
+        break;
+    }
+  });
+
+  // Every interactive control in this widget is a real <button>, <input>,
+  // <select> or <a>, so Enter/Space activation is native — no custom
+  // keydown-to-click shim needed. Escape is the one custom shortcut.
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape'){
+      var changed = ui.drawerOpen || ui.editingInterview || ui.addingInterview || ui.addingFlashcard || ui.activeNodeId || ui.editingNodeId || ui.addingNode;
+      if (changed){
+        ui.editingInterview = false; ui.addingInterview = false; ui.addingFlashcard = false;
+        ui.activeNodeId = null; ui.editingNodeId = null; ui.addingNode = false;
+        render();
+      }
+    }
+  });
+
+  /* ================================================================
+     EVENT DELEGATION — checkbox toggles
+  ================================================================ */
+  document.addEventListener('change', function(e){
+    if (e.target.matches('[data-action="toggle-checklist"]')){
+      var iv = getActiveInterview();
+      var item = iv && iv.checklist.find(function(c){ return c.id === e.target.dataset.id; });
+      if (item){ item.done = e.target.checked; commit(); }
+    }
+  });
+
+  /* ================================================================
+     EVENT DELEGATION — form submits
+  ================================================================ */
+  document.addEventListener('submit', function(e){
+    var form = e.target.closest('[data-form]');
+    if (!form) return;
+    e.preventDefault();
+    var kind = form.dataset.form;
+    var fd = new FormData(form);
+
+    if (kind === 'edit-interview'){
+      var iv = getActiveInterview();
+      if (iv){
+        iv.name = fd.get('name').trim() || iv.name;
+        iv.org = fd.get('org').trim() || iv.org;
+        var d = localDateFromInputs(fd.get('date'), fd.get('time'));
+        if (d) iv.date = d.toISOString();
+      }
+      ui.editingInterview = false;
+      commit();
+    }
+    else if (kind === 'add-interview'){
+      var d2 = localDateFromInputs(fd.get('date'), fd.get('time')) || new Date();
+      var fresh = { id: uid('iv'), name: fd.get('name').trim(), org: fd.get('org').trim(), date: d2.toISOString(), status:'notstarted', checklist:[], flashcards:[] };
+      state.interviews.push(fresh);
+      state.activeInterviewId = fresh.id;
+      ui.addingInterview = false;
+      commit();
+    }
+    else if (kind === 'add-checklist-item'){
+      var iv2 = getActiveInterview();
+      var text = fd.get('text').trim();
+      if (iv2 && text){ iv2.checklist.push({ id: uid('ck'), text: text, done:false }); form.reset(); }
+      commit();
+    }
+    else if (kind === 'add-flashcard'){
+      var iv3 = getActiveInterview();
+      var q = fd.get('q').trim(), a = fd.get('a').trim();
+      if (iv3 && q && a){ iv3.flashcards.push({ id: uid('fc'), q: q, a: a }); }
+      ui.addingFlashcard = false;
+      commit();
+    }
+    else if (kind === 'edit-node'){
+      var m = state.milestones.find(function(x){ return x.id === form.dataset.id; });
+      if (m){
+        m.title = fd.get('title').trim() || m.title;
+        m.date = fd.get('date').trim() || m.date;
+        m.priority = fd.get('priority');
+        m.notes = fd.get('notes').trim();
+      }
+      ui.editingNodeId = null;
+      commit();
+    }
+    else if (kind === 'add-node'){
+      var freshM = {
+        id: uid('ms'),
+        title: fd.get('title').trim(),
+        date: fd.get('date').trim(),
+        priority: fd.get('priority'),
+        status:'notstarted',
+        notes: fd.get('notes').trim()
+      };
+      state.milestones.push(freshM);
+      ui.addingNode = false;
+      ui.activeNodeId = freshM.id;
+      commit();
+    }
+  });
+
+  /* ================================================================
+     LIVE COUNTDOWN TICKER
+  ================================================================ */
+  setInterval(function(){
+    var active = getActiveInterview();
+    if (active) updateCountdown(active);
+  }, 15000);
+
+  /* ================================================================
+     RESTRAINED 3D TILT + CURSOR SPOTLIGHT
+  ================================================================ */
+  var hud = document.getElementById('hud');
+  var spotlight = document.getElementById('spotlight');
+  var MAX_TILT = 4;
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (!reduceMotion){
+    hud.addEventListener('mousemove', function(e){
+      var rect = hud.getBoundingClientRect();
+      var px = (e.clientX - rect.left) / rect.width;
+      var py = (e.clientY - rect.top) / rect.height;
+      var rotY = (px - 0.5) * MAX_TILT * 2;
+      var rotX = (0.5 - py) * MAX_TILT * 2;
+      hud.style.transform = 'rotateX(' + rotX.toFixed(2) + 'deg) rotateY(' + rotY.toFixed(2) + 'deg)';
+      spotlight.style.setProperty('--mx', (px*100).toFixed(1) + '%');
+      spotlight.style.setProperty('--my', (py*100).toFixed(1) + '%');
+    });
+    hud.addEventListener('mouseleave', function(){ hud.style.transform = 'rotateX(0deg) rotateY(0deg)'; });
+  }
+
+  /* ================================================================
+     INITIAL RENDER
+  ================================================================ */
+  render();
+
+})();
+</script>
+</body>
+</html>
