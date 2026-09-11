@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Life Areas Command Hub — Notion Glass Edition</title>
+  <style>
+    :root {
+      /* Updated to match the provided screenshot */
+      --bg-canvas: #191919; /* already Notion matched */ 
+      --bg-card: rgba(22, 22, 26, 0.65);
+      --bg-card-hover: rgba(32, 32, 38, 0.8);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(255, 255, 255, 0.25);
+      --text-main: #f4f4f5;
+      --text-muted: #94a3b8;
+      --accent-glow: rgba(255, 255, 255, 0.15);
+      --pure-white: #ffffff;
+      --font-stack: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-stack); letter-spacing: -0.2px; }
+
+    body {
+      background-color: #191919; /* Notion background for clean blending */
+      color: var(--text-main);
+      display: flex;
+      min-height: 100vh;
+      height: auto;
+      overflow: hidden;
+      max-width: 100%; /* prevent outer scrollbars */
+      position: relative;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Hide all scrollbars for clean Notion embed */
+    ::-webkit-scrollbar {
+      width: 0 !important;
+      height: 0 !important;
+      display: none !important;
+    }
+    * {
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+
+    /* --- INTERACTIVE AMBIENT MOUSE GLOW --- */
+    .mouse-glow {
+      position: absolute;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 70%);
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      transition: width 0.3s ease, height 0.3s ease;
+      z-index: 1;
+    }
+
+    .ambient-glow-1 {
+      position: absolute;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.04) 0%, rgba(0, 0, 0, 0) 70%);
+      top: -5%; left: -5%;
+      z-index: 0; pointer-events: none;
+      animation: floatGlow1 12s ease-in-out infinite alternate;
+    }
+
+    .ambient-glow-2 {
+      position: absolute;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 0%, rgba(0, 0, 0, 0) 70%);
+      bottom: -5%; right: -5%;
+      z-index: 0; pointer-events: none;
+      animation: floatGlow2 15s ease-in-out infinite alternate-reverse;
+    }
+
+    @keyframes floatGlow1 {
+      0% { transform: translateY(0) scale(1) rotate(0deg); }
+      100% { transform: translateY(30px) scale(1.1) rotate(10deg); }
+    }
+
+    @keyframes floatGlow2 {
+      0% { transform: translateY(0) scale(1) rotate(0deg); }
+      100% { transform: translateY(-40px) scale(1.15) rotate(-15deg); }
+    }
+
+    /* --- SIDEBAR WITH GLASS PANEL --- */
+    .sidebar {
+      position: relative;
+      z-index: 3;
+      width: 72px;
+      background: rgba(18, 18, 22, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 0;
+      gap: 28px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ffffff, #555555);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.8rem;
+      color: #000;
+      box-shadow: 0 0 15px rgba(255,255,255,0.25);
+      cursor: pointer;
+      overflow: hidden;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+    }
+
+    .sidebar-avatar:hover {
+      transform: scale(1.12) rotate(5deg);
+      box-shadow: 0 0 25px rgba(255,255,255,0.5);
+    }
+
+    .nav-icons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      align-items: center;
+    }
+
+    .nav-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 0.95rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid transparent;
+      position: relative;
+    }
+
+    .nav-icon:hover, .nav-icon.active {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--pure-white);
+      border-color: var(--border-hover);
+      box-shadow: 0 0 15px rgba(255,255,255,0.1);
+      transform: translateY(-2px);
+    }
+
+    /* --- APP CONTAINER --- */
+    .app-container {
+      position: relative;
+      z-index: 2;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      height: auto;
+      max-width: 920px; /* controlled width for Notion fit */
+      margin: 0 auto;
+    }
+
+    /* --- HEADER (GLASSY) --- */
+    .header {
+      padding: 20px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-subtle);
+      background: rgba(18, 18, 22, 0.6);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .header-title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .header-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--pure-white);
+      text-shadow: 0 2px 10px rgba(255,255,255,0.15);
+    }
+
+    .header-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .primary-btn {
+      background: var(--pure-white);
+      border: 1px solid var(--pure-white);
+      color: #000;
+      padding: 9px 18px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 4px 15px rgba(255,255,255,0.2);
+    }
+
+    .primary-btn:hover {
+      background: #e2e8f0;
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 6px 22px rgba(255,255,255,0.35);
+    }
+
+    /* --- DASHBOARD GRID & GLASS CARDS --- */
+    .dashboard-grid {
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1.1fr 1.5fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 1100px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+    }
+
+    .card:hover {
+      border-color: var(--border-hover);
+      background: var(--bg-card-hover);
+      box-shadow: 0 20px 45px rgba(0,0,0,0.6), 0 0 25px var(--accent-glow);
+      transform: translateY(-3px);
+    }
+
+    .card-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--pure-white);
+    }
+
+    .card-gear-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.75rem;
+      transition: all 0.3s ease;
+    }
+
+    .card-gear-btn:hover {
+      background: var(--pure-white);
+      color: #000;
+      border-color: var(--pure-white);
+      transform: rotate(90deg) scale(1.05);
+    }
+
+    /* --- CARD 1: LIFE BALANCE OVERVIEW --- */
+    .balance-container {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .balance-top-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 14px 18px;
+      border-radius: 12px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .balance-score-big {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--pure-white);
+      text-shadow: 0 0 15px rgba(255,255,255,0.3);
+    }
+
+    .balance-sub-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 220px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .balance-item-row {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.02);
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border-subtle);
+      transition: all 0.3s ease;
+    }
+
+    .balance-item-row:hover {
+      border-color: var(--border-hover);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .balance-item-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+    }
+
+    .mini-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .mini-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #a1a1aa, #ffffff);
+      border-radius: 3px;
+      box-shadow: 0 0 8px rgba(255,255,255,0.5);
+      transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* --- CARD 2: GRANULAR GRAPH & TREND --- */
+    .trend-card-layout { grid-column: span 1; }
+
+    .chart-wrapper {
+      position: relative;
+      height: 180px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 14px;
+      border: 1px solid var(--border-subtle);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .chart-svg-container {
+      flex-grow: 1;
+      position: relative;
+      width: 100%;
+    }
+
+    .trend-svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .chart-x-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      padding-top: 6px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .filter-select {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      color: var(--pure-white);
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      outline: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .filter-select:hover { border-color: var(--pure-white); background: rgba(255, 255, 255, 0.08); }
+
+    /* --- CARD 3: ACTIVE NEXT STEPS --- */
+    .steps-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .step-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-subtle);
+      padding: 12px 14px;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+
+    .step-row:hover {
+      border-color: var(--border-hover);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .step-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .step-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #ffffff;
+      cursor: pointer;
+    }
+
+    .step-pill {
+      font-size: 0.68rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border-subtle);
+      padding: 3px 8px;
+      border-radius: 6px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .priority-high { color: #f87171; border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.08); }
+    .priority-med { color: #fbbf24; border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.08); }
+
+    /* --- CARD 4: LIFE DOMAINS & VISION VAULT --- */
+    .domains-section {
+      grid-column: span 2;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .domains-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    .domain-mini-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .domain-mini-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 3px; height: 100%;
+      background: linear-gradient(to bottom, #ffffff, #666666);
+      opacity: 0.3;
+    }
+
+    .domain-mini-card:hover {
+      border-color: var(--border-hover);
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      transform: translateY(-3px);
+    }
+
+    .domain-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      font-size: 0.88rem;
+    }
+
+    .domain-vision-quote {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      font-style: italic;
+      line-height: 1.35;
+    }
+
+    .domain-meta-box {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 8px 10px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .domain-meta-box strong { color: var(--pure-white); }
+
+    /* --- MODALS --- */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .modal-overlay.active { display: flex; opacity: 1; }
+
+    .modal-card {
+      background: #121216;
+      border: 1px solid var(--border-hover);
+      border-radius: 20px;
+      width: 90%; max-width: 500px;
+      padding: 26px;
+      display: flex; flex-direction: column; gap: 16px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.9);
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
+    .form-group input, .form-group textarea, .form-group select {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-subtle);
+      color: var(--pure-white);
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+      border-color: var(--pure-white);
+      box-shadow: 0 0 15px rgba(255,255,255,0.15);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .modal-actions {
+      display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px;
+    }
+
+    .sub-input-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-subtle);
+      padding: 12px;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Interactive Mouse Glow Effect -->
+  <div class="mouse-glow" id="mouseGlow"></div>
+
+  <!-- Ambient Pinterest Glows -->
+  <div class="ambient-glow-1"></div>
+  <div class="ambient-glow-2"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-avatar" id="sidebarAvatar" title="Click to upload your custom photo/image" onclick="triggerAvatarUpload()">
+      <span id="avatarText">AY</span>
+      <img id="avatarImg" src="" alt="Avatar" style="display:none; width:100%; height:100%; border-radius:50%; object-fit:cover;">
+    </div>
+    <input type="file" id="avatarFileInput" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">
+    <div class="nav-icons">
+      <div class="nav-icon active" title="Dashboard">🏠</div>
+    </div>
+  </aside>
+
+  <!-- Main App Container -->
+  <div class="app-container">
+    
+    <!-- Header -->
+    <header class="header">
+      <div class="header-title-group">
+        <h1 class="header-title">Command Hub & Multi-Input Blueprint</h1>
+        <span class="header-subtitle">Dynamic 4-Factor Tracking Database System</span>
+      </div>
+      <div class="header-right">
+        <button class="primary-btn" onclick="openGlobalAddModal()">+ Add New Entry</button>
+      </div>
+    </header>
+
+    <!-- Dashboard Grid -->
+    <div class="dashboard-grid">
+      
+      <!-- CARD 1: LIFE BALANCE OVERVIEW -->
+      <div class="card" id="card-balance">
+        <div class="card-header-row">
+          <div class="card-title-group">
+            <button class="card-gear-btn" onclick="openCardConfig('balance')" title="Configure Sub-Inputs">⚙️</button>
+            <span class="card-title">Life Balance Overview</span>
+          </div>
+          <span style="font-size: 0.72rem; color: var(--text-muted);">4-Factor Average</span>
+        </div>
+        <div class="balance-container">
+          <div class="balance-top-banner">
+            <div>
+              <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Overall Harmony</div>
+              <div style="font-size: 0.74rem; color: #aaa;">Precision weighted score</div>
+            </div>
+            <div class="balance-score-big" id="overallScoreDisplay">8.2 / 10</div>
+          </div>
+          <div class="balance-sub-list" id="balanceSubListContainer"></div>
+        </div>
+      </div>
+
+      <!-- CARD 2: GRANULAR PERFORMANCE TREND & GRAPH -->
+      <div class="card trend-card-layout" id="card-trend">
+        <div class="card-header-row">
+          <div class="card-title-group">
+            <button class="card-gear-btn" onclick="openCardConfig('trend')" title="Configure Metrics">⚙️</button>
+            <span class="card-title">Performance Trend Grid</span>
+          </div>
+          <div class="chart-filter-bar">
+            <select class="filter-select" id="trendFilterSelect" onchange="filterTrend(this.value)">
+              <option value="all">All Categories</option>
+              <option value="Academics">Academics</option>
+              <option value="Health">Health & Fitness</option>
+              <option value="Creative">Creative</option>
+            </select>
+          </div>
+        </div>
+        <div class="chart-wrapper">
+          <div class="chart-svg-container">
+            <svg class="trend-svg" id="trendSvgElement" viewBox="0 0 400 120" preserveAspectRatio="none"></svg>
+          </div>
+          <div class="chart-x-labels" id="trendXLabels"></div>
+        </div>
+      </div>
+
+      <!-- CARD 3: ACTIVE NEXT STEPS -->
+      <div class="card" id="card-steps">
+        <div class="card-header-row">
+          <div class="card-title-group">
+            <button class="card-gear-btn" onclick="openCardConfig('steps')" title="Configure Steps">⚙️</button>
+            <span class="card-title">Active Next Steps</span>
+          </div>
+          <span style="font-size: 0.72rem; color: var(--text-muted);">Execution Board</span>
+        </div>
+        <div class="steps-list" id="activeStepsContainer"></div>
+      </div>
+
+      <!-- CARD 4: LIFE DOMAINS & VISION VAULT -->
+      <div class="domains-section" id="card-domains">
+        <div class="card">
+          <div class="card-header-row">
+            <div class="card-title-group">
+              <button class="card-gear-btn" onclick="openCardConfig('domains')" title="Configure Vault">⚙️</button>
+              <span class="card-title">Life Domains & Vision Vault</span>
+            </div>
+            <span style="font-size: 0.72rem; color: var(--text-muted);">Multi-factor inputs</span>
+          </div>
+          <div class="domains-grid" id="domainsGridContainer"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODALS -->
+  <div class="modal-overlay" id="cardConfigModal">
+    <div class="modal-card" id="cardConfigModalContent"></div>
+  </div>
+
+  <div class="modal-overlay" id="globalAddModal">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px;">
+        <h3 style="font-size: 0.95rem; color: var(--pure-white);">Add New Domain Entry</h3>
+        <button style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1rem;" onclick="closeGlobalAddModal()">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Domain Name</label>
+        <input type="text" id="inputNewName" placeholder="e.g. Advanced Coding & AI">
+      </div>
+      <div class="form-group">
+        <label>Category Tag</label>
+        <select id="inputNewCategory">
+          <option value="Academics">Academics</option>
+          <option value="Health">Health & Fitness</option>
+          <option value="Creative">Creative</option>
+        </select>
+      </div>
+      <label style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">4 Precision Input Factors (1-10)</label>
+      <div class="sub-input-grid">
+        <div class="form-group"><label>1. Consistency</label><input type="number" id="inputSub1" min="1" max="10" step="0.5" value="8"></div>
+        <div class="form-group"><label>2. Depth</label><input type="number" id="inputSub2" min="1" max="10" step="0.5" value="8"></div>
+        <div class="form-group"><label>3. Energy</label><input type="number" id="inputSub3" min="1" max="10" step="0.5" value="8"></div>
+        <div class="form-group"><label>4. Alignment</label><input type="number" id="inputSub4" min="1" max="10" step="0.5" value="8"></div>
+      </div>
+      <div class="form-group">
+        <label>Next Milestone</label>
+        <input type="text" id="inputNewAction" placeholder="e.g. Complete module">
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div class="form-group">
+          <label>Deadline</label>
+          <input type="text" id="inputNewDeadline" placeholder="e.g. Tomorrow">
+        </div>
+        <div class="form-group">
+          <label>Priority</label>
+          <select id="inputNewPriority">
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Vision Statement</label>
+        <textarea id="inputNewVision" rows="2" placeholder="Long-term benchmark..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="primary-btn" onclick="saveNewDomainEntry()">Save Entry</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const mouseGlow = document.getElementById('mouseGlow');
+    window.addEventListener('mousemove', (e) => {
+      mouseGlow.style.left = `${e.clientX}px`;
+      mouseGlow.style.top = `${e.clientY}px`;
+    });
+
+    function triggerAvatarUpload() { document.getElementById('avatarFileInput').click(); }
+    function handleAvatarUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.getElementById('avatarImg');
+          const txt = document.getElementById('avatarText');
+          img.src = e.target.result;
+          img.style.display = 'block';
+          txt.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    let lifeDomains = [
+      { id: 1, name: "Academics & O-Levels", category: "Academics", sub1: 9.0, sub2: 8.5, sub3: 8.0, sub4: 9.0, nextAction: "Complete Cambridge past paper revision", deadline: "Saturday", priority: "High", vision: "Top-tier academic results.", habit: "Daily 2h deep focus" },
+      { id: 2, name: "Health & Physical Energy", category: "Health", sub1: 8.0, sub2: 7.5, sub3: 8.5, sub4: 8.0, nextAction: "Complete 200 crunches & rooftop workout", deadline: "Daily", priority: "High", vision: "Consistent athletic build.", habit: "Min 100-200 crunches" },
+      { id: 3, name: "Creative & Digital Art", category: "Creative", sub1: 8.5, sub2: 8.0, sub3: 7.5, sub4: 8.0, nextAction: "Finalize Redbubble apparel graphics", deadline: "Sunday", priority: "Medium", vision: "Proficient 3D artist & brand creator.", habit: "Blender modeling sessions" },
+      { id: 4, name: "Programming & Code", category: "Academics", sub1: 7.5, sub2: 8.0, sub3: 7.0, sub4: 8.5, nextAction: "Practice Python backend modules", deadline: "Monday", priority: "Medium", vision: "Mastering software engineering.", habit: "freeCodeCamp daily" }
+    ];
+
+    let trendDataEntries = [
+      { day: "Mon", category: "Academics", value: 82, metricName: "Study Hours", detail: "3.5h Deep Work" },
+      { day: "Tue", category: "Health", value: 76, metricName: "Fitness", detail: "200 Crunches" },
+      { day: "Wed", category: "Creative", value: 88, metricName: "Blender Design", detail: "3D Asset Rendered" },
+      { day: "Thu", category: "Academics", value: 79, metricName: "Python", detail: "SQL Module" },
+      { day: "Fri", category: "Creative", value: 91, metricName: "Storefront", detail: "Graphics" },
+      { day: "Sat", category: "Health", value: 95, metricName: "Badminton", detail: "Cardio" },
+      { day: "Sun", category: "Academics", value: 86, metricName: "Planning", detail: "Review Completed" }
+    ];
+
+    function getDomainScore(d) { return ((d.sub1 + d.sub2 + d.sub3 + d.sub4) / 4).toFixed(1); }
+
+    function renderDashboard() {
+      renderBalanceCard();
+      renderTrendGraph();
+      renderActionList();
+      renderDomainsGrid();
+    }
+
+    function renderBalanceCard() {
+      let totalScore = 0;
+      lifeDomains.forEach(d => { totalScore += parseFloat(getDomainScore(d)); });
+      let overallAvg = lifeDomains.length > 0 ? (totalScore / lifeDomains.length).toFixed(1) : "8.0";
+      document.getElementById('overallScoreDisplay').innerText = `${overallAvg} / 10`;
+
+      let container = document.getElementById('balanceSubListContainer');
+      container.innerHTML = '';
+      lifeDomains.forEach(d => {
+        let currentScore = parseFloat(getDomainScore(d));
+        let pct = Math.round((currentScore / 10) * 100);
+        container.innerHTML += `
+          <div class="balance-item-row">
+            <div class="balance-item-info">
+              <span style="font-weight:600; color:var(--pure-white);">${d.name}</span>
+              <span style="color:var(--text-muted);">Score: <strong style="color:var(--pure-white);">${currentScore}</strong>/10</span>
+            </div>
+            <div class="mini-track"><div class="mini-fill" style="width: ${pct}%;"></div></div>
+          </div>
+        `;
+      });
+    }
+
+    function renderTrendGraph(filterCat = 'all') {
+      let filtered = filterCat === 'all' ? trendDataEntries : trendDataEntries.filter(e => e.category === filterCat);
+      let svg = document.getElementById('trendSvgElement');
+      let xLabels = document.getElementById('trendXLabels');
+      svg.innerHTML = ''; xLabels.innerHTML = '';
+
+      if (filtered.length === 0) {
+        svg.innerHTML = '<text x="150" y="60" fill="#888" font-size="11">No data</text>';
+        return;
+      }
+
+      let gridLinesHTML = `
+        <line x1="0" y1="20" x2="400" y2="20" stroke="rgba(255,255,255,0.05)" stroke-dasharray="3,3" />
+        <line x1="0" y1="50" x2="400" y2="50" stroke="rgba(255,255,255,0.05)" stroke-dasharray="3,3" />
+        <line x1="0" y1="80" x2="400" y2="80" stroke="rgba(255,255,255,0.05)" stroke-dasharray="3,3" />
+      `;
+
+      let points = [];
+      let width = 400, height = 100;
+      let step = width / (filtered.length > 1 ? filtered.length - 1 : 1);
+
+      filtered.forEach((entry, idx) => {
+        let x = idx * step;
+        let y = height - (entry.value / 100) * 80;
+        points.push(`${x},${y}`);
+        xLabels.innerHTML += `<span>${entry.day}</span>`;
+      });
+
+      let polylinePoints = points.join(' ');
+      let firstX = 0, lastX = (filtered.length - 1) * step;
+      let areaPath = `M ${firstX},100 L ${polylinePoints} L ${lastX},100 Z`;
+
+      svg.innerHTML = `
+        <defs>
+          <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#ffffff" stop-opacity="0.0"/>
+          </linearGradient>
+        </defs>
+        ${gridLinesHTML}
+        <path d="${areaPath}" fill="url(#trendGradient)"/>
+        <polyline points="${polylinePoints}" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        ${filtered.map((entry, idx) => {
+          let x = idx * step;
+          let y = height - (entry.value / 100) * 80;
+          return `<circle cx="${x}" cy="${y}" r="4" fill="#121216" stroke="#ffffff" stroke-width="2"><title>${entry.day} - ${entry.metricName}: ${entry.value}%</title></circle>`;
+        }).join('')}
+      `;
+    }
+
+    function renderActionList() {
+      let container = document.getElementById('activeStepsContainer');
+      container.innerHTML = '';
+      lifeDomains.forEach((domain) => {
+        let priorityClass = domain.priority === 'High' ? 'priority-high' : 'priority-med';
+        container.innerHTML += `
+          <div class="step-row">
+            <div class="step-left">
+              <input type="checkbox" onchange="this.closest('.step-row').style.opacity = this.checked ? 0.35 : 1;">
+              <div>
+                <div style="font-weight: 600; font-size: 0.82rem; color: var(--pure-white);">${domain.nextAction}</div>
+                <div style="font-size: 0.7rem; color: var(--text-muted);">${domain.name} • <span style="color:#ddd;">${domain.deadline}</span></div>
+              </div>
+            </div>
+            <div class="step-pill ${priorityClass}">${domain.priority}</div>
+          </div>
+        `;
+      });
+    }
+
+    function renderDomainsGrid() {
+      let container = document.getElementById('domainsGridContainer');
+      container.innerHTML = '';
+      lifeDomains.forEach((domain, idx) => {
+        let score = getDomainScore(domain);
+        container.innerHTML += `
+          <div class="domain-mini-card">
+            <div class="domain-card-header">
+              <span style="color:var(--pure-white);">${domain.name}</span>
+              <button style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.75rem;" onclick="deleteDomain(${idx})" title="Delete">🗑️</button>
+            </div>
+            <div class="domain-vision-quote">"${domain.vision}"</div>
+            <div style="font-size: 0.7rem; color: var(--text-muted);">Habit: <span style="color:#ddd;">${domain.habit}</span></div>
+            <div class="domain-meta-box">
+              <span>Score: <strong>${score}</strong>/10</span>
+              <span style="color:var(--text-muted);">4 Sub-Factors</span>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function openCardConfig(cardId) {
+      let modal = document.getElementById('cardConfigModal');
+      let content = document.getElementById('cardConfigModalContent');
+
+      // Full editor for every database entry
+      content.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px;">
+          <h3 style="font-size: 0.95rem; color: var(--pure-white);">⚙️ Database Editor — ${cardId === 'balance' ? 'Life Balance' : cardId === 'steps' ? 'Next Steps' : cardId === 'domains' ? 'Vision Vault' : 'All Entries'}</h3>
+          <button style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1rem;" onclick="closeCardConfig()">✕</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; max-height: 420px; overflow-y: auto; padding-right: 4px;">
+          ${lifeDomains.map((d, i) => `
+            <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; border: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 8px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                <input type="text" value="${d.name}" onchange="lifeDomains[${i}].name=this.value; renderDashboard();" style="flex:1; background:transparent; border:none; color:var(--pure-white); font-weight:700; font-size:0.85rem; outline:none;">
+                <button style="background:none; border:none; color:#f87171; cursor:pointer; font-size:0.75rem;" onclick="if(confirm('Delete this entry?')){lifeDomains.splice(${i},1); renderDashboard(); openCardConfig('${cardId}');}">🗑️</button>
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div class="form-group" style="margin:0;">
+                  <label style="font-size:0.6rem;">Category</label>
+                  <select onchange="lifeDomains[${i}].category=this.value; renderDashboard();" style="background:rgba(0,0,0,0.4); border:1px solid var(--border-subtle); color:var(--pure-white); border-radius:6px; font-size:0.72rem; padding:4px 6px;">
+                    <option value="Academics" ${d.category==='Academics'?'selected':''}>Academics</option>
+                    <option value="Health" ${d.category==='Health'?'selected':''}>Health</option>
+                    <option value="Creative" ${d.category==='Creative'?'selected':''}>Creative</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label style="font-size:0.6rem;">Priority</label>
+                  <select onchange="lifeDomains[${i}].priority=this.value; renderDashboard();" style="background:rgba(0,0,0,0.4); border:1px solid var(--border-subtle); color:var(--pure-white); border-radius:6px; font-size:0.72rem; padding:4px 6px;">
+                    <option value="High" ${d.priority==='High'?'selected':''}>High</option>
+                    <option value="Medium" ${d.priority==='Medium'?'selected':''}>Medium</option>
+                    <option value="Low" ${d.priority==='Low'?'selected':''}>Low</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                <div style="display:flex; flex-direction:column;"><span style="font-size:0.55rem; color:var(--text-muted);">Consistency</span><input type="number" min="1" max="10" step="0.5" value="${d.sub1}" onchange="lifeDomains[${i}].sub1=parseFloat(this.value)||0; renderDashboard();" style="background:rgba(0,0,0,0.4); border:1px solid var(--border-subtle); color:var(--pure-white); text-align:center; border-radius:6px; font-size:0.7rem; padding:3px;"></div>
+                <div style="display:flex; flex-direction:column;"><span style="font-size:0.55rem; color:var(--text-muted);">Depth</span><input type="number" min="1" max="10" step="0.5" value="${d.sub2}" onchange="lifeDomains[${i}].sub2=parseFloat(this.value)||0; renderDashboard();" style="background:rgba(0,0,0,0.4); border:1px solid var(--border-subtle); color:var(--pure-white); text-align:center; border-radius:6px; font-size:0.7rem; padding:3px;"></div>
+                <div style="display:flex; flex-direction:column;"><span style="font-size:0.55rem; color:var(--text-muted);">Energy</span><input type="number" min="1" max="10" step="0.5" value="${d.sub3}" onchange="lifeDomains[${i}].sub3=parseFloat(this.value)||0; renderDashboard();" style="background:rgba(0,0,0,0.4); border:1px solid var(--border-subtle); color:var(--pure-white); text-align:center; border-radius:6px; font-size:0.7rem; padding:3px;"></div>
+                <div style="display:flex; flex-direction:column;"><span style="font-size:0.55rem; color:var(--text-muted);">Alignment</span><input type="number" min="1" max="10" step="0.5" value="${d.sub4}" onchange="lifeDomains[${i}].sub4=parseFloat(this.value)||0; renderDashboard();" style="background:rgba(0,0,0,0.4); border:1px solid var(--border-subtle); color:var(--pure-white); text-align:center; border-radius:6px; font-size:0.7rem; padding:3px;"></div>
+              </div>
+
+              <div class="form-group" style="margin:0;">
+                <label style="font-size:0.6rem;">Next Action / Milestone</label>
+                <input type="text" value="${d.nextAction||''}" onchange="lifeDomains[${i}].nextAction=this.value; renderDashboard();" style="background:rgba(0,0,0,0.4); border:1px solid var(--border-subtle); color:var(--pure-white); border-radius:6px; font-size:0.75rem; padding:5px 8px;">
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div class="form-group" style="margin:0;">
+                  <label style="font-size:0.6rem;">Deadline</label>
+                  <input type="text" value="${d.deadline||''}" onchange="lifeDomains[${i}].deadline=this.value; renderDashboard();" style="background:rgba(0,0,0,0.4); border:1px solid var(--border-subtle); color:var(--pure-white); border-radius:6px; font-size:0.75rem; padding:5px 8px;">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label style="font-size:0.6rem;">Habit</label>
+                  <input type="text" value="${d.habit||''}" onchange="lifeDomains[${i}].habit=this.value; renderDashboard();" style="background:rgba(0,0,0,0.4); border:1px solid var(--border-subtle); color:var(--pure-white); border-radius:6px; font-size:0.75rem; padding:5px 8px;">
+                </div>
+              </div>
+
+              <div class="form-group" style="margin:0;">
+                <label style="font-size:0.6rem;">Vision Statement</label>
+                <textarea rows="2" onchange="lifeDomains[${i}].vision=this.value; renderDashboard();" style="background:rgba(0,0,0,0.4); border:1px solid var(--border-subtle); color:var(--pure-white); border-radius:6px; font-size:0.75rem; padding:5px 8px; resize:none;">${d.vision||''}</textarea>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="modal-actions" style="margin-top:10px;">
+          <button class="primary-btn" onclick="closeCardConfig()">Done</button>
+        </div>
+      `;
+      modal.classList.add('active');
+    }
+
+    function closeCardConfig() { document.getElementById('cardConfigModal').classList.remove('active'); }
+    function openGlobalAddModal() { document.getElementById('globalAddModal').classList.add('active'); }
+    function closeGlobalAddModal() { document.getElementById('globalAddModal').classList.remove('active'); }
+
+    function saveNewDomainEntry() {
+      let name = document.getElementById('inputNewName').value.trim();
+      let category = document.getElementById('inputNewCategory').value;
+      let sub1 = parseFloat(document.getElementById('inputSub1').value) || 8;
+      let sub2 = parseFloat(document.getElementById('inputSub2').value) || 8;
+      let sub3 = parseFloat(document.getElementById('inputSub3').value) || 8;
+      let sub4 = parseFloat(document.getElementById('inputSub4').value) || 8;
+      let nextAction = document.getElementById('inputNewAction').value.trim() || "Milestone";
+      let deadline = document.getElementById('inputNewDeadline').value.trim() || "Soon";
+      let priority = document.getElementById('inputNewPriority').value;
+      let vision = document.getElementById('inputNewVision').value.trim() || "Long-term mastery.";
+
+      if (!name) { alert("Please enter a name."); return; }
+      lifeDomains.push({ id: Date.now(), name, category, sub1, sub2, sub3, sub4, nextAction, deadline, priority, vision, habit: "Daily core routine" });
+      closeGlobalAddModal();
+      renderDashboard();
+    }
+
+    function deleteDomain(idx) {
+      if (confirm("Delete this entry?")) {
+        lifeDomains.splice(idx, 1);
+        renderDashboard();
+      }
+    }
+
+    function filterTrend(cat) { renderTrendGraph(cat); }
+
+    renderDashboard();
+  </script>
+</body>
+</html>
