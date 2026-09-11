@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customizable 4K Stellar Vision Core</title>
+  <style>
+    :root {
+      --notion-bg: #191919;
+      --gold-black: #2C2220;
+      --vintage-frame: #4F4B47;
+      --spacious-grey: #867B76;
+      --lavender-suede: #B4A79F;
+      --stonewashed-brown: #DCCCCC;
+      --font-stack: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: var(--font-stack); 
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    body {
+      background-color: var(--notion-bg);
+      color: var(--stonewashed-brown);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .starburst-container {
+      position: relative;
+      width: 560px;
+      height: 560px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      perspective: 1600px;
+      z-index: 5;
+      cursor: pointer;
+      transform-style: preserve-3d;
+      will-change: transform;
+    }
+
+    .orbit-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(134, 123, 118, 0.22);
+      box-shadow: 0 0 30px rgba(79, 75, 71, 0.15), inset 0 0 30px rgba(180, 167, 159, 0.05);
+      pointer-events: none;
+      will-change: transform;
+    }
+
+    .orbit-1 {
+      width: 380px;
+      height: 380px;
+      animation: spinIsometric1 18s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+      border-color: rgba(180, 167, 159, 0.4);
+    }
+
+    .orbit-2 {
+      width: 480px;
+      height: 480px;
+      animation: spinIsometric2 26s cubic-bezier(0.37, 0, 0.63, 1) infinite reverse;
+      border-style: dashed;
+      border-color: rgba(134, 123, 118, 0.25);
+    }
+
+    .orbit-3 {
+      width: 280px;
+      height: 280px;
+      animation: spinIsometric3 12s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+      border-color: rgba(220, 204, 192, 0.5);
+    }
+
+    .orbit-4 {
+      width: 540px;
+      height: 540px;
+      animation: spinIsometric4 36s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+      border-color: rgba(79, 75, 71, 0.45);
+    }
+
+    .orbit-1::after {
+      content: '';
+      position: absolute;
+      top: -6px;
+      left: 50%;
+      width: 12px;
+      height: 12px;
+      background: var(--stonewashed-brown);
+      border-radius: 50%;
+      box-shadow: 0 0 20px var(--stonewashed-brown), 0 0 35px var(--lavender-suede), 0 0 50px #ffffff;
+      animation: nodePulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite alternate;
+    }
+
+    .orbit-3::after {
+      content: '';
+      position: absolute;
+      bottom: 14px;
+      right: 14px;
+      width: 10px;
+      height: 10px;
+      background: var(--lavender-suede);
+      border-radius: 50%;
+      box-shadow: 0 0 18px var(--lavender-suede), 0 0 30px var(--stonewashed-brown);
+      animation: nodePulse 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite alternate;
+    }
+
+    .orbit-2::before {
+      content: '';
+      position: absolute;
+      top: 25%;
+      left: 0;
+      width: 8px;
+      height: 8px;
+      background: var(--spacious-grey);
+      border-radius: 50%;
+      box-shadow: 0 0 15px var(--spacious-grey), 0 0 25px var(--stonewashed-brown);
+    }
+
+    @keyframes nodePulse {
+      0% { transform: scale(0.85); opacity: 0.6; }
+      100% { transform: scale(1.3); opacity: 1; filter: brightness(1.35); }
+    }
+
+    @keyframes spinIsometric1 {
+      0% { transform: rotateX(60deg) rotateY(20deg) rotateZ(0deg); }
+      100% { transform: rotateX(60deg) rotateY(20deg) rotateZ(360deg); }
+    }
+
+    @keyframes spinIsometric2 {
+      0% { transform: rotateX(50deg) rotateY(-30deg) rotateZ(0deg); }
+      100% { transform: rotateX(50deg) rotateY(-30deg) rotateZ(360deg); }
+    }
+
+    @keyframes spinIsometric3 {
+      0% { transform: rotateX(70deg) rotateY(10deg) rotateZ(0deg); }
+      100% { transform: rotateX(70deg) rotateY(10deg) rotateZ(-360deg); }
+    }
+
+    @keyframes spinIsometric4 {
+      0% { transform: rotateX(40deg) rotateY(45deg) rotateZ(0deg); }
+      100% { transform: rotateX(40deg) rotateY(45deg) rotateZ(360deg); }
+    }
+
+    .starburst-core {
+      position: relative;
+      background: linear-gradient(135deg, rgba(44, 34, 32, 0.82) 0%, rgba(79, 75, 71, 0.68) 100%);
+      backdrop-filter: blur(32px);
+      -webkit-backdrop-filter: blur(32px);
+      border: 1.5px solid rgba(180, 167, 159, 0.35);
+      border-radius: 30px;
+      padding: 40px;
+      width: 350px;
+      text-align: center;
+      box-shadow: 0 40px 80px rgba(0, 0, 0, 0.85), 
+                  inset 0 0 40px rgba(180, 167, 159, 0.15),
+                  0 0 60px rgba(44, 34, 32, 0.9);
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 10;
+      transform-style: preserve-3d;
+      will-change: transform;
+    }
+
+    .starburst-container:hover .starburst-core {
+      transform: scale(1.04) translateZ(35px);
+      border-color: rgba(220, 204, 192, 0.75);
+      box-shadow: 0 50px 100px rgba(0, 0, 0, 0.95), 
+                  0 0 80px rgba(180, 167, 159, 0.35), 
+                  inset 0 0 50px rgba(180, 167, 159, 0.28);
+    }
+
+    .core-glow-bg {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle, rgba(180, 167, 159, 0.28) 0%, rgba(44, 34, 32, 0) 75%);
+      border-radius: 30px;
+      pointer-events: none;
+      z-index: -2;
+      animation: pulseGlow 5s cubic-bezier(0.4, 0, 0.4, 1) infinite alternate;
+    }
+
+    @keyframes pulseGlow {
+      0% { opacity: 0.45; transform: scale(0.92); }
+      100% { opacity: 1; transform: scale(1.12); filter: brightness(1.3); }
+    }
+
+    /* Very Small Customization Icon Button */
+    .edit-btn {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      opacity: 0.4;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      padding: 4px;
+      z-index: 20;
+    }
+    .edit-btn:hover {
+      opacity: 1;
+      transform: scale(1.15);
+    }
+    .edit-btn svg {
+      width: 13px;
+      height: 13px;
+      fill: var(--lavender-suede);
+      filter: drop-shadow(0 0 4px rgba(180, 167, 159, 0.5));
+    }
+
+    .star-icon {
+      font-size: 1.5rem;
+      display: inline-block;
+      margin-bottom: 14px;
+      color: var(--stonewashed-brown);
+      filter: drop-shadow(0 0 14px rgba(220, 204, 192, 0.9));
+      animation: floatIcon 4s cubic-bezier(0.4, 0, 0.6, 1) infinite alternate;
+    }
+
+    @keyframes floatIcon {
+      0% { transform: translateY(0) scale(1) rotate(0deg); }
+      100% { transform: translateY(-7px) scale(1.08) rotate(12deg); }
+    }
+
+    .core-quote {
+      font-size: 0.94rem;
+      line-height: 1.65;
+      color: var(--stonewashed-brown);
+      font-weight: 600;
+      letter-spacing: -0.2px;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+    }
+
+    .core-author {
+      display: block;
+      margin-top: 14px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--lavender-suede);
+      font-weight: 800;
+      opacity: 0.95;
+      text-shadow: 0 0 10px rgba(180, 167, 159, 0.5);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="starburst-container" id="starContainer">
+    <!-- Multi-layered Isometric Orbit Rings -->
+    <div class="orbit-ring orbit-1"></div>
+    <div class="orbit-ring orbit-2"></div>
+    <div class="orbit-ring orbit-3"></div>
+    <div class="orbit-ring orbit-4"></div>
+
+    <!-- Central 4K Glassy Nucleus -->
+    <div class="starburst-core">
+      <!-- Tiny Edit/Customize Icon Button -->
+      <button class="edit-btn" id="editBtn" title="Customize Text">
+        <svg viewBox="0 0 24 24">
+          <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+        </svg>
+      </button>
+
+      <div class="core-glow-bg"></div>
+      <div class="star-icon">✦</div>
+      <p class="core-quote" id="quoteText">"Vision is not merely seeing what is possible, but engineering the reality of tomorrow through unwavering daily focus."</p>
+      <span class="core-author" id="authorText">Master Command Hub</span>
+    </div>
+  </div>
+
+  <script>
+    // Smooth 3D Parallax Tilt Physics
+    const container = document.getElementById('starContainer');
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight / 2;
+    let currentRotateX = 0;
+    let currentRotateY = 0;
+    let targetRotateX = 0;
+    let targetRotateY = 0;
+
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+
+      const rect = container.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      
+      const x = mouseX - centerX;
+      const y = mouseY - centerY;
+      
+      targetRotateX = (-y / 18);
+      targetRotateY = (x / 18);
+    });
+
+    function animate() {
+      currentRotateX += (targetRotateX - currentRotateX) * 0.08;
+      currentRotateY += (targetRotateY - currentRotateY) * 0.08;
+
+      container.style.transform = `rotateX(${currentRotateX.toFixed(2)}deg) rotateY(${currentRotateY.toFixed(2)}deg) translateZ(10px)`;
+
+      requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('mouseleave', () => {
+      targetRotateX = 0;
+      targetRotateY = 0;
+    });
+
+    animate();
+
+    // Customization Logic via the tiny edit icon
+    const editBtn = document.getElementById('editBtn');
+    const quoteText = document.getElementById('quoteText');
+    const authorText = document.getElementById('authorText');
+
+    editBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const newQuote = prompt("Enter your custom quote/vision:", quoteText.innerText.replace(/^"|"$/g, ''));
+      if (newQuote !== null && newQuote.trim() !== "") {
+        quoteText.innerText = `"${newQuote.trim()}"`;
+      }
+      const newAuthor = prompt("Enter the author/signature:", authorText.innerText);
+      if (newAuthor !== null && newAuthor.trim() !== "") {
+        authorText.innerText = newAuthor.trim();
+      }
+    });
+  </script>
+</body>
+</html>
