@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Horizon - 5-Year Projection</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Outfit:wght@200;300;400;500&display=swap" rel="stylesheet">
+  
+  <style>
+    /* =========================================
+       COLOR PALETTE & VARIABLES
+       ========================================= */
+    :root {
+      --bg-notion: #191919; 
+      --bg-widget: #111112;
+      
+      --rose-imperial: #807878;
+      --rose-glimmer: #E6C2BF;
+      --rose-dust: #F9EBE5;
+      
+      --font-serif: 'Cormorant Garamond', serif;
+      --font-sans: 'Outfit', sans-serif;
+      
+      /* Pro-level easing curve (fast out, slow in) */
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-notion);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: var(--font-sans);
+      color: var(--rose-dust);
+      overflow: hidden; /* Prevent body scroll during animation */
+    }
+
+    /* =========================================
+       TEXTURES & AMBIENT LIGHT
+       ========================================= */
+    .noise-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0.035;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    .ambient-glow {
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(230, 194, 191, 0.08) 0%, rgba(17, 17, 18, 0) 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      transition: opacity 1s var(--ease-out-expo);
+      opacity: 0.5;
+      filter: blur(40px);
+      transform: translate(-50%, -50%);
+    }
+
+    /* =========================================
+       MAIN CONTAINER
+       ========================================= */
+    #widget-container {
+      width: 100%;
+      max-width: 840px;
+      height: 600px;
+      background: rgba(17, 17, 18, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 28px;
+      padding: 50px;
+      position: relative;
+      box-shadow: 
+        0 30px 60px rgba(0, 0, 0, 0.4), 
+        inset 0 1px 0 rgba(230, 194, 191, 0.1),
+        inset 0 -1px 0 rgba(128, 120, 120, 0.1);
+      border: 1px solid rgba(230, 194, 191, 0.05);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 1;
+      transition: border-color 2s ease, box-shadow 2s ease;
+    }
+
+    #widget-container.active-glow {
+      border-color: rgba(230, 194, 191, 0.15);
+      box-shadow: 
+        0 40px 80px rgba(0, 0, 0, 0.6), 
+        0 0 80px rgba(230, 194, 191, 0.05),
+        inset 0 1px 0 rgba(230, 194, 191, 0.2);
+    }
+
+    /* =========================================
+       HEADER
+       ========================================= */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 2;
+      border-bottom: 1px solid rgba(128, 120, 120, 0.15);
+      padding-bottom: 18px;
+      margin-bottom: 35px;
+    }
+
+    .header-title {
+      font-size: 0.7rem;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--rose-imperial);
+      font-weight: 500;
+    }
+
+    .header-year {
+      font-family: var(--font-serif);
+      font-size: 1.3rem;
+      color: var(--rose-glimmer);
+      font-style: italic;
+      font-weight: 400;
+      opacity: 0.8;
+    }
+
+    /* =========================================
+       PHASE 1: LOCKED STATE
+       ========================================= */
+    #locked-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      z-index: 2;
+      transition: opacity 1.2s var(--ease-out-expo), filter 1.2s var(--ease-out-expo), transform 1.2s var(--ease-out-expo);
+    }
+
+    .locked-text {
+      font-family: var(--font-serif);
+      font-size: 2.4rem;
+      color: var(--rose-dust);
+      margin-bottom: 40px;
+      line-height: 1.3;
+      font-style: italic;
+      font-weight: 400;
+      letter-spacing: 0.5px;
+      text-shadow: 0 4px 20px rgba(249, 235, 232, 0.15);
+    }
+
+    .btn-begin {
+      position: relative;
+      background: rgba(128, 120, 120, 0.05);
+      border: 1px solid rgba(230, 194, 191, 0.3);
+      color: var(--rose-glimmer);
+      padding: 14px 36px;
+      border-radius: 40px;
+      font-family: var(--font-sans);
+      font-size: 0.75rem;
+      letter-spacing: 3px;
+      cursor: pointer;
+      overflow: hidden;
+      transition: all 0.5s var(--ease-out-expo);
+      text-transform: uppercase;
+      backdrop-filter: blur(5px);
+    }
+
+    .btn-begin::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%; width: 50%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(249, 235, 232, 0.2), transparent);
+      transform: skewX(-20deg);
+      transition: left 0.7s var(--ease-out-expo);
+    }
+
+    .btn-begin:hover {
+      background: rgba(230, 194, 191, 0.1);
+      border-color: var(--rose-glimmer);
+      box-shadow: 0 0 30px rgba(230, 194, 191, 0.15);
+      transform: translateY(-2px) scale(1.02);
+      color: var(--rose-dust);
+    }
+
+    .btn-begin:hover::before {
+      left: 150%;
+    }
+
+    /* =========================================
+       PHASE 2 & 3: REVEAL & INTERACTIVE
+       ========================================= */
+    #vision-sequence {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      z-index: 2;
+      position: relative;
+      padding-right: 15px;
+      overflow-y: auto; /* FIX: Enabled scrolling immediately */
+      scroll-behavior: smooth; /* Native smooth scrolling */
+    }
+
+    .statement-block {
+      margin-bottom: 40px;
+      display: none;
+    }
+
+    .statement-block.visible { display: block; }
+
+    /* Cinematic Blur Fades */
+    .question {
+      font-family: var(--font-serif);
+      font-size: 2rem;
+      color: var(--rose-glimmer);
+      margin-bottom: 12px;
+      font-style: italic;
+      font-weight: 400;
+      letter-spacing: 0.5px;
+      opacity: 0;
+      transform: translateY(15px);
+      filter: blur(10px);
+      transition: opacity 1.2s var(--ease-out-expo), transform 1.2s var(--ease-out-expo), filter 1.2s var(--ease-out-expo), text-shadow 0.4s ease;
+      cursor: text;
+      outline: none;
+    }
+    
+    .question.revealed {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0px);
+    }
+
+    .question:focus { text-shadow: 0 0 25px rgba(230, 194, 191, 0.5); }
+
+    .answer {
+      font-size: 1.15rem;
+      color: var(--rose-dust);
+      line-height: 1.7;
+      font-weight: 300;
+      opacity: 0;
+      transform: translateY(10px);
+      filter: blur(8px);
+      transition: opacity 1.2s var(--ease-out-expo), transform 1.2s var(--ease-out-expo), filter 1.2s var(--ease-out-expo), border-color 0.4s ease;
+      cursor: text;
+      outline: none;
+      padding-left: 20px;
+      border-left: 1px solid rgba(230, 194, 191, 0.2);
+    }
+
+    .answer.revealed {
+      opacity: 0.9;
+      transform: translateY(0);
+      filter: blur(0px);
+    }
+
+    .answer:focus {
+      border-left: 2px solid var(--rose-glimmer);
+      background: linear-gradient(90deg, rgba(230, 194, 191, 0.05), transparent);
+    }
+
+    /* Dimming logic for stack */
+    .statement-block.dimmed .question,
+    .statement-block.dimmed .answer {
+      opacity: 0.25;
+      transform: scale(0.98);
+      filter: blur(1px);
+    }
+
+    .statement-block:hover.dimmed .question, 
+    .statement-block:hover.dimmed .answer,
+    .statement-block.interactive .question,
+    .statement-block.interactive .answer {
+      opacity: 1 !important;
+      transform: scale(1) !important;
+      filter: blur(0px) !important;
+    }
+
+    /* Make It Real Panel */
+    .make-it-real {
+      margin-top: 25px;
+      padding: 20px;
+      background: rgba(128, 120, 120, 0.04);
+      border-radius: 16px;
+      border: 1px solid rgba(128, 120, 120, 0.1);
+      display: none;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.8s var(--ease-out-expo);
+    }
+
+    .statement-block.interactive .make-it-real {
+      display: grid;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .action-col h4 {
+      font-size: 0.65rem;
+      color: var(--rose-imperial);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .action-col p {
+      font-size: 0.9rem;
+      color: var(--rose-dust);
+      opacity: 0.8;
+      outline: none;
+      font-weight: 300;
+      line-height: 1.5;
+      transition: color 0.3s ease, opacity 0.3s ease;
+    }
+
+    .action-col p:focus {
+      color: var(--rose-glimmer);
+      opacity: 1;
+    }
+
+    /* =========================================
+       CONTROLS & PROGRESS
+       ========================================= */
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+      padding-top: 25px;
+      z-index: 2;
+    }
+
+    .progress-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      padding-right: 30px;
+    }
+
+    .node {
+      height: 4px;
+      width: 4px;
+      border-radius: 50%;
+      background: rgba(128, 120, 120, 0.4);
+      transition: all 0.6s var(--ease-out-expo);
+    }
+
+    .node.active {
+      background: var(--rose-glimmer);
+      box-shadow: 0 0 12px var(--rose-glimmer);
+      transform: scale(2);
+    }
+
+    .line {
+      flex: 1;
+      height: 1px;
+      background: rgba(128, 120, 120, 0.15);
+    }
+
+    .btn-next, .btn-replay {
+      background: transparent;
+      border: none;
+      color: var(--rose-glimmer);
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      cursor: pointer;
+      display: none;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+      font-weight: 400;
+    }
+    
+    .btn-next:hover, .btn-replay:hover {
+      text-shadow: 0 0 15px rgba(230, 194, 191, 0.8);
+      transform: translateX(3px);
+    }
+    .btn-replay:hover { transform: rotate(-10deg) scale(1.05); }
+
+    /* Custom Scrollbar for Pro Vibe */
+    #vision-sequence::-webkit-scrollbar { width: 4px; }
+    #vision-sequence::-webkit-scrollbar-track { background: transparent; }
+    #vision-sequence::-webkit-scrollbar-thumb { background: rgba(128, 120, 120, 0.3); border-radius: 10px; }
+    #vision-sequence::-webkit-scrollbar-thumb:hover { background: var(--rose-imperial); }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Light tracking mouse -->
+  <div class="ambient-glow" id="glow"></div>
+  
+  <div id="widget-container">
+    <div class="noise-overlay"></div>
+    
+    <div class="header">
+      <div class="header-title">Five-Year Vision</div>
+      <div class="header-year" id="dynamic-year">2031</div>
+    </div>
+
+    <div id="locked-state">
+      <div class="locked-text">Not everything is clear yet.<br>Begin when you're ready.</div>
+      <button class="btn-begin" onclick="startSequence()">Step Into The Horizon</button>
+    </div>
+
+    <div id="vision-sequence"></div>
+
+    <div class="controls" id="controls" style="display: none;">
+      <div class="progress-bar" id="progress-bar"></div>
+      <button class="btn-next" id="btn-next" onclick="advanceSequence()">Next &rarr;</button>
+      <button class="btn-replay" id="btn-replay" onclick="resetSequence()">&#8635; Replay</button>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('dynamic-year').innerText = new Date().getFullYear() + 5;
+
+    // Ambient mouse glow logic
+    const glow = document.getElementById('glow');
+    document.addEventListener('mousemove', (e) => {
+      glow.style.left = e.pageX + 'px';
+      glow.style.top = e.pageY + 'px';
+    });
+
+    const defaultData = [
+      { id: "v1", question: "Where do I live?", answer: "Somewhere I chose deliberately, not just where I ended up.", today: "Research 3 potential tech hubs.", month: "Determine budget requirements.", year: "Save first relocation fund milestone." },
+      { id: "v2", question: "What am I doing?", answer: "Building things for a living, in some form — whether that's a company, a role, or ongoing independent projects.", today: "Draft new designs for GRITandGLITCH.", month: "Launch a new collection.", year: "Achieve consistent freelance/independent income." },
+      { id: "v3", question: "What am I studying / working on?", answer: "Whatever the natural extension of computer science + real products looks like by then.", today: "Code 50 lines of Python or refine a 3D model in Blender.", month: "Master backend SQL integrations.", year: "Ace my O Levels while maintaining technical depth." },
+      { id: "v4", question: "What does a normal day look like?", answer: "Focused mornings, real conversations in the afternoon, something built by evening.", today: "Execute my 200 crunches and rooftop session.", month: "Lock in an 8-to-2 school and afternoon deep work routine.", year: "Make the schedule automatic and unbreakable." },
+      { id: "v5", question: "Who am I surrounded by?", answer: "People who build things too, not just people who talk about building things.", today: "Reach out to one creator or developer.", month: "Join a focused Discord or local tech group.", year: "Collaborate on a joint project." },
+      { id: "v6", question: "What skills do I have?", answer: "Genuine technical depth, not surface-level familiarity. The ability to finish, not just start.", today: "Troubleshoot one specific bug without using AI shortcuts.", month: "Complete a full AI upscaling/generation pipeline.", year: "Master hardware integration with Arduino." },
+      { id: "v7", question: "How financially independent am I?", answer: "Fully — no longer a question anyone else has to think about.", today: "Track today's expenses and income.", month: "Read one book on financial systems.", year: "Set up a diversified savings/investment framework." },
+      { id: "v8", question: "What have I built?", answer: "More than one real thing. Evidence, not promises.", today: "Document today's progress on my current build.", month: "Finish the MVP for my latest software idea.", year: "Maintain a public, visible body of work." },
+      { id: "v9", question: "What am I proud of?", answer: "That I kept going on the weeks it felt pointless.", today: "Show up even if I only hit 100 crunches instead of 200.", month: "Review my 'done' list and celebrate consistency.", year: "Look back at 365 days of not quitting." }
+    ];
+
+    let visionData = JSON.parse(localStorage.getItem('horizonVisionData')) || defaultData;
+    let currentIndex = 0;
+    const sequenceContainer = document.getElementById('vision-sequence');
+    const progressBar = document.getElementById('progress-bar');
+    const btnNext = document.getElementById('btn-next');
+    const btnReplay = document.getElementById('btn-replay');
+
+    function initDOM() {
+      sequenceContainer.innerHTML = '';
+      progressBar.innerHTML = '';
+      visionData.forEach((item, index) => {
+        const block = document.createElement('div');
+        block.className = 'statement-block';
+        block.id = `block-${index}`;
+        block.innerHTML = `
+          <div class="question" contenteditable="false" data-id="${item.id}" data-field="question">${item.question}</div>
+          <div class="answer" contenteditable="false" data-id="${item.id}" data-field="answer">${item.answer}</div>
+          <div class="make-it-real">
+            <div class="action-col"><h4>Today</h4><p contenteditable="false" data-id="${item.id}" data-field="today">${item.today}</p></div>
+            <div class="action-col"><h4>This Month</h4><p contenteditable="false" data-id="${item.id}" data-field="month">${item.month}</p></div>
+            <div class="action-col"><h4>This Year</h4><p contenteditable="false" data-id="${item.id}" data-field="year">${item.year}</p></div>
+          </div>
+        `;
+        sequenceContainer.appendChild(block);
+        
+        if(index < visionData.length) {
+          const node = document.createElement('div');
+          node.className = 'node';
+          node.id = `node-${index}`;
+          progressBar.appendChild(node);
+          if(index < visionData.length - 1) {
+            const line = document.createElement('div');
+            line.className = 'line';
+            progressBar.appendChild(line);
+          }
+        }
+      });
+      document.querySelectorAll('[contenteditable]').forEach(el => el.addEventListener('blur', saveEdits));
+    }
+
+    function saveEdits(e) {
+      const id = e.target.getAttribute('data-id');
+      const field = e.target.getAttribute('data-field');
+      const dataIndex = visionData.findIndex(item => item.id === id);
+      if(dataIndex > -1) {
+        visionData[dataIndex][field] = e.target.innerText;
+        localStorage.setItem('horizonVisionData', JSON.stringify(visionData));
+      }
+    }
+
+    function startSequence() {
+      const locked = document.getElementById('locked-state');
+      locked.style.transform = 'scale(0.95)';
+      locked.style.filter = 'blur(10px)';
+      locked.style.opacity = '0';
+      
+      setTimeout(() => {
+        locked.style.display = 'none';
+        sequenceContainer.style.display = 'flex';
+        document.getElementById('controls').style.display = 'flex';
+        btnNext.style.display = 'block';
+        initDOM();
+        showBlock(0);
+      }, 900);
+    }
+
+    function showBlock(index) {
+      if (index > 0) document.getElementById(`block-${index - 1}`).classList.add('dimmed');
+      
+      const block = document.getElementById(`block-${index}`);
+      block.classList.add('visible');
+      document.getElementById(`node-${index}`).classList.add('active');
+
+      // FIX: Improved auto-scroll. Wait slightly for display:block to calculate height, then scroll.
+      setTimeout(() => {
+        sequenceContainer.scrollTo({
+          top: sequenceContainer.scrollHeight,
+          behavior: 'smooth'
+        });
+      }, 50);
+
+      const question = block.querySelector('.question');
+      const answer = block.querySelector('.answer');
+      
+      setTimeout(() => question.classList.add('revealed'), 100);
+      setTimeout(() => answer.classList.add('revealed'), 1000);
+
+      if(index === visionData.length - 1) {
+        setTimeout(activateInteractivePhase, 2000);
+      }
+    }
+
+    function advanceSequence() {
+      if (currentIndex < visionData.length - 1) {
+        currentIndex++;
+        showBlock(currentIndex);
+      }
+    }
+
+    function activateInteractivePhase() {
+      btnNext.style.display = 'none';
+      btnReplay.style.display = 'block';
+      document.getElementById('widget-container').classList.add('active-glow');
+      
+      const blocks = document.querySelectorAll('.statement-block');
+      blocks.forEach((block, idx) => {
+        block.classList.remove('dimmed');
+        setTimeout(() => block.classList.add('interactive'), idx * 150);
+      });
+      document.querySelectorAll('[contenteditable="false"]').forEach(el => el.setAttribute('contenteditable', 'true'));
+    }
+
+    function resetSequence() {
+      currentIndex = 0;
+      document.getElementById('widget-container').classList.remove('active-glow');
+      btnReplay.style.display = 'none';
+      btnNext.style.display = 'block';
+      initDOM();
+      showBlock(0);
+      sequenceContainer.scrollTo(0, 0);
+    }
+  </script>
+</body>
+</html>
