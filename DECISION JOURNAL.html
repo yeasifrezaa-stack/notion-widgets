@@ -1,0 +1,2080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Decision Journal — Sealed Forecast Archive</title>
+  
+  <!-- Typography Options -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       COLOR PALETTE & CSS VARIABLES
+       ========================================================================== */
+    :root {
+      --bg-notion: #191919;
+      --color-bib: #16131F;
+      --color-mh: #F0D9E4;
+      --color-dec: #C1A0AC;
+      --color-ff: #4A3F4B;
+      --color-ms: #806C79;
+      
+      --glass-bg: rgba(74, 63, 75, 0.22);
+      --glass-border: rgba(193, 160, 172, 0.18);
+      --glass-glow: rgba(240, 217, 228, 0.12);
+      
+      --font-serif: 'Cormorant Garamond', Georgia, serif;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --ease-fluid: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Enforce Selected Font Across Entire Widget Elements */
+    body, input, select, textarea, button, p, span, div, td, th, label, h1, h2, h3, h4, h5, h6, option {
+      font-family: var(--font-sans) !important;
+    }
+
+    .font-serif-text {
+      font-family: var(--font-serif) !important;
+    }
+
+    html, body {
+      background-color: var(--bg-notion) !important;
+      color: var(--color-mh);
+      min-height: 100vh;
+      width: 100%;
+    }
+
+    body {
+      display: block;
+      padding: 0;
+      margin: 0;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* ==========================================================================
+       MAIN JOURNAL CONTAINER WIDGET
+       ========================================================================== */
+    .journal-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 100%;
+      min-height: 100vh;
+      background: rgba(22, 19, 31, 0.95);
+      border: 1px solid var(--glass-border);
+      border-radius: 0;
+      backdrop-filter: blur(32px);
+      -webkit-backdrop-filter: blur(32px);
+      padding: 24px 20px;
+      z-index: 1;
+      overflow: hidden;
+      transition: border-color 0.4s var(--ease-fluid), box-shadow 0.4s var(--ease-fluid);
+      animation: journalEntrance 1s var(--ease-fluid) forwards, journalFloat 8s ease-in-out infinite alternate;
+    }
+
+    @keyframes journalEntrance {
+      from { opacity: 0; transform: translateY(40px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes journalFloat {
+      0% { 
+        transform: translateY(0); 
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8), 0 0 60px rgba(193, 160, 172, 0.1), inset 0 0 20px rgba(240, 217, 228, 0.15); 
+      }
+      100% { 
+        transform: translateY(-8px); 
+        box-shadow: 0 40px 90px rgba(0, 0, 0, 0.9), 0 0 90px rgba(193, 160, 172, 0.25), inset 0 0 35px rgba(240, 217, 228, 0.25); 
+      }
+    }
+
+    .journal-wrapper::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--color-dec), var(--color-mh), var(--color-dec), transparent);
+      opacity: 0.8;
+      box-shadow: 0 0 15px var(--color-mh);
+      animation: shimmerBorder 4s infinite ease-in-out;
+    }
+
+    @keyframes shimmerBorder {
+      0%, 100% { opacity: 0.4; transform: translateX(-40%); }
+      50% { opacity: 1; transform: translateX(40%); box-shadow: 0 0 25px var(--color-mh); }
+    }
+
+    /* Header Section */
+    .journal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+      padding-bottom: 22px;
+      border-bottom: 1px dashed rgba(193, 160, 172, 0.3);
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .header-left .title-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 6px;
+    }
+
+    .header-left .seal-icon-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--color-ff), var(--color-bib));
+      border: 1px solid var(--color-dec);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      box-shadow: 0 0 20px rgba(193, 160, 172, 0.35);
+      animation: sealPulse 2s infinite alternate ease-in-out;
+    }
+
+    @keyframes sealPulse {
+      0% { box-shadow: 0 0 10px rgba(193, 160, 172, 0.4); transform: scale(0.97) rotate(0deg); }
+      100% { box-shadow: 0 0 35px rgba(240, 217, 228, 0.8); transform: scale(1.08) rotate(6deg); border-color: var(--color-mh); }
+    }
+
+    .header-left h1 {
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: var(--color-mh);
+      letter-spacing: 0.02em;
+      text-shadow: 0 0 20px rgba(240, 217, 228, 0.4), 0 2px 12px rgba(0,0,0,0.8);
+      animation: textGlow 4s infinite alternate;
+    }
+
+    @keyframes textGlow {
+      from { text-shadow: 0 0 15px rgba(240, 217, 228, 0.3), 0 2px 10px rgba(0,0,0,0.8); }
+      to { text-shadow: 0 0 30px rgba(240, 217, 228, 0.7), 0 2px 15px rgba(0,0,0,0.9); }
+    }
+
+    .header-left .subtitle {
+      font-size: 0.92rem;
+      color: var(--color-ms);
+      font-style: italic;
+      letter-spacing: 0.01em;
+    }
+
+    /* Stat Pills Header */
+    .header-stats {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .stat-pill {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      padding: 10px 18px;
+      border-radius: 14px;
+      text-align: right;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2), 0 0 10px rgba(193, 160, 172, 0.05);
+      transition: all 0.35s var(--ease-fluid);
+      position: relative;
+      overflow: hidden;
+      animation: pillBreathe 5s infinite alternate;
+    }
+
+    @keyframes pillBreathe {
+      from { box-shadow: 0 4px 15px rgba(0,0,0,0.2), 0 0 5px rgba(193,160,172,0.05); }
+      to { box-shadow: 0 4px 20px rgba(0,0,0,0.3), 0 0 20px rgba(193,160,172,0.15); }
+    }
+
+    .stat-pill:hover {
+      transform: translateY(-4px) scale(1.04);
+      border-color: var(--color-dec);
+      background: rgba(193, 160, 172, 0.1);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 25px rgba(240, 217, 228, 0.4);
+    }
+
+    .stat-pill .label {
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--color-ms);
+      display: block;
+      margin-bottom: 2px;
+      font-weight: 600;
+    }
+
+    .stat-pill .value {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--color-mh);
+      text-shadow: 0 0 10px rgba(240, 217, 228, 0.3);
+    }
+
+    .stat-pill.highlight .value {
+      color: #ffd700;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+      animation: goldGlow 2s infinite alternate;
+    }
+
+    @keyframes goldGlow {
+      from { text-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
+      to { text-shadow: 0 0 30px rgba(255, 215, 0, 0.9); }
+    }
+
+    /* Metadata Strip */
+    .metadata-strip {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(16, 13, 23, 0.88);
+      border: 1px solid rgba(193, 160, 172, 0.25);
+      padding: 12px 24px;
+      border-radius: 14px;
+      margin-bottom: 24px;
+      font-size: 0.73rem;
+      text-transform: uppercase;
+      letter-spacing: 0.11em;
+      color: var(--color-ms);
+      gap: 15px;
+      flex-wrap: wrap;
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.6), 0 0 15px rgba(193, 160, 172, 0.1);
+    }
+
+    .metadata-strip strong {
+      color: var(--color-mh);
+      font-weight: 600;
+      margin-left: 4px;
+      text-shadow: 0 0 8px rgba(240, 217, 228, 0.4);
+    }
+
+    /* Font Selector Control in Metadata Strip */
+    .font-selector-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .font-selector-wrapper select {
+      background: rgba(74, 63, 75, 0.4);
+      border: 1px solid var(--glass-border);
+      color: var(--color-mh);
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      outline: none;
+    }
+
+    /* Rules Banner Carousel */
+    .rules-banner {
+      background: radial-gradient(ellipse at top, rgba(74, 63, 75, 0.5), var(--color-bib));
+      border: 1px solid var(--color-dec);
+      border-radius: 18px;
+      padding: 20px 26px;
+      margin-bottom: 28px;
+      position: relative;
+      box-shadow: inset 0 0 35px rgba(0,0,0,0.8), 0 0 25px rgba(193, 160, 172, 0.2);
+      overflow: hidden;
+      transition: transform 0.3s var(--ease-fluid);
+      animation: bannerPulse 4s infinite alternate;
+    }
+
+    @keyframes bannerPulse {
+      from { box-shadow: inset 0 0 30px rgba(0,0,0,0.7), 0 0 15px rgba(193, 160, 172, 0.15); }
+      to { box-shadow: inset 0 0 45px rgba(0,0,0,0.9), 0 0 35px rgba(193, 160, 172, 0.35); }
+    }
+
+    .rules-banner-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+
+    .rules-banner-header h3 {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--color-dec);
+      font-weight: 700;
+      text-shadow: 0 0 8px rgba(193, 160, 172, 0.5);
+    }
+
+    .rule-banner-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .rule-item-quote {
+      font-size: 1.2rem;
+      font-style: italic;
+      color: var(--color-mh);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      line-height: 1.45;
+      text-shadow: 0 0 12px rgba(240, 217, 228, 0.3);
+    }
+
+    .rule-context {
+      font-size: 0.75rem;
+      color: var(--color-ms);
+      margin-top: 6px;
+    }
+
+    /* Controls Strip & Filter Pills */
+    .controls-strip {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .view-tabs {
+      display: flex;
+      background: rgba(16, 13, 23, 0.92);
+      border: 1px solid var(--glass-border);
+      padding: 4px;
+      border-radius: 14px;
+      gap: 4px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 10px rgba(193,160,172,0.1);
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--color-ms);
+      padding: 10px 22px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s var(--ease-fluid);
+    }
+
+    .tab-btn.active, .tab-btn:hover {
+      color: var(--color-mh);
+      background: var(--color-ff);
+      box-shadow: 0 0 20px rgba(240, 217, 228, 0.35);
+      text-shadow: 0 0 8px rgba(240, 217, 228, 0.5);
+    }
+
+    .category-filter-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 22px;
+      align-items: center;
+    }
+
+    .filter-chip {
+      background: rgba(16, 13, 23, 0.7);
+      border: 1px solid var(--glass-border);
+      color: var(--color-ms);
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s var(--ease-fluid);
+    }
+
+    .filter-chip.active, .filter-chip:hover {
+      border-color: var(--color-dec);
+      color: var(--color-mh);
+      background: rgba(193, 160, 172, 0.25);
+      box-shadow: 0 0 15px rgba(240, 217, 228, 0.3);
+      text-shadow: 0 0 5px rgba(240, 217, 228, 0.4);
+    }
+
+    .action-group {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--color-ff), var(--color-bib));
+      border: 1px solid var(--color-dec);
+      color: var(--color-mh);
+      padding: 11px 24px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 15px rgba(193, 160, 172, 0.2);
+      transition: all 0.35s var(--ease-fluid);
+      animation: btnPulse 3s infinite alternate;
+    }
+
+    @keyframes btnPulse {
+      from { box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 10px rgba(240, 217, 228, 0.15); }
+      to { box-shadow: 0 4px 25px rgba(0,0,0,0.7), 0 0 25px rgba(240, 217, 228, 0.45); }
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, var(--color-dec), var(--color-ff));
+      box-shadow: 0 8px 30px rgba(0,0,0,0.6), 0 0 35px rgba(240, 217, 228, 0.6);
+      transform: translateY(-2px) scale(1.03);
+      text-shadow: 0 0 10px rgba(255,255,255,0.4);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--glass-border);
+      color: var(--color-dec);
+      padding: 11px 20px;
+      border-radius: 12px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.3s var(--ease-fluid);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(193, 160, 172, 0.15);
+      border-color: var(--color-mh);
+      color: var(--color-mh);
+      transform: translateY(-1px);
+      box-shadow: 0 0 20px rgba(193, 160, 172, 0.3);
+      text-shadow: 0 0 8px rgba(240, 217, 228, 0.4);
+    }
+
+    /* 3D Page View Perspective */
+    .view-perspective {
+      perspective: 1400px;
+      min-height: 520px;
+    }
+
+    .page-content {
+      transform-style: preserve-3d;
+      transition: transform 0.45s var(--ease-fluid), opacity 0.35s ease, filter 0.35s ease;
+    }
+
+    .page-content.turning {
+      transform: rotateY(-90deg) scale(0.94);
+      opacity: 0;
+      filter: blur(8px);
+    }
+
+    /* Cards Grid */
+    .decisions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    /* Cards */
+    .decision-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 26px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(20px);
+      transition: transform 0.4s var(--ease-fluid), border-color 0.4s var(--ease-fluid), box-shadow 0.4s var(--ease-fluid);
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.4), 0 0 15px rgba(193, 160, 172, 0.08);
+      animation: cardEntrance 0.6s var(--ease-bounce) forwards;
+      opacity: 0;
+    }
+
+    @keyframes cardEntrance {
+      from { opacity: 0; transform: translateY(35px) scale(0.9); filter: blur(5px); }
+      to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+    }
+
+    .decision-card.removing {
+      animation: cardExit 0.45s var(--ease-fluid) forwards !important;
+    }
+
+    @keyframes cardExit {
+      to { opacity: 0; transform: scale(0.8) translateY(-30px); filter: blur(12px); }
+    }
+
+    .decision-card:hover {
+      transform: translateY(-8px) scale(1.03);
+      border-color: rgba(240, 217, 228, 0.6);
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7), 0 0 40px rgba(240, 217, 228, 0.4), inset 0 0 20px rgba(240, 217, 228, 0.15);
+    }
+
+    .decision-card.due-card {
+      border-color: #ffd700;
+      box-shadow: 0 0 35px rgba(255, 215, 0, 0.35);
+      animation: cardPulse 2.5s infinite alternate ease-in-out;
+    }
+
+    @keyframes cardPulse {
+      0% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.25), inset 0 0 10px rgba(255,215,0,0.1); border-color: rgba(255,215,0,0.5); }
+      100% { box-shadow: 0 0 45px rgba(255, 215, 0, 0.6), inset 0 0 25px rgba(255,215,0,0.3); border-color: rgba(255,215,0,1); transform: scale(1.01); }
+    }
+    
+    .decision-card.due-card:hover {
+      transform: translateY(-8px) scale(1.03);
+      box-shadow: 0 25px 50px rgba(0,0,0,0.8), 0 0 60px rgba(255, 215, 0, 0.7), inset 0 0 30px rgba(255,215,0,0.4);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .category-badge {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 4px 11px;
+      border-radius: 20px;
+      background: rgba(16, 13, 23, 0.75);
+      border: 1px solid var(--glass-border);
+      color: var(--color-dec);
+      font-weight: 600;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-badge {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.4);
+    }
+
+    .status-badge.sealed {
+      background: rgba(74, 63, 75, 0.85);
+      color: var(--color-mh);
+      border: 1px solid var(--color-dec);
+      text-shadow: 0 0 8px rgba(240,217,228,0.5);
+    }
+
+    .status-badge.due {
+      background: #ffd700;
+      color: #16131F;
+      font-weight: 800;
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+    }
+
+    .status-badge.archived {
+      background: rgba(193, 160, 172, 0.22);
+      color: var(--color-mh);
+      border: 1px solid var(--color-dec);
+    }
+
+    .btn-remove {
+      background: transparent;
+      border: none;
+      color: var(--color-ms);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.92rem;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .btn-remove:hover {
+      background: rgba(220, 53, 69, 0.4);
+      color: #ffbaba;
+      transform: scale(1.2) rotate(90deg);
+      box-shadow: 0 0 15px rgba(220, 53, 69, 0.6);
+    }
+
+    .card-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      line-height: 1.38;
+      color: var(--color-mh);
+      margin-bottom: 16px;
+      text-shadow: 0 0 8px rgba(240, 217, 228, 0.2);
+    }
+
+    /* Redacted Sealed Box */
+    .sealed-box {
+      background: rgba(16, 13, 23, 0.9);
+      border: 1px dashed var(--color-dec);
+      border-radius: 14px;
+      padding: 18px;
+      position: relative;
+      margin-bottom: 16px;
+      text-align: center;
+      box-shadow: inset 0 2px 15px rgba(0,0,0,0.8), 0 0 10px rgba(193, 160, 172, 0.15);
+    }
+
+    .blurred-lines {
+      filter: blur(5px);
+      user-select: none;
+      opacity: 0.35;
+      font-size: 0.8rem;
+      color: var(--color-ms);
+      margin-bottom: 8px;
+      letter-spacing: 0.1em;
+      animation: blurPulse 3s infinite alternate;
+    }
+
+    @keyframes blurPulse {
+      from { filter: blur(4px); opacity: 0.3; }
+      to { filter: blur(6px); opacity: 0.5; }
+    }
+
+    .seal-watermark {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--color-dec);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-shadow: 0 0 10px rgba(193,160,172,0.4);
+    }
+
+    /* Archived Box */
+    .archived-box {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      background: rgba(16, 13, 23, 0.7);
+      padding: 16px;
+      border-radius: 14px;
+      margin-bottom: 16px;
+      font-size: 0.8rem;
+      border: 1px solid var(--glass-border);
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.6);
+    }
+
+    .archived-col {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .archived-col .col-label {
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      color: var(--color-ms);
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+
+    .archived-col .col-text {
+      color: var(--color-mh);
+      line-height: 1.38;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 14px;
+      border-top: 1px solid rgba(193, 160, 172, 0.2);
+      font-size: 0.73rem;
+      color: var(--color-ms);
+    }
+
+    .calibration-tag {
+      font-size: 0.63rem;
+      font-weight: 700;
+      padding: 4px 9px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+
+    .calibration-tag.overconfident { background: rgba(220, 53, 69, 0.25); color: #ff8e8e; border: 1px solid #dc3545; box-shadow: 0 0 12px rgba(220,53,69,0.3); }
+    .calibration-tag.calibrated { background: rgba(40, 167, 69, 0.25); color: #81c784; border: 1px solid #28a745; box-shadow: 0 0 12px rgba(40,167,69,0.3); }
+    .calibration-tag.honest { background: rgba(255, 193, 7, 0.25); color: #ffd54f; border: 1px solid #ffc107; box-shadow: 0 0 12px rgba(255,193,7,0.3); }
+
+    /* Timeline Section */
+    .timeline-container {
+      position: relative;
+      padding-left: 36px;
+    }
+
+    .timeline-container::before {
+      content: '';
+      position: absolute;
+      left: 14px;
+      top: 10px;
+      bottom: 10px;
+      width: 2px;
+      background: linear-gradient(180deg, var(--color-dec), var(--color-ff), transparent);
+      box-shadow: 0 0 10px var(--color-dec);
+    }
+
+    .timeline-node {
+      position: relative;
+      margin-bottom: 24px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 20px 24px;
+      transition: all 0.4s var(--ease-fluid);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4), 0 0 15px rgba(193,160,172,0.1);
+      animation: timelineEntrance 0.6s var(--ease-bounce) forwards;
+      opacity: 0;
+      transform-origin: left;
+    }
+    
+    @keyframes timelineEntrance {
+      from { opacity: 0; transform: translateX(-30px) scale(0.95); }
+      to { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
+    .timeline-node:hover {
+      border-color: rgba(240,217,228,0.7);
+      transform: translateX(10px) scale(1.02);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.6), 0 0 30px rgba(240, 217, 228, 0.3);
+    }
+
+    .timeline-node::before {
+      content: '';
+      position: absolute;
+      left: -30px;
+      top: 24px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--color-dec);
+      border: 3px solid var(--color-bib);
+      box-shadow: 0 0 15px var(--color-dec), 0 0 25px var(--color-mh);
+      transition: all 0.4s var(--ease-bounce);
+      animation: nodePulse 2s infinite alternate;
+    }
+    
+    @keyframes nodePulse {
+      from { box-shadow: 0 0 10px var(--color-dec); }
+      to { box-shadow: 0 0 25px var(--color-mh); }
+    }
+
+    .timeline-node:hover::before {
+      transform: scale(1.5);
+      background: var(--color-mh);
+      border-color: var(--color-ff);
+      box-shadow: 0 0 35px var(--color-mh), 0 0 50px rgba(255,255,255,0.6);
+    }
+
+    /* Analytics Dashboard & Dynamic Summaries */
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.25fr;
+      gap: 24px;
+      animation: fadeUp 0.6s var(--ease-fluid) forwards;
+    }
+    
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .analytics-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 22px;
+      padding: 30px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.4), 0 0 20px rgba(193, 160, 172, 0.15);
+      transition: transform 0.4s, box-shadow 0.4s;
+    }
+    
+    .analytics-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 35px rgba(240, 217, 228, 0.3);
+      border-color: rgba(240,217,228,0.4);
+    }
+
+    .analytics-card h3 {
+      font-size: 1.4rem;
+      color: var(--color-mh);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-shadow: 0 0 10px rgba(240,217,228,0.4);
+    }
+
+    .grade-display-box {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      background: rgba(16, 13, 23, 0.8);
+      border: 1px solid var(--color-dec);
+      border-radius: 18px;
+      padding: 22px;
+      margin-bottom: 22px;
+      box-shadow: inset 0 2px 15px rgba(0,0,0,0.7), 0 0 20px rgba(193,160,172,0.15);
+    }
+
+    .grade-circle {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--color-ff), var(--color-bib));
+      border: 2px solid var(--color-dec);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--color-mh);
+      box-shadow: 0 0 30px rgba(193, 160, 172, 0.5), inset 0 0 15px rgba(240,217,228,0.3);
+      flex-shrink: 0;
+      animation: sealPulse 2.5s infinite alternate ease-in-out;
+      text-shadow: 0 0 15px rgba(255,255,255,0.5);
+    }
+
+    .summary-quote-box {
+      background: rgba(16, 13, 23, 0.88);
+      border-left: 3px solid var(--color-dec);
+      padding: 22px 24px;
+      border-radius: 0 16px 16px 0;
+      font-size: 1.08rem;
+      font-style: italic;
+      line-height: 1.7;
+      color: var(--color-mh);
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 0 15px rgba(193, 160, 172, 0.1);
+      position: relative;
+    }
+
+    .summary-quote-box::before {
+      content: '“';
+      position: absolute;
+      top: -10px;
+      left: 10px;
+      font-size: 3.5rem;
+      color: rgba(240, 217, 228, 0.2);
+      font-family: serif;
+      animation: textGlow 3s infinite alternate;
+    }
+
+    /* Rules Item List in Modal */
+    .rule-item-row {
+      background: rgba(16, 13, 23, 0.8);
+      border: 1px solid var(--glass-border);
+      padding: 14px 18px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .rule-item-row .rule-text {
+      font-size: 0.9rem;
+      color: var(--color-mh);
+    }
+
+    .rule-item-row .rule-source {
+      font-size: 0.7rem;
+      color: var(--color-ms);
+    }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(8, 6, 12, 0.92);
+      backdrop-filter: blur(20px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s var(--ease-fluid);
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-window {
+      background: rgba(22, 19, 31, 0.98);
+      border: 1px solid var(--color-dec);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 700px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 40px;
+      box-shadow: 0 45px 100px rgba(0,0,0,0.95), 0 0 60px rgba(193, 160, 172, 0.35);
+      transform: scale(0.9) translateY(40px);
+      transition: transform 0.5s var(--ease-bounce);
+    }
+
+    .modal-overlay.active .modal-window {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 26px;
+      border-bottom: 1px dashed rgba(193, 160, 172, 0.3);
+      padding-bottom: 16px;
+    }
+
+    .modal-header h2 {
+      font-size: 1.8rem;
+      color: var(--color-mh);
+      text-shadow: 0 0 15px rgba(240,217,228,0.4);
+    }
+
+    .close-btn {
+      background: transparent;
+      border: none;
+      color: var(--color-ms);
+      font-size: 1.7rem;
+      cursor: pointer;
+      transition: color 0.3s, transform 0.3s, text-shadow 0.3s;
+    }
+
+    .close-btn:hover { 
+      color: var(--color-mh); 
+      transform: scale(1.2) rotate(90deg); 
+      text-shadow: 0 0 15px rgba(240,217,228,0.8);
+    }
+
+    .form-group { margin-bottom: 22px; }
+
+    .form-group label {
+      display: block;
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--color-dec);
+      margin-bottom: 8px;
+      font-weight: 600;
+      text-shadow: 0 0 5px rgba(193,160,172,0.3);
+    }
+
+    .form-control {
+      width: 100%;
+      background: rgba(74, 63, 75, 0.4);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 13px 18px;
+      color: var(--color-mh);
+      font-size: 0.92rem;
+      transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+    }
+
+    .form-control:focus {
+      outline: none;
+      background: rgba(74, 63, 75, 0.6);
+      border-color: var(--color-mh);
+      box-shadow: 0 0 25px rgba(193, 160, 172, 0.4), inset 0 0 10px rgba(240,217,228,0.1);
+    }
+
+    textarea.form-control { resize: vertical; min-height: 90px; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+    /* Friction Slider Lock */
+    .friction-lock-container {
+      margin-top: 30px;
+      background: rgba(16, 13, 23, 0.95);
+      border: 1px solid var(--color-dec);
+      padding: 24px;
+      border-radius: 18px;
+      text-align: center;
+      box-shadow: inset 0 2px 15px rgba(0,0,0,0.8), 0 0 25px rgba(193,160,172,0.2);
+    }
+
+    .friction-slider {
+      width: 100%;
+      margin: 16px 0;
+      accent-color: var(--color-mh);
+      cursor: pointer;
+      filter: drop-shadow(0 0 8px rgba(240,217,228,0.5));
+    }
+
+    @media (max-width: 880px) {
+      .analytics-grid { grid-template-columns: 1fr; }
+      .journal-wrapper { padding: 16px 12px; }
+      .form-row { grid-template-columns: 1fr; }
+      .archived-box { grid-template-columns: 1fr; }
+      .header-stats { width: 100%; }
+      .stat-pill { flex: 1 1 40%; text-align: left; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- MAIN JOURNAL WRAPPER CONTAINER -->
+  <div class="journal-wrapper" id="journal-widget">
+    
+    <!-- HEADER -->
+    <header class="journal-header">
+      <div class="header-left">
+        <div class="title-group">
+          <div class="seal-icon-badge">🔐</div>
+          <h1>DECISION JOURNAL</h1>
+        </div>
+        <p class="subtitle">Record the decision before reality gets a chance to rewrite it.</p>
+      </div>
+
+      <div class="header-stats">
+        <div class="stat-pill">
+          <span class="label">Decisions Logged</span>
+          <span class="value" id="stat-logged">0</span>
+        </div>
+        <div class="stat-pill highlight">
+          <span class="label">Calibration</span>
+          <span class="value" id="stat-calibration">0%</span>
+        </div>
+        <div class="stat-pill">
+          <span class="label">Overall Grade</span>
+          <span class="value" id="stat-grade">0.0</span>
+        </div>
+        <div class="stat-pill">
+          <span class="label">Revisits Due</span>
+          <span class="value" id="stat-due">0</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- METADATA STRIP -->
+    <div class="metadata-strip">
+      <div>ARCHIVE: <strong>PERSONAL DECISION VAULT</strong></div>
+      <div>PERIOD: <strong><span id="meta-period">AUG 2026 — PRESENT</span></strong></div>
+      <div>STREAK: <strong><span id="meta-streak">0</span> HONEST REVIEWS</strong></div>
+      
+      <!-- FONT SELECTOR OPTION IN WIDGET -->
+      <div class="font-selector-wrapper">
+        <span>FONT:</span>
+        <select id="widget-font-select" onchange="changeWidgetFont(this.value)">
+          <option value="default">Jakarta + Garamond</option>
+          <option value="inter">Inter (Modern Clean)</option>
+          <option value="space">Space Grotesk (Tech)</option>
+          <option value="playfair">Playfair + Serif</option>
+          <option value="mono">JetBrains Mono</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- RULES BANNER CAROUSEL & CUSTOMIZER -->
+    <div class="rules-banner">
+      <div class="rules-banner-header">
+        <h3>RULES EARNED THE HARD WAY</h3>
+        <div class="rule-banner-actions">
+          <button class="btn-secondary" style="padding: 4px 12px; font-size: 0.68rem;" onclick="cycleRule()">🔄 Cycle</button>
+          <button class="btn-secondary" style="padding: 4px 12px; font-size: 0.68rem;" onclick="openManageRulesModal()">✎ Manage Rules</button>
+        </div>
+      </div>
+      <div class="rule-item-quote" id="rule-quote">"Always align study methods with the final testing format."</div>
+      <div class="rule-context" id="rule-context">Earned from Academic Decision #001</div>
+    </div>
+
+    <!-- CONTROLS & NAVIGATION -->
+    <div class="controls-strip">
+      <div class="view-tabs">
+        <button class="tab-btn active" onclick="switchView('archive', event)">Archive List</button>
+        <button class="tab-btn" onclick="switchView('timeline', event)">Timeline</button>
+        <button class="tab-btn" onclick="switchView('analytics', event)">Calibration & Grade</button>
+      </div>
+
+      <div class="action-group">
+        <button class="btn-secondary" onclick="openBackupModal()">💾 Backup / Restore</button>
+        <button class="btn-primary" onclick="openNewDecisionModal()">✦ New Decision</button>
+      </div>
+    </div>
+
+    <!-- CATEGORY FILTER CHIPS -->
+    <div class="category-filter-bar" id="category-filter-bar">
+      <span style="font-size: 0.72rem; color: var(--color-ms); font-weight: 700; text-transform: uppercase; margin-right: 4px;">Filter:</span>
+      <button class="filter-chip active" onclick="setCategoryFilter('All', event)">All</button>
+      <button class="filter-chip" onclick="setCategoryFilter('Academic', event)">Academic</button>
+      <button class="filter-chip" onclick="setCategoryFilter('Projects & Coding', event)">Projects & Coding</button>
+      <button class="filter-chip" onclick="setCategoryFilter('Creative / 3D Art', event)">Creative / 3D Art</button>
+      <button class="filter-chip" onclick="setCategoryFilter('Personal', event)">Personal</button>
+      <button class="filter-chip" onclick="setCategoryFilter('Finance', event)">Finance</button>
+    </div>
+
+    <!-- 3D PAGE VIEW PERSPECTIVE CONTAINER -->
+    <div class="view-perspective">
+      <div class="page-content" id="page-content">
+        <!-- Content rendered dynamically via JS -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODAL 1: NEW DECISION -->
+  <div class="modal-overlay" id="modal-new">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h2>Make the Prediction</h2>
+        <button class="close-btn" onclick="closeModal('modal-new')">&times;</button>
+      </div>
+
+      <form id="form-new-decision" onsubmit="handleCreateDecision(event)">
+        <div class="form-group">
+          <label>Decision Title</label>
+          <input type="text" class="form-control" id="new-title" placeholder="e.g. Prioritize past papers over reading textbook chapters" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Category</label>
+            <select class="form-control" id="new-category">
+              <option value="Academic">Academic</option>
+              <option value="Projects & Coding">Projects & Coding</option>
+              <option value="Creative / 3D Art">Creative / 3D Art</option>
+              <option value="Career">Career</option>
+              <option value="Personal">Personal</option>
+              <option value="Finance">Finance</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Revisit Date (Lock Duration)</label>
+            <input type="date" class="form-control" id="new-revisit-date" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Original Prediction (What do you expect will happen?)</label>
+          <textarea class="form-control" id="new-prediction" placeholder="Be specific. This will be genuinely sealed until the revisit date." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Confidence Level & Calibration Tag</label>
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <input type="range" min="0" max="100" value="75" class="form-control" id="new-confidence" oninput="updateConfidenceLabel(this.value)">
+            <div style="font-size: 1.3rem; font-weight: 700; color: var(--color-mh); min-width: 50px; text-align: right; text-shadow: 0 0 10px rgba(240,217,228,0.5);">
+              <span id="confidence-num">75</span>%
+            </div>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--color-dec); margin-top: 4px;" id="confidence-qualifier">Confident</div>
+        </div>
+
+        <div class="form-group">
+          <label>Core Reasoning (Why do you believe this?)</label>
+          <textarea class="form-control" id="new-reasoning" placeholder="What key facts or assumptions drive this belief?"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Pre-Mortem (If this completely fails, what is the most likely reason?)</label>
+          <input type="text" class="form-control" id="new-premortem" placeholder="Acknowledge blind spots now before locking...">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Current State / Mindset Tag</label>
+            <select class="form-control" id="new-state-tag">
+              <option value="Flow State">Flow State</option>
+              <option value="Neutral / Calm" selected>Neutral / Calm</option>
+              <option value="Rushed">Rushed</option>
+              <option value="Exhausted">Exhausted</option>
+              <option value="Highly Emotional">Highly Emotional</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Perceived Risk</label>
+            <select class="form-control" id="new-risk">
+              <option value="Low">Low Risk</option>
+              <option value="Medium" selected>Medium Risk</option>
+              <option value="High">High Risk</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Friction Seal Mechanic -->
+        <div class="friction-lock-container">
+          <div style="font-size: 0.82rem; color: var(--color-mh); font-weight: 600; text-shadow: 0 0 8px rgba(240,217,228,0.4);">🔐 FRICTION LOCK CEREMONY</div>
+          <div style="font-size: 0.72rem; color: var(--color-ms); margin-top: 4px;">Drag the seal slider fully to the right to lock this forecast into the archive.</div>
+          <input type="range" min="0" max="100" value="0" class="friction-slider" id="friction-seal-slider" oninput="checkFrictionSeal(this.value)">
+          <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; opacity: 0.4; pointer-events: none;" id="seal-submit-btn">
+            SLIDE TO WAX-SEAL DECISION
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: REVEAL CEREMONY -->
+  <div class="modal-overlay" id="modal-reveal">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h2>Revisit Ceremony — Unsealing Record</h2>
+        <button class="close-btn" onclick="closeModal('modal-reveal')">&times;</button>
+      </div>
+
+      <div style="background: rgba(16, 13, 23, 0.9); border: 1px solid var(--color-dec); padding: 22px; border-radius: 16px; margin-bottom: 22px; box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 0 20px rgba(193,160,172,0.2);">
+        <div style="font-size: 0.68rem; text-transform: uppercase; color: var(--color-dec); letter-spacing: 0.1em; margin-bottom: 6px; font-weight: 700;">STEP 1: ANTI-HINDSIGHT ENFORCEMENT</div>
+        <h3 style="font-size: 1.4rem; color: var(--color-mh); text-shadow: 0 0 10px rgba(240,217,228,0.4);" id="reveal-title">Decision Title</h3>
+        
+        <div style="margin-top: 14px; padding: 16px; background: rgba(74, 63, 75, 0.35); border-radius: 12px; border: 1px dashed var(--glass-border);">
+          <div style="font-size: 0.65rem; color: var(--color-ms); text-transform: uppercase;">Original Prediction (Sealed on <span id="reveal-sealed-date"></span>)</div>
+          <div style="font-size: 1.18rem; color: var(--color-mh); margin-top: 6px;" id="reveal-prediction-text">...</div>
+          <div style="font-size: 0.78rem; color: var(--color-dec); margin-top: 10px;">
+            Confidence Level: <strong id="reveal-confidence-val" style="text-shadow: 0 0 5px rgba(193,160,172,0.5);">0%</strong> | Pre-Mortem: <em id="reveal-premortem-text">...</em>
+          </div>
+        </div>
+      </div>
+
+      <form id="form-reveal-outcome" onsubmit="handleCompleteReveal(event)">
+        <div class="form-group">
+          <label>What Actually Happened?</label>
+          <textarea class="form-control" id="reveal-actual-outcome" placeholder="Describe the outcome objectively..." required></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Were you right?</label>
+            <select class="form-control" id="reveal-verdict" required>
+              <option value="Right">Yes — Right</option>
+              <option value="Wrong">No — Wrong</option>
+              <option value="Partially">Partially Correct</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>The "Invisible Variable"</label>
+            <input type="text" class="form-control" id="reveal-invisible-var" placeholder="What key factor did you miss back then?">
+          </div>
+        </div>
+
+        <div class="form-group" style="background: rgba(16, 13, 23, 0.55); padding: 18px; border-radius: 14px; border: 1px solid var(--glass-border); display: grid; grid-template-columns: 1fr 1fr; gap: 18px;">
+          <div>
+            <label>Decision Quality (1–10)</label>
+            <input type="number" min="1" max="10" value="8" class="form-control" id="reveal-dec-quality" required>
+            <span style="font-size: 0.65rem; color: var(--color-ms);">Based on process & logic known THEN.</span>
+          </div>
+          <div>
+            <label>Outcome Quality (1–10)</label>
+            <input type="number" min="1" max="10" value="8" class="form-control" id="reveal-out-quality" required>
+            <span style="font-size: 0.65rem; color: var(--color-ms);">Based strictly on actual result.</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Rule / Lesson Earned the Hard Way</label>
+          <input type="text" class="form-control" id="reveal-future-rule" placeholder="e.g. Always add a 30% buffer to software estimates." required>
+        </div>
+
+        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">
+          ✓ CLOSE THE LOOP & STAMP CALIBRATION
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 3: MANAGE CUSTOM RULES -->
+  <div class="modal-overlay" id="modal-manage-rules">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h2>Customize Rules Earned the Hard Way</h2>
+        <button class="close-btn" onclick="closeModal('modal-manage-rules')">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <label>Add New Custom Rule</label>
+        <div style="display: flex; gap: 10px;">
+          <input type="text" id="custom-rule-input" class="form-control" placeholder="e.g. Never make strategic choices when emotionally drained.">
+          <button class="btn-primary" style="white-space: nowrap;" onclick="addCustomRule()">+ Add Rule</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Active Rules Library</label>
+        <div id="rules-list-container" style="max-height: 280px; overflow-y: auto;">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: BACKUP / RESTORE -->
+  <div class="modal-overlay" id="modal-backup">
+    <div class="modal-window" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2>Backup & Restore Vault</h2>
+        <button class="close-btn" onclick="closeModal('modal-backup')">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <label>Export Current JSON Archive</label>
+        <button class="btn-secondary" style="width: 100%; margin-bottom: 12px; justify-content: center; display: flex; align-items: center; gap: 8px;" onclick="exportJSONData()">📥 Download Sealed_Archive.json</button>
+      </div>
+
+      <div class="form-group" style="border-top: 1px dashed var(--glass-border); padding-top: 24px; margin-top: 24px;">
+        <label>Restore From Backup File</label>
+        <input type="file" id="import-json-file" class="form-control" accept=".json">
+        <button class="btn-primary" style="width: 100%; margin-top: 16px; justify-content: center;" onclick="importJSONData()">📤 Import Archive Data</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- JAVASCRIPT ENGINE -->
+  <script>
+    const STORAGE_KEY = 'sealed_decision_journal_v4';
+    const CUSTOM_RULES_KEY = 'sealed_decision_custom_rules_v1';
+    const FONT_PREF_KEY = 'sealed_decision_font_pref';
+
+    let currentView = 'archive';
+    let activeCategoryFilter = 'All';
+    let activeRevealId = null;
+    let currentRuleIndex = 0;
+
+    // Summaries for Marks (1 to 10)
+    const SUMMARY_TEXTS = {
+      1: "Your decision record reflects severe volatility and reactive choices.\nCore assumptions were left completely unexamined, leaving outcomes vulnerable to pure external noise.\nEmotional impulse repeatedly overrode systematic logic during critical forks.\nTo restore strategic agency, step back and re-anchor in fundamental first principles.\nEvery choice requires deliberate friction before commitment.",
+      2: "Foresight has been consistently obscured by surface-level observations.\nStrategy was routinely overridden by short-term urgency, causing predictable downstream bottlenecks.\nWhile raw ambition is present, your execution framework lacks defensive depth.\nCalibration remains heavily skewed toward overconfidence.\nMandatory pre-mortems must be implemented immediately to stabilize performance.",
+      3: "A fragile decision pattern where sound reasoning is compromised by persistent blind spots.\nKey variables were routinely overlooked, leading to outcome variance far exceeding expectations.\nIndividual choices show occasional clarity, but systemic follow-through remains disjointed.\nDecision quality suffers noticeably under time pressure and rushed execution states.\nSlow down the deliberation phase before locking choices into action.",
+      4: "Your archive demonstrates sporadic clarity interspersed with uncalibrated gambles.\nFoundations are occasionally solid, yet critical risks are downplayed during execution.\nHindsight reveals a high reliance on favorable circumstances rather than airtight rationale.\nThe gap between original forecasts and actual outcomes signals unexamined biases.\nStandardize your evaluation process to enforce consistent quality across all domains.",
+      5: "A balanced tightrope walk between intuitive instinct and structured analytical discipline.\nHalf of your recorded choices hold up under rigorous post-mortem review, while others yield to hidden variables.\nYou navigate familiar territory with reasonable accuracy but struggle when complexity spikes.\nOutcome quality fluctuates in direct tandem with your emotional state.\nCultivate deliberate friction to tip the scale toward sustained excellence.",
+      6: "A dependable, solid cognitive standard that reliably protects against structural failure.\nYour rationale is clear and supported by pragmatic facts, though subtle variables occasionally slip through.\nCalibration is grounded, reflecting healthy self-awareness during prediction.\nWhile safe and effective, true strategic breakthroughs will require deeper pre-mortem analysis.\nMaintain this steady baseline while systematically refining your risk assessment.",
+      7: "High-caliber decision architecture marked by disciplined deliberation and clear risk management.\nYou consistently isolate primary variables and account for potential failure modes ahead of time.\nOutcomes closely mirror original forecasts, demonstrating strong calibration and emotional composure.\nMinor discrepancies stem from unpreventable external shifts rather than structural logical flaws.\nYou are operating from a position of strategic clarity.",
+      8: "Exceptional cognitive precision and formidable alignment between prediction and reality.\nYour pre-mortem analysis routinely catches critical vulnerabilities before they manifest in real-world execution.\nDecision quality remains remarkably steady even across high-pressure or rushed internal states.\nBlind spots are rare, and lessons earned are swiftly integrated into your overarching framework.\nA masterclass in disciplined long-term foresight.",
+      9: "Near-flawless strategic execution powered by profound clarity, deep self-awareness, and relentless calibration.\nYou evaluate complex trade-offs with surgical objectivity, virtually immune to hindsight bias or cognitive noise.\nPredictions hold true across shifting environments, proving the structural depth of your initial reasoning.\nEvery choice is a calculated move that maximizes leverage while minimizing tail risk.\nAn elite cognitive baseline.",
+      10: "An immaculate, flawless benchmark of strategic mastery where foresight, logic, and outcome exist in perfect harmony.\nEvery decision in this cycle was engineered with absolute clarity, exhaustive pre-mortem coverage, and pristine poise.\nUnforeseen variables were anticipated and neutralized before impact, yielding optimal outcomes without reliance on luck.\nYou have achieved complete alignment between mental models and real-world execution.\nPure, unadulterated decision perfection."
+    };
+
+    const SAMPLE_DECISIONS = [
+      {
+        id: "dec-001",
+        title: "Should I prioritize past papers over reading textbook for O-Level Chemistry?",
+        category: "Academic",
+        dateMade: "2026-08-01",
+        revisitDate: "2026-09-01",
+        prediction: "Solving 10 years of past papers will yield higher mock scores than re-reading chapters.",
+        confidence: 85,
+        reasoning: "Question formats repeat frequently in Cambridge examinations.",
+        preMortem: "Tricky Paper 2 theoretical questions might catch me off guard.",
+        stateTag: "Flow State",
+        risk: "Medium",
+        actualOutcome: "Scored 92% in mock exam. Past paper practice matched 80% of actual question structures.",
+        verdict: "Right",
+        invisibleVariable: "Grade boundary curve variance",
+        decisionQuality: 9,
+        outcomeQuality: 9,
+        calibration: "Well Calibrated",
+        futureRule: "Always align study methods with the final testing format.",
+        status: "archived"
+      },
+      {
+        id: "dec-002",
+        title: "Build Python backend using FastAPI vs Flask for commercial ad project",
+        category: "Projects & Coding",
+        dateMade: "2026-08-05",
+        revisitDate: "2026-09-02",
+        prediction: "Learning FastAPI async architecture will take longer but speed up API performance.",
+        confidence: 65,
+        reasoning: "Async IO handles parallel requests significantly better.",
+        preMortem: "Steep learning curve might delay project delivery date.",
+        stateTag: "Rushed",
+        risk: "High",
+        actualOutcome: "Learning took longer than expected, but API throughput increased by 400%.",
+        verdict: "Right",
+        invisibleVariable: "Client's sudden surge in payload concurrency",
+        decisionQuality: 8,
+        outcomeQuality: 9,
+        calibration: "Honest Uncertainty",
+        futureRule: "Multiply all technical learning estimates by 2.5.",
+        status: "archived"
+      },
+      {
+        id: "dec-003",
+        title: "Render heavy 3D Blender animation sequence on local GPU before deadline",
+        category: "Creative / 3D Art",
+        dateMade: "2026-08-10",
+        revisitDate: "2026-09-05",
+        prediction: "Local GPU render will complete in 18 hours without memory throttling.",
+        confidence: 95,
+        reasoning: "Render settings were optimized in viewport preview.",
+        preMortem: "GPU VRAM bottleneck during volumetric fog rendering.",
+        stateTag: "Flow State",
+        risk: "Medium",
+        actualOutcome: "Render crashed halfway due to VRAM overflow during fog sequence.",
+        verdict: "Wrong",
+        invisibleVariable: "Background system updates consuming VRAM",
+        decisionQuality: 5,
+        outcomeQuality: 3,
+        calibration: "Overconfident",
+        futureRule: "Never schedule a heavy render without a 24-hour buffer.",
+        status: "archived"
+      },
+      {
+        id: "dec-004",
+        title: "Adopt 200 crunches daily flex structure + 1-hour rooftop sessions",
+        category: "Personal",
+        dateMade: "2026-09-01",
+        revisitDate: "2026-09-14",
+        prediction: "Allowing a 100-crunch fallback on busy study days will preserve workout continuity.",
+        confidence: 80,
+        reasoning: "Flexibility prevents complete habit abandonment.",
+        preMortem: "Monsoon rainfall disrupting rooftop availability.",
+        stateTag: "Neutral / Calm",
+        risk: "Low",
+        actualOutcome: null,
+        verdict: null,
+        status: "due"
+      },
+      {
+        id: "dec-005",
+        title: "Master Blender Geometry Nodes vs Manual Procedural Modeling",
+        category: "Creative / 3D Art",
+        dateMade: "2026-07-20",
+        revisitDate: "2026-08-20",
+        prediction: "Investing 2 weeks in Geo Nodes will slash future environment creation time by half.",
+        confidence: 90,
+        reasoning: "Node-based non-destructive workflows scale better for complex scenes.",
+        preMortem: "Math nodes logic complexity causing initial slowdown.",
+        stateTag: "Flow State",
+        risk: "Low",
+        actualOutcome: "Building procedural terrain now takes 15 minutes instead of 3 hours.",
+        verdict: "Right",
+        invisibleVariable: "Availability of quality open-source node templates",
+        decisionQuality: 9,
+        outcomeQuality: 10,
+        calibration: "Well Calibrated",
+        futureRule: "Frontload skill investments in modular tools early.",
+        status: "archived"
+      }
+    ];
+
+    /* ==========================================================================
+       FONT CONTROL ENGINE
+       ========================================================================== */
+    function changeWidgetFont(fontFamily) {
+      const root = document.documentElement;
+      localStorage.setItem(FONT_PREF_KEY, fontFamily);
+
+      if (fontFamily === 'inter') {
+        root.style.setProperty('--font-sans', "'Inter', sans-serif");
+        root.style.setProperty('--font-serif', "'Inter', sans-serif");
+      } else if (fontFamily === 'space') {
+        root.style.setProperty('--font-sans', "'Space Grotesk', sans-serif");
+        root.style.setProperty('--font-serif', "'Space Grotesk', sans-serif");
+      } else if (fontFamily === 'playfair') {
+        root.style.setProperty('--font-sans', "'Playfair Display', serif");
+        root.style.setProperty('--font-serif', "'Playfair Display', serif");
+      } else if (fontFamily === 'mono') {
+        root.style.setProperty('--font-sans', "'JetBrains Mono', monospace");
+        root.style.setProperty('--font-serif', "'JetBrains Mono', monospace");
+      } else {
+        // Default
+        root.style.setProperty('--font-sans', "'Plus Jakarta Sans', sans-serif");
+        root.style.setProperty('--font-serif', "'Cormorant Garamond', serif");
+      }
+    }
+
+    function initFont() {
+      const savedFont = localStorage.getItem(FONT_PREF_KEY) || 'default';
+      document.getElementById('widget-font-select').value = savedFont;
+      changeWidgetFont(savedFont);
+    }
+
+    /* ==========================================================================
+       CUSTOM RULES MANAGEMENT ENGINE
+       ========================================================================== */
+    function getCustomRules() {
+      const saved = localStorage.getItem(CUSTOM_RULES_KEY);
+      return saved ? JSON.parse(saved) : [];
+    }
+
+    function saveCustomRules(rules) {
+      localStorage.setItem(CUSTOM_RULES_KEY, JSON.stringify(rules));
+      renderRulesBanner();
+    }
+
+    function addCustomRule() {
+      const input = document.getElementById('custom-rule-input');
+      const val = input.value.trim();
+      if (!val) return;
+
+      const rules = getCustomRules();
+      rules.push({ text: val, source: 'Custom User Rule' });
+      saveCustomRules(rules);
+      input.value = '';
+      renderRulesListInModal();
+    }
+
+    function removeCustomRule(index) {
+      const rules = getCustomRules();
+      rules.splice(index, 1);
+      saveCustomRules(rules);
+      renderRulesListInModal();
+    }
+
+    function openManageRulesModal() {
+      renderRulesListInModal();
+      document.getElementById('modal-manage-rules').classList.add('active');
+    }
+
+    function renderRulesListInModal() {
+      const container = document.getElementById('rules-list-container');
+      const customRules = getCustomRules();
+
+      const decisions = getDecisions();
+      const extractedRules = decisions.filter(d => d.futureRule).map(d => ({ text: d.futureRule, source: `${d.category} — ${d.title}` }));
+
+      const all = [...customRules, ...extractedRules];
+
+      if (all.length === 0) {
+        container.innerHTML = `<div style="text-align: center; color: var(--color-ms); padding: 15px;">No custom or archived rules logged yet.</div>`;
+        return;
+      }
+
+      let html = '';
+      all.forEach((r, idx) => {
+        const isCustom = idx < customRules.length;
+        html += `
+          <div class="rule-item-row">
+            <div>
+              <div class="rule-text">"${r.text}"</div>
+              <div class="rule-source">${r.source}</div>
+            </div>
+            ${isCustom ? `<button class="btn-remove" onclick="removeCustomRule(${idx})">✕</button>` : ''}
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function getAllRules() {
+      const custom = getCustomRules();
+      const decisions = getDecisions();
+      const extracted = decisions.filter(d => d.futureRule).map(d => ({ text: d.futureRule, source: `Earned from ${d.category} — ${d.title}` }));
+      return [...custom.map(c => ({ text: c.text, source: 'Custom Rule' })), ...extracted];
+    }
+
+    function renderRulesBanner() {
+      const rules = getAllRules();
+      if (rules.length === 0) {
+        document.getElementById('rule-quote').innerText = `"Always align study methods with the final testing format."`;
+        document.getElementById('rule-context').innerText = `Default Principle`;
+        return;
+      }
+
+      if (currentRuleIndex >= rules.length) currentRuleIndex = 0;
+      const r = rules[currentRuleIndex];
+      document.getElementById('rule-quote').innerText = `"${r.text}"`;
+      document.getElementById('rule-context').innerText = r.source;
+    }
+
+    function cycleRule() {
+      const rules = getAllRules();
+      if (rules.length === 0) return;
+      currentRuleIndex = (currentRuleIndex + 1) % rules.length;
+      renderRulesBanner();
+    }
+
+    /* ==========================================================================
+       DECISION DATA ENGINE
+       ========================================================================== */
+    function getDecisions() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(SAMPLE_DECISIONS));
+        return SAMPLE_DECISIONS;
+      }
+      return JSON.parse(saved);
+    }
+
+    function saveDecisions(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      renderApp();
+    }
+
+    function processStateComputation(decisions) {
+      const todayStr = "2026-09-14";
+      return decisions.map(d => {
+        if (d.status !== 'archived') {
+          if (d.revisitDate <= todayStr) {
+            d.status = 'due';
+          } else {
+            d.status = 'sealed';
+          }
+        }
+        return d;
+      });
+    }
+
+    function calculateRealtimeStats(decisions) {
+      const loggedCount = decisions.length;
+      const dueCount = decisions.filter(d => d.status === 'due').length;
+      const archived = decisions.filter(d => d.status === 'archived');
+
+      let calibrated = archived.filter(a => a.calibration === 'Well Calibrated' || a.calibration === 'Honest Uncertainty').length;
+      let calibrationPct = archived.length > 0 ? Math.round((calibrated / archived.length) * 100) : 0;
+
+      let totalQuality = 0;
+      let qualityCount = 0;
+      archived.forEach(a => {
+        if (a.decisionQuality && a.outcomeQuality) {
+          totalQuality += (a.decisionQuality + a.outcomeQuality) / 2;
+          qualityCount++;
+        }
+      });
+      let rawGrade = qualityCount > 0 ? (totalQuality / qualityCount) : 8.0;
+      let overallGrade = rawGrade.toFixed(1);
+      let gradeInt = Math.min(10, Math.max(1, Math.round(rawGrade)));
+
+      let periodText = "AUG 2026 — PRESENT";
+      if (decisions.length > 0) {
+        const dates = decisions.map(d => new Date(d.dateMade)).filter(d => !isNaN(d));
+        if (dates.length > 0) {
+          const minDate = new Date(Math.min.apply(null, dates));
+          const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+          periodText = `${months[minDate.getMonth()]} ${minDate.getFullYear()} — PRESENT`;
+        }
+      }
+
+      let streak = archived.length;
+
+      return {
+        loggedCount,
+        dueCount,
+        calibrationPct,
+        overallGrade,
+        gradeInt,
+        periodText,
+        streak
+      };
+    }
+
+    function renderApp() {
+      const rawDecisions = getDecisions();
+      const decisions = processStateComputation(rawDecisions);
+      const stats = calculateRealtimeStats(decisions);
+
+      document.getElementById('stat-logged').innerText = stats.loggedCount;
+      document.getElementById('stat-calibration').innerText = `${stats.calibrationPct}%`;
+      document.getElementById('stat-grade').innerText = stats.overallGrade;
+      document.getElementById('stat-due').innerText = stats.dueCount;
+
+      document.getElementById('meta-period').innerText = stats.periodText;
+      document.getElementById('meta-streak').innerText = stats.streak;
+
+      renderRulesBanner();
+
+      const filterBar = document.getElementById('category-filter-bar');
+      if (currentView === 'archive') {
+        filterBar.style.display = 'flex';
+      } else {
+        filterBar.style.display = 'none';
+      }
+
+      renderPageView(decisions, stats);
+    }
+
+    function switchView(viewName, e) {
+      currentView = viewName;
+      if (e) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        e.target.classList.add('active');
+      }
+
+      const pageEl = document.getElementById('page-content');
+      pageEl.classList.add('turning');
+
+      setTimeout(() => {
+        renderApp();
+        pageEl.classList.remove('turning');
+      }, 300);
+    }
+
+    function setCategoryFilter(cat, e) {
+      activeCategoryFilter = cat;
+      if (e) {
+        document.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active'));
+        e.target.classList.add('active');
+      }
+      renderApp();
+    }
+
+    function renderPageView(decisions, stats) {
+      const pageEl = document.getElementById('page-content');
+
+      if (currentView === 'archive') {
+        let filtered = decisions;
+        if (activeCategoryFilter !== 'All') {
+          filtered = decisions.filter(d => d.category === activeCategoryFilter);
+        }
+
+        if (filtered.length === 0) {
+          pageEl.innerHTML = `<div style="text-align: center; padding: 50px; color: var(--color-ms); font-style: italic;">No decision entries found for category "${activeCategoryFilter}".</div>`;
+          return;
+        }
+
+        let html = '<div class="decisions-grid">';
+        filtered.forEach((d, idx) => {
+          html += createCardHTML(d, idx);
+        });
+        html += '</div>';
+        pageEl.innerHTML = html;
+      } 
+      else if (currentView === 'timeline') {
+        let html = '<div class="timeline-container">';
+        const sorted = [...decisions].sort((a,b) => new Date(b.dateMade) - new Date(a.dateMade));
+        
+        sorted.forEach((d, idx) => {
+          html += `
+            <div class="timeline-node" id="node-${d.id}" style="animation-delay: ${idx * 0.08}s;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 15px;">
+                <div style="flex: 1;">
+                  <div style="font-size: 0.68rem; color: var(--color-dec); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; text-shadow: 0 0 5px rgba(193,160,172,0.4);">${d.dateMade} — ${d.category}</div>
+                  <div style="font-size: 1.28rem; color: var(--color-mh); margin: 4px 0 8px 0; font-weight: 600; text-shadow: 0 0 8px rgba(240,217,228,0.3);">${d.title}</div>
+                  
+                  <div style="font-size: 0.8rem; color: var(--color-mh); opacity: 0.9; margin-bottom: 8px;">
+                    <strong>Prediction:</strong> "${d.prediction}"
+                  </div>
+
+                  <div style="font-size: 0.75rem; color: var(--color-ms); display: flex; gap: 15px; flex-wrap: wrap;">
+                    <span>Status: <strong style="color: var(--color-mh); text-shadow: 0 0 5px rgba(240,217,228,0.5);">${d.status.toUpperCase()}</strong></span>
+                    <span>Confidence: <strong style="color: var(--color-mh);">${d.confidence}%</strong></span>
+                    <span>State: <strong style="color: var(--color-mh);">${d.stateTag || 'Calm'}</strong></span>
+                    ${d.verdict ? `<span>Verdict: <strong style="color: ${d.verdict==='Right'?'#81c784':'#ffbaba'}; text-shadow: 0 0 5px ${d.verdict==='Right'?'rgba(129,199,132,0.4)':'rgba(255,186,186,0.4)'};">${d.verdict}</strong></span>` : ''}
+                  </div>
+                </div>
+                <button class="btn-remove" onclick="removeDecision('${d.id}')" title="Remove Entry">✕</button>
+              </div>
+            </div>
+          `;
+        });
+        html += '</div>';
+        pageEl.innerHTML = html;
+      } 
+      else if (currentView === 'analytics') {
+        const summaryText = SUMMARY_TEXTS[stats.gradeInt] || SUMMARY_TEXTS[8];
+
+        pageEl.innerHTML = `
+          <div class="analytics-grid">
+            <div class="analytics-card">
+              <h3>🎯 Overall Quality Grade</h3>
+              
+              <div class="grade-display-box">
+                <div class="grade-circle">${stats.overallGrade}</div>
+                <div>
+                  <div style="font-size: 0.7rem; text-transform: uppercase; color: var(--color-dec); letter-spacing: 0.1em; font-weight: 700;">CURRENT COGNITIVE MARK</div>
+                  <div style="font-size: 1.15rem; color: var(--color-mh); margin-top: 2px; text-shadow: 0 0 10px rgba(240,217,228,0.5);">
+                    ${stats.gradeInt === 10 ? '★ Perfect Decision Mastery' : (stats.gradeInt >= 8 ? 'High Strategic Calibration' : 'Developing Baseline')}
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top: 20px;">
+                <div style="font-size: 0.68rem; text-transform: uppercase; color: var(--color-dec); letter-spacing: 0.1em; margin-bottom: 10px; font-weight: 700;">AESTHETIC GRADE SUMMARY</div>
+                <div class="summary-quote-box">
+                  ${summaryText.replace(/\n/g, '<br>')}
+                </div>
+              </div>
+            </div>
+
+            <div class="analytics-card">
+              <h3>⚖ Calibration & Mindset Matrix</h3>
+              <p style="font-size: 0.88rem; color: var(--color-ms); line-height: 1.55; margin-bottom: 22px;">
+                Measures the correlation between original predictions, internal decision states, and ultimate outcome quality.
+              </p>
+
+              <div style="background: rgba(16, 13, 23, 0.75); padding: 20px; border-radius: 16px; border: 1px solid var(--glass-border); margin-bottom: 18px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.6);">
+                <div style="font-size: 0.68rem; text-transform: uppercase; color: var(--color-dec); font-weight: 700; margin-bottom: 6px;">BIAS ENGINE OBSERVATION</div>
+                <div style="font-size: 0.94rem; color: var(--color-mh); line-height: 1.45;">
+                  "Decisions logged under <strong>'Rushed'</strong> state show a 35% higher variance in outcome quality versus <strong>'Flow State'</strong>."
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; text-align: center;">
+                <div style="background: rgba(16, 13, 23, 0.55); padding: 18px; border-radius: 14px; border: 1px solid var(--glass-border); box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);">
+                  <div style="font-size: 1.8rem; color: var(--color-mh); font-weight: 700; text-shadow: 0 0 15px rgba(240,217,228,0.5);">${stats.calibrationPct}%</div>
+                  <div style="font-size: 0.65rem; color: var(--color-dec); text-transform: uppercase; margin-top: 4px;">Calibration Rating</div>
+                </div>
+                <div style="background: rgba(16, 13, 23, 0.55); padding: 18px; border-radius: 14px; border: 1px solid var(--glass-border); box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);">
+                  <div style="font-size: 1.8rem; color: var(--color-mh); font-weight: 700; text-shadow: 0 0 15px rgba(240,217,228,0.5);">${stats.streak}</div>
+                  <div style="font-size: 0.65rem; color: var(--color-dec); text-transform: uppercase; margin-top: 4px;">Active Review Streak</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function createCardHTML(d, idx) {
+      let statusClass = d.status;
+      let statusText = d.status === 'sealed' ? '🔒 SEALED' : (d.status === 'due' ? '⏳ REVISIT DUE' : '✓ ARCHIVED');
+
+      let bodyHTML = '';
+      if (d.status === 'sealed') {
+        bodyHTML = `
+          <div class="sealed-box">
+            <div class="blurred-lines">████████████████████████████████</div>
+            <div class="seal-watermark">🔐 CONFIDENTIAL — SEALED FORECAST</div>
+            <div style="font-size: 0.72rem; color: var(--color-ms); margin-top: 6px;">Unlocks: ${d.revisitDate}</div>
+          </div>
+        `;
+      } else if (d.status === 'due') {
+        bodyHTML = `
+          <div class="sealed-box" style="border-color: #ffd700; background: rgba(74, 63, 75, 0.55); box-shadow: inset 0 2px 15px rgba(0,0,0,0.6), 0 0 20px rgba(255,215,0,0.2);">
+            <div style="font-size: 0.85rem; color: #ffd700; font-weight: 700; margin-bottom: 10px; text-shadow: 0 0 10px rgba(255,215,0,0.5);">
+              The revisit window is open.
+            </div>
+            <button class="btn-primary" style="width: 100%; justify-content: center;" onclick="openRevealModal('${d.id}')">
+              🔓 UNSEAL & REVEAL
+            </button>
+          </div>
+        `;
+      } else {
+        bodyHTML = `
+          <div class="archived-box">
+            <div class="archived-col">
+              <span class="col-label">PREDICTION (${d.confidence}%)</span>
+              <span class="col-text">${d.prediction}</span>
+            </div>
+            <div class="archived-col">
+              <span class="col-label">ACTUAL OUTCOME</span>
+              <span class="col-text">${d.actualOutcome}</span>
+            </div>
+          </div>
+        `;
+      }
+
+      let calTagHTML = d.calibration ? `<span class="calibration-tag ${d.calibration === 'Overconfident' ? 'overconfident' : 'calibrated'}">${d.calibration}</span>` : '';
+
+      return `
+        <div class="decision-card ${d.status === 'due' ? 'due-card' : ''}" id="card-${d.id}" style="animation-delay: ${idx * 0.08}s;">
+          <div>
+            <div class="card-top">
+              <span class="category-badge">${d.category}</span>
+              <div class="card-actions">
+                <span class="status-badge ${statusClass}">${statusText}</span>
+                <button class="btn-remove" onclick="removeDecision('${d.id}')" title="Remove Decision">✕</button>
+              </div>
+            </div>
+            <h3 class="card-title">${d.title}</h3>
+            ${bodyHTML}
+          </div>
+
+          <div class="card-footer">
+            <span>Made: ${d.dateMade}</span>
+            ${calTagHTML}
+          </div>
+        </div>
+      `;
+    }
+
+    function removeDecision(id) {
+      const cardEl = document.getElementById(`card-${id}`) || document.getElementById(`node-${id}`);
+      if (cardEl) {
+        cardEl.classList.add('removing');
+        setTimeout(() => {
+          let decisions = getDecisions().filter(d => d.id !== id);
+          saveDecisions(decisions);
+        }, 380);
+      } else {
+        let decisions = getDecisions().filter(d => d.id !== id);
+        saveDecisions(decisions);
+      }
+    }
+
+    function openNewDecisionModal() {
+      document.getElementById('modal-new').classList.add('active');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    function updateConfidenceLabel(val) {
+      document.getElementById('confidence-num').innerText = val;
+      let label = "Uncertain";
+      if (val > 55) label = "Leaning";
+      if (val > 70) label = "Confident";
+      if (val > 88) label = "Highly Confident";
+      if (val > 97) label = "Near Certain";
+      document.getElementById('confidence-qualifier').innerText = label;
+    }
+
+    function checkFrictionSeal(val) {
+      const btn = document.getElementById('seal-submit-btn');
+      if (val >= 98) {
+        btn.style.opacity = '1';
+        btn.style.pointerEvents = 'auto';
+        btn.innerText = '🔐 SEAL DECISION NOW';
+        btn.style.boxShadow = '0 0 30px rgba(240, 217, 228, 0.8)';
+      } else {
+        btn.style.opacity = '0.4';
+        btn.style.pointerEvents = 'none';
+        btn.innerText = 'SLIDE TO WAX-SEAL DECISION';
+        btn.style.boxShadow = '0 4px 20px rgba(0,0,0,0.5)';
+      }
+    }
+
+    function handleCreateDecision(e) {
+      e.preventDefault();
+      let decisions = getDecisions();
+
+      const newEntry = {
+        id: `dec-${Date.now()}`,
+        title: document.getElementById('new-title').value,
+        category: document.getElementById('new-category').value,
+        dateMade: new Date().toISOString().slice(0, 10),
+        revisitDate: document.getElementById('new-revisit-date').value,
+        prediction: document.getElementById('new-prediction').value,
+        confidence: parseInt(document.getElementById('new-confidence').value),
+        reasoning: document.getElementById('new-reasoning').value,
+        preMortem: document.getElementById('new-premortem').value,
+        stateTag: document.getElementById('new-state-tag').value,
+        risk: document.getElementById('new-risk').value,
+        actualOutcome: null,
+        verdict: null,
+        status: "sealed"
+      };
+
+      decisions.unshift(newEntry);
+      saveDecisions(decisions);
+      closeModal('modal-new');
+      document.getElementById('form-new-decision').reset();
+      document.getElementById('friction-seal-slider').value = 0;
+      checkFrictionSeal(0);
+    }
+
+    function openRevealModal(id) {
+      activeRevealId = id;
+      const decisions = getDecisions();
+      const target = decisions.find(d => d.id === id);
+      if (!target) return;
+
+      document.getElementById('reveal-title').innerText = target.title;
+      document.getElementById('reveal-sealed-date').innerText = target.dateMade;
+      document.getElementById('reveal-prediction-text').innerText = target.prediction;
+      document.getElementById('reveal-confidence-val').innerText = `${target.confidence}%`;
+      document.getElementById('reveal-premortem-text').innerText = target.preMortem || 'None noted';
+
+      document.getElementById('modal-reveal').classList.add('active');
+    }
+
+    function handleCompleteReveal(e) {
+      e.preventDefault();
+      if (!activeRevealId) return;
+
+      let decisions = getDecisions();
+      const idx = decisions.findIndex(d => d.id === activeRevealId);
+      if (idx !== -1) {
+        const actualOutcome = document.getElementById('reveal-actual-outcome').value;
+        const verdict = document.getElementById('reveal-verdict').value;
+        const invisibleVar = document.getElementById('reveal-invisible-var').value;
+        const decQual = parseInt(document.getElementById('reveal-dec-quality').value);
+        const outQual = parseInt(document.getElementById('reveal-out-quality').value);
+        const rule = document.getElementById('reveal-future-rule').value;
+
+        let calibration = 'Well Calibrated';
+        const conf = decisions[idx].confidence;
+        if (verdict === 'Wrong' && conf >= 75) {
+          calibration = 'Overconfident';
+        } else if (verdict === 'Right' && conf <= 55) {
+          calibration = 'Underconfident';
+        } else if (conf >= 40 && conf <= 60) {
+          calibration = 'Honest Uncertainty';
+        }
+
+        decisions[idx].actualOutcome = actualOutcome;
+        decisions[idx].verdict = verdict;
+        decisions[idx].invisibleVariable = invisibleVar;
+        decisions[idx].decisionQuality = decQual;
+        decisions[idx].outcomeQuality = outQual;
+        decisions[idx].futureRule = rule;
+        decisions[idx].calibration = calibration;
+        decisions[idx].status = 'archived';
+
+        saveDecisions(decisions);
+      }
+
+      closeModal('modal-reveal');
+      document.getElementById('form-reveal-outcome').reset();
+      activeRevealId = null;
+    }
+
+    function openBackupModal() {
+      document.getElementById('modal-backup').classList.add('active');
+    }
+
+    function exportJSONData() {
+      const decisions = getDecisions();
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(decisions, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `Sealed_Archive_${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importJSONData() {
+      const fileInput = document.getElementById('import-json-file');
+      if (!fileInput.files.length) {
+        alert('Please select a valid JSON backup file first.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (Array.isArray(imported)) {
+            saveDecisions(imported);
+            closeModal('modal-backup');
+            alert('Archive successfully restored!');
+          } else {
+            alert('Invalid backup format.');
+          }
+        } catch (err) {
+          alert('Error reading JSON file.');
+        }
+      };
+      reader.readAsText(fileInput.files[0]);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initFont();
+      renderApp();
+    });
+  </script>
+</body>
+</html>
