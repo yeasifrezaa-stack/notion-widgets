@@ -123,7 +123,7 @@
         .label { font-family: var(--font-mono); font-size: 0.7rem; color: var(--highlight); margin-bottom: 1rem; display: block; text-transform: uppercase; letter-spacing: 0.15em; }
         .vision-text { font-family: var(--font-serif); font-size: 1.4rem; font-style: italic; color: var(--text-main); line-height: 1.6; }
 
-        /* --- ULTRA-ANIMATIVE TASKS & TICK BOXES --- */
+        /* --- ULTRA-ANIMATIVE TASKS & BORDERLESS TICK BOXES --- */
         .task-list { list-style: none; margin-top: 1.5rem; max-height: 420px; overflow-y: auto; padding-right: 0.5rem; }
         .task-list::-webkit-scrollbar { width: 4px; }
         .task-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
@@ -149,8 +149,8 @@
         
         .checkbox-wrapper { position: relative; width: 22px; height: 22px; margin-top: 2px; flex-shrink: 0; }
         .checkbox {
-            width: 22px; height: 22px; border: 2px solid var(--text-dim); border-radius: 6px;
-            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); background: rgba(255,255,255,0.02);
+            width: 22px; height: 22px; border: none; border-radius: 6px;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); background: rgba(255, 255, 255, 0.07);
             position: relative; display: flex; align-items: center; justify-content: center;
         }
         .checkbox::after {
@@ -164,7 +164,7 @@
         }
         
         .task-item.completed .checkbox {
-            border-color: var(--highlight); background: var(--highlight);
+            border: none; background: var(--highlight);
             transform: rotate(360deg) scale(1.15);
             box-shadow: 0 0 25px var(--accent-glow), 0 0 10px var(--highlight);
         }
@@ -241,7 +241,46 @@
         }
         .settings-drawer.active { max-height: 350px; overflow-y: auto; border-top: 1px solid var(--border); padding: 1.2rem 1.5rem; margin-top: 1rem; }
         .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: center; font-size: 0.75rem; color: var(--text-dim); }
-        .settings-grid select { background: var(--surface); color: var(--text-main); border: 1px solid var(--border); padding: 0.4rem; border-radius: 4px; font-family: var(--font-mono); }
+        
+        /* --- HIGHLY AESTHETIC & ANIMATIVE DROPDOWNS --- */
+        .settings-grid select {
+            background: rgba(20, 20, 26, 0.9);
+            backdrop-filter: blur(12px);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.4s var(--spring);
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23A3E635' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.9rem center;
+            padding-right: 2.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .settings-grid select:hover {
+            border-color: var(--highlight);
+            background-color: rgba(30, 30, 42, 1);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 6px 25px rgba(163, 230, 53, 0.2);
+        }
+        .settings-grid select:focus {
+            outline: none;
+            border-color: var(--highlight);
+            background-color: rgba(30, 30, 42, 1);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 0 20px var(--accent-glow), 0 6px 25px rgba(163, 230, 53, 0.2);
+        }
+        .settings-grid select option {
+            background: #14141A;
+            color: var(--text-main);
+            padding: 0.8rem;
+            font-family: var(--font-mono);
+        }
 
         .svg-chart-container { width: 100%; height: 300px; display: flex; align-items: center; justify-content: center; transition: transform 0.4s var(--spring); }
         .svg-chart-container svg { overflow: visible; }
@@ -344,7 +383,7 @@
                     <p class="vision-text" id="ws-vision">Vision text...</p>
                 </div>
                 <div class="panel-section">
-                    <span class="label">Active Build Pipeline (Interactive Tasks & Tick Boxes)</span>
+                    <span class="label">Active Build Pipeline (Interactive Tasks & Borderless Tick Boxes)</span>
                     <ul class="task-list" id="ws-tasks"></ul>
                 </div>
             </div>
@@ -754,7 +793,7 @@
             }, 600);
         }
 
-        // --- TASK MANAGEMENT & ULTRA-ANIMATIVE TICK BOX ENGINE ---
+        // --- TASK MANAGEMENT & BORDERLESS TICK BOX ENGINE ---
         function renderTasks() {
             const taskContainer = document.getElementById('ws-tasks');
             taskContainer.innerHTML = '';
