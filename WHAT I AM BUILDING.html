@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Living Architecture - Ultimate Reactive OS</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
+
+        :root {
+            --bg: #0D0D12;
+            --surface: #14141A;
+            --text-main: #F4F4F5;
+            --text-dim: #71717A;
+            --border: rgba(255, 255, 255, 0.1);
+            --border-hover: rgba(255, 255, 255, 0.3);
+            --accent: #1F473E;
+            --accent-bright: #2D6A4F;
+            --accent-glow: rgba(163, 230, 53, 0.4);
+            --highlight: #A3E635;
+            --font-serif: 'Playfair Display', serif;
+            --font-sans: 'Inter', sans-serif;
+            --font-mono: 'Courier New', Courier, monospace;
+            --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            padding: 3rem 1.5rem;
+            max-width: 1300px;
+            margin: 0 auto;
+            overflow-x: hidden;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.035'/%3E%3C/svg%3E");
+        }
+
+        #cursor-glow {
+            position: fixed;
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(163, 230, 53, 0.04) 0%, transparent 70%);
+            border-radius: 50%; pointer-events: none;
+            transform: translate(-50%, -50%); z-index: 0;
+            transition: opacity 0.3s;
+        }
+
+        /* --- MAIN VIEW --- */
+        #main-view {
+            transition: opacity 0.6s ease, transform 0.8s var(--spring), filter 0.6s;
+            position: relative; z-index: 10;
+        }
+
+        #main-view.hidden {
+            opacity: 0; transform: scale(0.92) translateY(-30px);
+            filter: blur(15px); pointer-events: none; position: absolute; width: 100%;
+        }
+
+        .header { animation: fadeInDown 1.2s var(--spring) forwards; }
+        .meta { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.2em; color: var(--text-dim); text-transform: uppercase; }
+        .title { font-family: var(--font-serif); font-size: 3rem; font-weight: 400; margin: 0.8rem 0; letter-spacing: -0.02em; }
+        .divider { height: 1px; background: linear-gradient(90deg, var(--border) 0%, transparent 100%); margin: 2.5rem 0; width: 0; animation: drawLine 1.5s var(--spring) forwards 0.3s; }
+
+        /* GRID */
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; perspective: 1000px; }
+
+        .card {
+            padding: 2.5rem 2rem; border: 1px solid var(--border);
+            background: rgba(20, 20, 26, 0.4); backdrop-filter: blur(10px);
+            cursor: pointer; position: relative; overflow: hidden;
+            opacity: 0; animation: fadeUp 0.8s var(--spring) forwards;
+            transition: all 0.5s var(--spring); border-radius: 8px;
+            transform-style: preserve-3d;
+        }
+
+        .card:nth-child(1) { animation-delay: 0.1s; } .card:nth-child(2) { animation-delay: 0.2s; }
+        .card:nth-child(3) { animation-delay: 0.3s; } .card:nth-child(4) { animation-delay: 0.4s; }
+        .card:nth-child(5) { animation-delay: 0.5s; } .card:nth-child(6) { animation-delay: 0.6s; }
+
+        .grid:hover .card:not(:hover) { opacity: 0.4; filter: blur(3px); transform: scale(0.98); }
+        .card:hover { transform: translateY(-8px) scale(1.02) rotateX(2deg) rotateY(-2deg); background: rgba(30, 30, 40, 0.8); z-index: 2; border-color: var(--highlight); box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(163, 230, 53, 0.1); }
+        
+        .card h2 { font-family: var(--font-serif); font-size: 1.5rem; margin: 1rem 0 0.5rem; font-weight: 400; transition: color 0.3s; }
+        .card p { font-size: 0.85rem; color: var(--text-dim); font-weight: 300; line-height: 1.5; }
+        .card:hover h2 { color: var(--highlight); }
+        .motif { width: 32px; height: 32px; stroke: var(--text-dim); stroke-width: 1.5; fill: none; transition: all 0.5s var(--spring); }
+        .card:hover .motif { stroke: var(--highlight); transform: scale(1.2) rotate(5deg); }
+
+        /* MANIFESTO */
+        .manifesto { margin-top: 5rem; padding-top: 3rem; border-top: 1px solid var(--border); position: relative; }
+        .manifesto-line {
+            font-family: var(--font-serif); font-size: 1.5rem; margin-bottom: 1.2rem;
+            color: var(--text-dim); transition: all 0.5s var(--spring); opacity: 0;
+            transform: translateY(15px); animation: fadeUp 1s var(--spring) forwards;
+            width: fit-content; cursor: crosshair; position: relative;
+        }
+        
+        .manifesto-line:nth-child(2) { animation-delay: 0.7s; } .manifesto-line:nth-child(3) { animation-delay: 0.8s; }
+        .manifesto-line:nth-child(4) { animation-delay: 0.9s; } .manifesto-line:nth-child(5) { animation-delay: 1.0s; }
+        .manifesto-line:nth-child(6) { animation-delay: 1.1s; } .manifesto-line:nth-child(7) { animation-delay: 1.2s; color: var(--text-main); }
+
+        .manifesto-line:hover { color: var(--text-main); transform: translateX(20px) scale(1.05); text-shadow: 0 0 20px rgba(255,255,255,0.4); letter-spacing: 0.02em; }
+        .manifesto-line.highlight:hover { color: var(--highlight); text-shadow: 0 0 25px rgba(163, 230, 53, 0.5); }
+
+        /* --- WORKSPACE PANEL --- */
+        .workspace {
+            display: none; position: relative; z-index: 20; opacity: 0;
+            transform: translateY(40px) scale(0.98); transition: all 0.6s var(--spring);
+        }
+        .workspace.active { display: block; opacity: 1; transform: translateY(0) scale(1); }
+
+        .workspace-header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid var(--border); padding-bottom: 2rem; margin-bottom: 3rem; }
+        .btn-close {
+            background: transparent; border: 1px solid var(--border); color: var(--text-dim);
+            padding: 0.8rem 1.5rem; font-family: var(--font-mono); font-size: 0.75rem;
+            cursor: pointer; transition: all 0.4s var(--spring); letter-spacing: 0.1em; border-radius: 4px;
+        }
+        .btn-close:hover { border-color: var(--highlight); color: var(--bg); background: var(--highlight); transform: translateX(-5px); box-shadow: 0 0 15px var(--accent-glow); }
+
+        .workspace-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 4rem; align-items: start; }
+        .panel-section { margin-bottom: 3rem; }
+        .label { font-family: var(--font-mono); font-size: 0.7rem; color: var(--highlight); margin-bottom: 1rem; display: block; text-transform: uppercase; letter-spacing: 0.15em; }
+        .vision-text { font-family: var(--font-serif); font-size: 1.4rem; font-style: italic; color: var(--text-main); line-height: 1.6; }
+
+        /* --- ULTRA-ANIMATIVE TASKS & TICK BOXES --- */
+        .task-list { list-style: none; margin-top: 1.5rem; max-height: 420px; overflow-y: auto; padding-right: 0.5rem; }
+        .task-list::-webkit-scrollbar { width: 4px; }
+        .task-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+        
+        .task-item {
+            display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 1.2rem 0;
+            border-bottom: 1px solid var(--border); transition: all 0.5s var(--spring); position: relative; overflow: hidden;
+            animation: taskEnter 0.6s var(--spring) forwards;
+        }
+        @keyframes taskEnter {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); filter: blur(4px); }
+            to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+        }
+        .task-item.deleting {
+            animation: taskExit 0.4s var(--spring) forwards;
+        }
+        @keyframes taskExit {
+            to { opacity: 0; transform: translateX(50px) scale(0.9); filter: blur(10px); max-height: 0; padding: 0; border: none; }
+        }
+        .task-item:hover { transform: translateX(12px) scale(1.01); background: linear-gradient(90deg, rgba(163,230,53,0.04) 0%, transparent 100%); padding-left: 1rem; border-color: var(--border-hover); }
+        
+        .task-main-content { display: flex; align-items: flex-start; gap: 1.2rem; cursor: pointer; flex-grow: 1; }
+        
+        .checkbox-wrapper { position: relative; width: 22px; height: 22px; margin-top: 2px; flex-shrink: 0; }
+        .checkbox {
+            width: 22px; height: 22px; border: 2px solid var(--text-dim); border-radius: 6px;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); background: rgba(255,255,255,0.02);
+            position: relative; display: flex; align-items: center; justify-content: center;
+        }
+        .checkbox::after {
+            content: '✓'; font-size: 12px; color: var(--bg); font-weight: bold; opacity: 0;
+            transform: scale(0) rotate(-45deg); transition: all 0.4s var(--spring);
+        }
+        
+        .checkbox-ripple {
+            position: absolute; width: 100%; height: 100%; border-radius: 50%; pointer-events: none;
+            background: var(--highlight); opacity: 0; transform: scale(1);
+        }
+        
+        .task-item.completed .checkbox {
+            border-color: var(--highlight); background: var(--highlight);
+            transform: rotate(360deg) scale(1.15);
+            box-shadow: 0 0 25px var(--accent-glow), 0 0 10px var(--highlight);
+        }
+        .task-item.completed .checkbox::after {
+            opacity: 1; transform: scale(1) rotate(0deg);
+        }
+        .task-item.completed .checkbox-ripple {
+            animation: rippleEffect 0.6s var(--spring) forwards;
+        }
+        @keyframes rippleEffect {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(2.8); opacity: 0; }
+        }
+
+        .task-title { font-size: 0.95rem; color: var(--text-main); font-weight: 400; position: relative; transition: color 0.3s; }
+        .task-desc { font-size: 0.8rem; color: var(--text-dim); margin-top: 0.4rem; font-weight: 300; line-height: 1.4; transition: color 0.3s; }
+        
+        .task-item.completed .task-title { color: var(--text-dim); }
+        .task-item.completed .task-title::after {
+            content: ''; position: absolute; left: 0; top: 50%; height: 2px; background: var(--highlight);
+            animation: strikethrough 0.5s var(--spring) forwards; box-shadow: 0 0 8px var(--accent-glow);
+        }
+
+        /* Task Action Controls (Edit & Delete) */
+        .task-actions { display: flex; align-items: center; gap: 0.5rem; opacity: 0.3; transition: opacity 0.3s var(--spring); }
+        .task-item:hover .task-actions { opacity: 1; }
+        .task-action-btn {
+            background: transparent; border: 1px solid var(--border); color: var(--text-dim);
+            width: 28px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s var(--spring); font-size: 0.8rem;
+        }
+        .task-action-btn:hover { border-color: var(--highlight); color: var(--highlight); transform: scale(1.2) rotate(10deg); background: rgba(163,230,53,0.08); box-shadow: 0 0 10px var(--accent-glow); }
+        .task-action-btn.delete:hover { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.08); box-shadow: 0 0 10px rgba(239,68,68,0.3); }
+
+        /* Add Task Container Form */
+        .add-task-container { margin-top: 1.5rem; background: rgba(0,0,0,0.25); border: 1px dashed var(--border); border-radius: 8px; padding: 1.2rem; transition: all 0.4s var(--spring); }
+        .add-task-container:hover { border-color: var(--border-hover); background: rgba(0,0,0,0.4); }
+        .add-task-inputs { display: flex; flex-direction: column; gap: 0.8rem; }
+        .add-task-input { background: var(--surface); border: 1px solid var(--border); color: var(--text-main); padding: 0.6rem 0.8rem; border-radius: 4px; font-family: var(--font-sans); font-size: 0.85rem; transition: border-color 0.3s; }
+        .add-task-input:focus { outline: none; border-color: var(--highlight); box-shadow: 0 0 10px var(--accent-glow); }
+        .btn-add-task {
+            background: var(--highlight); color: var(--bg); border: none; padding: 0.6rem 1.2rem;
+            border-radius: 4px; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600; cursor: pointer;
+            transition: all 0.3s var(--spring); letter-spacing: 0.1em; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+        }
+        .btn-add-task:hover { transform: translateY(-2px); box-shadow: 0 0 20px var(--accent-glow); filter: brightness(1.1); }
+
+        /* --- CHART & CONTROLS UI --- */
+        .interactive-zone { background: rgba(20, 20, 26, 0.6); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        
+        .chart-box { padding: 2rem; position: relative; }
+        .chart-box-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .chart-title-group { display: flex; align-items: center; gap: 1rem; }
+        .chart-box-title { font-family: var(--font-serif); font-size: 1.2rem; font-style: italic; color: var(--text-main); }
+        
+        .chart-actions { display: flex; align-items: center; gap: 0.8rem; }
+        .action-icon {
+            background: transparent; border: 1px solid var(--border); color: var(--text-dim);
+            width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s var(--spring); font-size: 0.9rem;
+        }
+        .action-icon:hover { border-color: var(--highlight); color: var(--highlight); transform: scale(1.1) rotate(15deg); background: rgba(163, 230, 53, 0.05); }
+
+        /* Color Picker Sign */
+        .color-picker-wrapper { position: relative; width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s var(--spring); background: rgba(255,255,255,0.02); }
+        .color-picker-wrapper:hover { border-color: var(--highlight); transform: scale(1.1); }
+        .color-picker-wrapper input[type="color"] { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+        .color-preview-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--highlight); box-shadow: 0 0 10px rgba(163,230,53,0.5); }
+
+        /* Settings Drawer Inside Chart Box */
+        .settings-drawer {
+            max-height: 0; overflow: hidden; background: rgba(0,0,0,0.3); border-top: 0px solid var(--border);
+            transition: all 0.5s var(--spring); padding: 0 1.5rem; border-radius: 0 0 6px 6px;
+        }
+        .settings-drawer.active { max-height: 350px; overflow-y: auto; border-top: 1px solid var(--border); padding: 1.2rem 1.5rem; margin-top: 1rem; }
+        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: center; font-size: 0.75rem; color: var(--text-dim); }
+        .settings-grid select { background: var(--surface); color: var(--text-main); border: 1px solid var(--border); padding: 0.4rem; border-radius: 4px; font-family: var(--font-mono); }
+
+        .svg-chart-container { width: 100%; height: 300px; display: flex; align-items: center; justify-content: center; transition: transform 0.4s var(--spring); }
+        .svg-chart-container svg { overflow: visible; }
+        .svg-chart-container.pulse { animation: chartPulse 0.5s var(--spring); }
+
+        /* Data Controls */
+        .control-panel { background: rgba(0,0,0,0.2); border-top: 1px solid var(--border); padding: 2rem; }
+        .control-header { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+        .control-header::before { content: ''; display: inline-block; width: 6px; height: 6px; background: var(--highlight); border-radius: 50%; animation: blink 2s infinite; }
+        
+        .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .input-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .input-label { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-main); font-weight: 300; }
+        .input-val { color: var(--highlight); font-family: var(--font-mono); }
+        
+        /* Custom Reactive Sliders */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; cursor: pointer; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: var(--border); border-radius: 2px; transition: all 0.3s; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: var(--highlight); margin-top: -6px; box-shadow: 0 0 10px rgba(163, 230, 53, 0.5); transition: transform 0.2s var(--spring); }
+        input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.3); }
+        input[type=range]:active::-webkit-slider-runnable-track { background: rgba(255,255,255,0.2); }
+
+        /* SVG Element Transitions */
+        svg path, svg rect, svg polygon, svg circle, svg polyline { transition: all 0.8s var(--spring); }
+
+        /* Animations */
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(25px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes drawLine { to { width: 100%; } }
+        @keyframes strikethrough { from { width: 0; } to { width: 100%; } }
+        @keyframes chartPulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); filter: brightness(1.2); } 100% { transform: scale(1); } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    </style>
+</head>
+<body>
+
+    <div id="cursor-glow"></div>
+
+    <!-- MAIN DASHBOARD -->
+    <div id="main-view">
+        <div class="header">
+            <div class="meta">ARCHITECTURE / REACTIVE OS v3.0</div>
+            <h1 class="title">🏗️ What I'M Building</h1>
+            <p class="meta" style="color: var(--text-dim)">Six fully loaded, customizable pillars supporting one deliberate life.</p>
+            <div class="divider"></div>
+        </div>
+
+        <div class="grid">
+            <div class="card" onclick="openPillar('mind')">
+                <svg class="motif" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                <h2>A Mind</h2><p>O-Level exam modules & deep work focus blocks.</p>
+            </div>
+            <div class="card" onclick="openPillar('body')">
+                <svg class="motif" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                <h2>A Body</h2><p>Core strength, crunches & rooftop conditioning.</p>
+            </div>
+            <div class="card" onclick="openPillar('career')">
+                <svg class="motif" viewBox="0 0 24 24"><path d="M3 21h18M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16M9 9h6M9 13h6"/></svg>
+                <h2>A Career</h2><p>Redbubble storefronts & Suncrest Cola commercial assets.</p>
+            </div>
+            <div class="card" onclick="openPillar('work')">
+                <svg class="motif" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/></svg>
+                <h2>A Body of Work</h2><p>Blender 3D renders, Python scripts & Arduino robotics.</p>
+            </div>
+            <div class="card" onclick="openPillar('finance')">
+                <svg class="motif" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                <h2>Financial Foundation</h2><p>Capital allocation, hardware budgets & skincare orders.</p>
+            </div>
+            <div class="card" onclick="openPillar('community')">
+                <svg class="motif" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M16 3.13a4 4 0 010 7.75M9 11a4 4 0 100-8 4 4 0 000 8z"/></svg>
+                <h2>A Community</h2><p>Family alignment, brother Alif syncs & peer networks.</p>
+            </div>
+        </div>
+
+        <div class="manifesto">
+            <div class="meta" style="margin-bottom: 2rem;">✦ MY MANIFESTO</div>
+            <div class="manifesto-line">I want to live deliberately.</div>
+            <div class="manifesto-line">I believe progress compounds quietly, not dramatically.</div>
+            <div class="manifesto-line">I value honesty with myself more than comfort.</div>
+            <div class="manifesto-line">I will keep building even in the weeks it feels slow.</div>
+            <div class="manifesto-line">I refuse to let other people's timelines become my own anxiety.</div>
+            <div class="manifesto-line highlight">I am becoming someone who finishes what they start.</div>
+        </div>
+    </div>
+
+    <!-- WORKSPACE PANEL -->
+    <div class="workspace" id="workspace">
+        <div class="workspace-header">
+            <div>
+                <span class="meta" id="ws-meta">PILLAR / 00</span>
+                <h1 class="title" id="ws-title" style="margin: 0.4rem 0 0 0;">Title</h1>
+            </div>
+            <button class="btn-close" onclick="closePillar()">← RETURN TO GRID</button>
+        </div>
+
+        <div class="workspace-grid">
+            <div>
+                <div class="panel-section">
+                    <span class="label">Core Vision</span>
+                    <p class="vision-text" id="ws-vision">Vision text...</p>
+                </div>
+                <div class="panel-section">
+                    <span class="label">Active Build Pipeline (Interactive Tasks & Tick Boxes)</span>
+                    <ul class="task-list" id="ws-tasks"></ul>
+                </div>
+            </div>
+
+            <div>
+                <div class="interactive-zone">
+                    <div class="chart-box">
+                        <div class="chart-box-header">
+                            <div class="chart-title-group">
+                                <span class="chart-box-title" id="chart-type-title">Architectural Metric</span>
+                            </div>
+                            <div class="chart-actions">
+                                <!-- Color Sign Picker -->
+                                <div class="color-picker-wrapper" title="Customize Chart Color">
+                                    <div class="color-preview-dot" id="color-dot"></div>
+                                    <input type="color" id="chart-color-picker" value="#A3E635" onchange="updateChartColor(this.value)">
+                                </div>
+                                <!-- Gear Settings Sign -->
+                                <button class="action-icon" onclick="toggleSettings()" title="Customization Settings">⚙️</button>
+                            </div>
+                        </div>
+
+                        <!-- Settings Drawer -->
+                        <div class="settings-drawer" id="settings-drawer">
+                            <div class="settings-grid">
+                                <span>Chart Grid Lines:</span>
+                                <select id="setting-grid" onchange="updateSettings()">
+                                    <option value="show">Enabled (Full)</option>
+                                    <option value="minimal">Minimalist</option>
+                                    <option value="hide">Hidden</option>
+                                </select>
+                                <span>Animation Spring:</span>
+                                <select id="setting-speed" onchange="updateSettings()">
+                                    <option value="normal">Default Spring</option>
+                                    <option value="fast">Ultra Fast</option>
+                                </select>
+                            </div>
+                            <div style="margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 0.8rem;">
+                                <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--highlight); display: block; margin-bottom: 0.6rem; text-transform: uppercase;">Customize Graph Topics / Labels</span>
+                                <div id="topic-inputs-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; font-size: 0.75rem; color: var(--text-dim);"></div>
+                            </div>
+                        </div>
+
+                        <div class="svg-chart-container" id="svg-chart-mount">
+                            <!-- SVG Injected Here -->
+                        </div>
+                    </div>
+                    
+                    <div class="control-panel">
+                        <div class="control-header">Data Input Matrix (Customizable Sliders)</div>
+                        <div class="controls-grid" id="controls-mount">
+                            <!-- Sliders Injected Here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Cursor Spotlight
+        document.addEventListener('mousemove', (e) => {
+            const glow = document.getElementById('cursor-glow');
+            glow.style.left = e.clientX + 'px';
+            glow.style.top = e.clientY + 'px';
+        });
+
+        let activePillar = null;
+
+        const db = {
+            mind: {
+                meta: "PILLAR / 01", title: "A Mind",
+                vision: "Deliberate clarity. Managing O-Level prep and high-focus study modules with absolute zero friction.",
+                color: "#A3E635",
+                settings: { grid: 'show', speed: 'normal' },
+                tasks: [
+                    { title: "Execute 2h Deep Work Block", desc: "Start immediately after school ends at 2:00 PM.", completed: false },
+                    { title: "O-Level Past Papers Audit", desc: "Complete 2 timed Cambridge International exam papers.", completed: false },
+                    { title: "Syllabus Module Mapping", desc: "Review computer science theory & math problem sets.", completed: false },
+                    { title: "Vocabulary & Concept Retention", desc: "Active recall sessions for technical definitions.", completed: false }
+                ],
+                chartName: "Focus Hours Trajectory & Momentum",
+                state: { mon: 2.5, wed: 4.0, fri: 3.0, sun: 5.0 },
+                labels: { t1: 'MON', t2: 'WED', t3: 'FRI', t4: 'SUN' },
+                topicControls: [
+                    { id: 't1', label: 'Topic 1 Label' },
+                    { id: 't2', label: 'Topic 2 Label' },
+                    { id: 't3', label: 'Topic 3 Label' },
+                    { id: 't4', label: 'Topic 4 Label' }
+                ],
+                controls: [
+                    { id: 'mon', label: 'Mon Focus (Hrs)', min: 0, max: 8, step: 0.5 },
+                    { id: 'wed', label: 'Wed Focus (Hrs)', min: 0, max: 8, step: 0.5 },
+                    { id: 'fri', label: 'Fri Focus (Hrs)', min: 0, max: 8, step: 0.5 },
+                    { id: 'sun', label: 'Sun Focus (Hrs)', min: 0, max: 8, step: 0.5 }
+                ],
+                render: function(s, l) {
+                    const col = db.mind.color;
+                    const showGrid = db.mind.settings.grid;
+                    const getY = (val) => 190 - (val / 8) * 130;
+                    const getX = (i) => 60 + i * 90;
+                    
+                    const pts = `${getX(0)},${getY(s.mon)} ${getX(1)},${getY(s.wed)} ${getX(2)},${getY(s.fri)} ${getX(3)},${getY(s.sun)}`;
+                    const areaPts = `${getX(0)},190 ${pts} ${getX(3)},190`;
+                    
+                    return `
+                    <svg width="100%" height="100%" viewBox="0 0 400 240">
+                        <defs>
+                            <linearGradient id="mindGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="${col}" stop-opacity="0.35"/>
+                                <stop offset="100%" stop-color="${col}" stop-opacity="0.0"/>
+                            </linearGradient>
+                        </defs>
+                        
+                        ${showGrid !== 'hide' ? `
+                            <line x1="40" y1="40" x2="380" y2="40" stroke="rgba(255,255,255,0.06)" stroke-dasharray="4"/>
+                            <text x="35" y="44" fill="#71717A" font-size="9" font-family="monospace" text-anchor="end">8h</text>
+                            
+                            <line x1="40" y1="115" x2="380" y2="115" stroke="rgba(255,255,255,0.06)" stroke-dasharray="4"/>
+                            <text x="35" y="119" fill="#71717A" font-size="9" font-family="monospace" text-anchor="end">4h</text>
+                            
+                            <line x1="40" y1="190" x2="380" y2="190" stroke="rgba(255,255,255,0.15)"/>
+                            <text x="35" y="194" fill="#71717A" font-size="9" font-family="monospace" text-anchor="end">0h</text>
+                        ` : ''}
+
+                        <polygon points="${areaPts}" fill="url(#mindGrad)"/>
+                        <polyline points="${pts}" fill="none" stroke="${col}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        
+                        <g transform="translate(${getX(0)}, ${getY(s.mon)})"><circle cx="0" cy="0" r="6" fill="#0D0D12" stroke="${col}" stroke-width="2.5"/><text x="0" y="-12" fill="${col}" font-size="10" font-family="monospace" text-anchor="middle" font-weight="bold">${s.mon}h</text></g>
+                        <g transform="translate(${getX(1)}, ${getY(s.wed)})"><circle cx="0" cy="0" r="6" fill="#0D0D12" stroke="${col}" stroke-width="2.5"/><text x="0" y="-12" fill="${col}" font-size="10" font-family="monospace" text-anchor="middle" font-weight="bold">${s.wed}h</text></g>
+                        <g transform="translate(${getX(2)}, ${getY(s.fri)})"><circle cx="0" cy="0" r="6" fill="#0D0D12" stroke="${col}" stroke-width="2.5"/><text x="0" y="-12" fill="${col}" font-size="10" font-family="monospace" text-anchor="middle" font-weight="bold">${s.fri}h</text></g>
+                        <g transform="translate(${getX(3)}, ${getY(s.sun)})"><circle cx="0" cy="0" r="7" fill="${col}" stroke="#0D0D12" stroke-width="2"/><text x="0" y="-12" fill="${col}" font-size="10" font-family="monospace" text-anchor="middle" font-weight="bold">${s.sun}h</text></g>
+
+                        <text x="${getX(0)}" y="215" fill="#71717A" font-size="10" font-family="monospace" text-anchor="middle">${l.t1}</text>
+                        <text x="${getX(1)}" y="215" fill="#71717A" font-size="10" font-family="monospace" text-anchor="middle">${l.t2}</text>
+                        <text x="${getX(2)}" y="215" fill="#71717A" font-size="10" font-family="monospace" text-anchor="middle">${l.t3}</text>
+                        <text x="${getX(3)}" y="215" fill="#71717A" font-size="10" font-family="monospace" text-anchor="middle">${l.t4}</text>
+                    </svg>`;
+                }
+            },
+            body: {
+                meta: "PILLAR / 02", title: "A Body",
+                vision: "Unstoppable physical energy. Consistent rooftop training, core endurance, and disciplined recovery.",
+                color: "#A3E635",
+                settings: { grid: 'show', speed: 'normal' },
+                tasks: [
+                    { title: "Daily Core Routine Target", desc: "Execute target: 200 crunches (Minimum fallback: 100).", completed: false },
+                    { title: "Rooftop Workout Block", desc: "1-hour overall session (At least 30 mins active time + recovery).", completed: false },
+                    { title: "Hydration & Electrolyte Intake", desc: "Maintain peak daily water intake for athletic conditioning.", completed: false },
+                    { title: "Mobility & Scapular Shrugs", desc: "Post-workout structural stretching and posture alignment.", completed: false }
+                ],
+                chartName: "Intensity Output Matrix & Volume",
+                state: { w1c: 60, w1r: 40, w2c: 80, w2r: 50, w3c: 100, w3r: 70 },
+                labels: { l1: 'WEEK 1', l2: 'WEEK 2', l3: 'WEEK 3' },
+                topicControls: [
+                    { id: 'l1', label: 'Column 1 Label' },
+                    { id: 'l2', label: 'Column 2 Label' },
+                    { id: 'l3', label: 'Column 3 Label' }
+                ],
+                controls: [
+                    { id: 'w1c', label: 'W1 Core', min: 10, max: 120, step: 5 }, { id: 'w1r', label: 'W1 Roof', min: 10, max: 120, step: 5 },
+                    { id: 'w2c', label: 'W2 Core', min: 10, max: 120, step: 5 }, { id: 'w2r', label: 'W2 Roof', min: 10, max: 120, step: 5 },
+                    { id: 'w3c', label: 'W3 Core', min: 10, max: 120, step: 5 }, { id: 'w3r', label: 'W3 Roof', min: 10, max: 120, step: 5 }
+                ],
+                render: function(s, l) {
+                    const col = db.body.color;
+                    const drawCol = (x, h1, h2, label) => {
+                        const base = 195; const y1 = base - h1; const y2 = y1 - h2; const total = h1 + h2;
+                        return `
+                        <g transform="translate(${x}, 0)">
+                            <rect x="0" y="${y1}" width="42" height="${h1}" fill="#1F473E" rx="3"/>
+                            <rect x="0" y="${y2}" width="42" height="${h2}" fill="${col}" rx="3"/>
+                            <text x="21" y="${y2 - 12}" fill="${col}" font-size="10" font-family="monospace" text-anchor="middle" font-weight="bold">${total}</text>
+                            <text x="21" y="215" font-size="10" fill="#71717A" font-family="monospace" text-anchor="middle">${label}</text>
+                        </g>`;
+                    };
+                    return `
+                    <svg width="100%" height="100%" viewBox="0 0 400 240">
+                        <line x1="30" y1="195" x2="370" y2="195" stroke="rgba(255,255,255,0.15)"/>
+                        ${drawCol(60, s.w1c, s.w1r, l.l1)}
+                        ${drawCol(170, s.w2c, s.w2r, l.l2)}
+                        ${drawCol(280, s.w3c, s.w3r, l.l3)}
+                    </svg>`;
+                }
+            },
+            career: {
+                meta: "PILLAR / 03", title: "A Career",
+                vision: "Building real commercial output that exists in the digital marketplace with high customer conversion.",
+                color: "#A3E635",
+                settings: { grid: 'show', speed: 'normal' },
+                tasks: [
+                    { title: "Suncrest Cola Commercial Export", desc: "Upscale AI-generated video ad assets to pristine 4K resolution.", completed: false },
+                    { title: "GRITandGLITCH Storefront Sync", desc: "Publish custom automotive and anime graphics on Redbubble.", completed: false },
+                    { title: "TeePublic Tag Optimization", desc: "Refine SEO keywords and descriptions for maximum reach.", completed: false }
+                ],
+                chartName: "Shipped Assets vs Engagement Velocity",
+                state: { q1s: 40, q1r: 25, q2s: 75, q2r: 60, q3s: 115, q3r: 95 },
+                labels: { q1: 'Q1 SHIP', q2: 'Q2 SHIP', q3: 'Q3 SHIP' },
+                topicControls: [
+                    { id: 'q1', label: 'Metric 1 Label' },
+                    { id: 'q2', label: 'Metric 2 Label' },
+                    { id: 'q3', label: 'Metric 3 Label' }
+                ],
+                controls: [
+                    { id: 'q1s', label: 'Q1 Shipped', min: 10, max: 140, step: 5 }, { id: 'q1r', label: 'Q1 Reach', min: 10, max: 140, step: 5 },
+                    { id: 'q2s', label: 'Q2 Shipped', min: 10, max: 140, step: 5 }, { id: 'q2r', label: 'Q2 Reach', min: 10, max: 140, step: 5 },
+                    { id: 'q3s', label: 'Q3 Shipped', min: 10, max: 140, step: 5 }, { id: 'q3r', label: 'Q3 Reach', min: 10, max: 140, step: 5 }
+                ],
+                render: function(s, l) {
+                    const col = db.career.color;
+                    const b = 195;
+                    const getX = (i) => 70 + i * 110;
+                    return `
+                    <svg width="100%" height="100%" viewBox="0 0 400 240">
+                        <line x1="40" y1="${b}" x2="370" y2="${b}" stroke="rgba(255,255,255,0.15)"/>
+                        <rect x="${getX(0)-14}" y="${b-s.q1s}" width="28" height="${s.q1s}" fill="${col}" rx="3"/>
+                        <rect x="${getX(1)-14}" y="${b-s.q2s}" width="28" height="${s.q2s}" fill="${col}" rx="3"/>
+                        <rect x="${getX(2)-14}" y="${b-s.q3s}" width="28" height="${s.q3s}" fill="${col}" rx="3"/>
+                        <text x="${getX(0)}" y="215" fill="#71717A" font-size="10" font-family="monospace" text-anchor="middle">${l.q1}</text>
+                        <text x="${getX(1)}" y="215" fill="#71717A" font-size="10" font-family="monospace" text-anchor="middle">${l.q2}</text>
+                        <text x="${getX(2)}" y="215" fill="#71717A" font-size="10" font-family="monospace" text-anchor="middle">${l.q3}</text>
+                    </svg>`;
+                }
+            },
+            work: {
+                meta: "PILLAR / 04", title: "A Body of Work",
+                vision: "Creating advanced digital assets, 3D blender models, Python pipelines, and physical robotics.",
+                color: "#A3E635",
+                settings: { grid: 'show', speed: 'normal' },
+                tasks: [
+                    { title: "Blender 3D Character Rigging", desc: "Refine lighting, textures, and node setups for custom models.", completed: false },
+                    { title: "Python Backend Development", desc: "Execute freeCodeCamp coursework for data analytics and APIs.", completed: false },
+                    { title: "Arduino Robotics Circuit Test", desc: "Calibrate servo motors, color sensors, and HC-05 Bluetooth module.", completed: false }
+                ],
+                chartName: "Technical Build & Execution %",
+                state: { b1: 85, b2: 65, b3: 75 },
+                labels: { b1: 'Blender 3D', b2: 'Python API', b3: 'Arduino Bot' },
+                topicControls: [
+                    { id: 'b1', label: 'Bar 1 Label' },
+                    { id: 'b2', label: 'Bar 2 Label' },
+                    { id: 'b3', label: 'Bar 3 Label' }
+                ],
+                controls: [
+                    { id: 'b1', label: 'Blender Art (%)', min: 5, max: 100, step: 1 },
+                    { id: 'b2', label: 'Python Script (%)', min: 5, max: 100, step: 1 },
+                    { id: 'b3', label: 'Arduino Test (%)', min: 5, max: 100, step: 1 }
+                ],
+                render: function(s, l) {
+                    const col = db.work.color;
+                    const drawBar = (y, val, label) => {
+                        const w = val * 2.1;
+                        return `
+                        <g transform="translate(0, ${y})">
+                            <text x="105" y="18" fill="#F4F4F5" font-size="11" font-family="sans-serif" text-anchor="end">${label}</text>
+                            <rect x="120" y="0" width="${w}" height="24" fill="${col}" rx="2"/>
+                            <text x="${120 + w + 18}" y="16" fill="${col}" font-size="11" font-family="monospace" font-weight="bold">${val}%</text>
+                        </g>`;
+                    };
+                    return `
+                    <svg width="100%" height="100%" viewBox="0 0 400 240">
+                        ${drawBar(45, s.b1, l.b1)}
+                        ${drawBar(105, s.b2, l.b2)}
+                        ${drawBar(165, s.b3, l.b3)}
+                    </svg>`;
+                }
+            },
+            finance: {
+                meta: "PILLAR / 05", title: "Financial Foundation",
+                vision: "Maintaining rigorous financial tracking, skincare inventory, and hardware investment allocation.",
+                color: "#A3E635",
+                settings: { grid: 'show', speed: 'normal' },
+                tasks: [
+                    { title: "Arogga Skincare Restock Ledger", desc: "Monitor Melao B3 5% serum and exfoliant orders.", completed: false },
+                    { title: "Merch Revenue Audit", desc: "Review Redbubble and TeePublic payout schedules.", completed: false }
+                ],
+                chartName: "Capital & Resource Allocation Ring",
+                state: { hard: 45, save: 35, care: 20 },
+                labels: { f1: 'Tech', f2: 'Save', f3: 'Care' },
+                topicControls: [
+                    { id: 'f1', label: 'Segment 1 Label' },
+                    { id: 'f2', label: 'Segment 2 Label' },
+                    { id: 'f3', label: 'Segment 3 Label' }
+                ],
+                controls: [
+                    { id: 'hard', label: 'Hardware/Tech', min: 10, max: 100, step: 1 },
+                    { id: 'save', label: 'Savings Reserve', min: 10, max: 100, step: 1 },
+                    { id: 'care', label: 'Personal Care', min: 10, max: 100, step: 1 }
+                ],
+                render: function(s, l) {
+                    const col = db.finance.color;
+                    const total = s.hard + s.save + s.care;
+                    const p1 = s.hard/total; const p2 = s.save/total; const p3 = s.care/total;
+                    const c = Math.PI * 2 * 55;
+                    const o1 = 0; const o2 = p1 * c; const o3 = (p1 + p2) * c;
+                    return `
+                    <svg width="100%" height="100%" viewBox="0 0 400 240">
+                        <g transform="translate(190, 120) rotate(-90)">
+                            <circle cx="0" cy="0" r="55" fill="none" stroke="${col}" stroke-width="34" stroke-dasharray="${p1*c} ${c}" stroke-dashoffset="${-o1}"/>
+                            <circle cx="0" cy="0" r="55" fill="none" stroke="#2D6A4F" stroke-width="34" stroke-dasharray="${p2*c} ${c}" stroke-dashoffset="${-o2}"/>
+                            <circle cx="0" cy="0" r="55" fill="none" stroke="#4A5568" stroke-width="34" stroke-dasharray="${p3*c} ${c}" stroke-dashoffset="${-o3}"/>
+                        </g>
+                    </svg>`;
+                }
+            },
+            community: {
+                meta: "PILLAR / 06", title: "A Community",
+                vision: "Surrounding myself with ambitious builders while staying grounded with family and elder brother Alif.",
+                color: "#A3E635",
+                settings: { grid: 'show', speed: 'normal' },
+                tasks: [
+                    { title: "Weekly Sync with Brother Alif", desc: "Catch up on university progress at INTI Malaysia.", completed: false },
+                    { title: "Family Alignment & Outings", desc: "Plan weekend dinners and outings with Ammu and Papa.", completed: false }
+                ],
+                chartName: "Network Connection Density & Growth",
+                state: { j1: 25, j2: 45, a1: 65, a2: 55, j3: 105, j4: 85 },
+                labels: { t1: 'JAN', t2: 'APR', t3: 'JUL' },
+                topicControls: [
+                    { id: 't1', label: 'Point 1 Label' },
+                    { id: 't2', label: 'Point 2 Label' },
+                    { id: 't3', label: 'Point 3 Label' }
+                ],
+                controls: [
+                    { id: 'j1', label: 'Jan Family', min: 10, max: 120, step: 5 }, { id: 'j2', label: 'Jan Peers', min: 10, max: 120, step: 5 },
+                    { id: 'a1', label: 'Apr Family', min: 10, max: 120, step: 5 }, { id: 'a2', label: 'Apr Peers', min: 10, max: 120, step: 5 },
+                    { id: 'j3', label: 'Jul Family', min: 10, max: 120, step: 5 }, { id: 'j4', label: 'Jul Peers', min: 10, max: 120, step: 5 }
+                ],
+                render: function(s, l) {
+                    const col = db.community.color;
+                    const b = 195;
+                    const l1 = `50,${b} 50,${b-s.j1} 210,${b-s.a1} 350,${b-s.j3} 350,${b}`;
+                    return `
+                    <svg width="100%" height="100%" viewBox="0 0 400 240">
+                        <polygon points="${l1}" fill="rgba(163,230,53,0.15)"/>
+                        <polyline points="50,${b-s.j1} 210,${b-s.a1} 350,${b-s.j3}" fill="none" stroke="${col}" stroke-width="3.5"/>
+                    </svg>`;
+                }
+            }
+        };
+
+        const mainView = document.getElementById('main-view');
+        const workspace = document.getElementById('workspace');
+
+        function openPillar(id) {
+            activePillar = id;
+            const data = db[id];
+            
+            document.getElementById('ws-meta').innerText = data.meta;
+            document.getElementById('ws-title').innerText = data.title;
+            document.getElementById('ws-vision').innerText = data.vision;
+            document.getElementById('chart-type-title').innerText = data.chartName;
+
+            document.getElementById('chart-color-picker').value = data.color;
+            document.getElementById('color-dot').style.background = data.color;
+
+            renderTasks();
+
+            // Render Topic Customization Inputs inside Settings Drawer
+            const topicContainer = document.getElementById('topic-inputs-grid');
+            topicContainer.innerHTML = '';
+            data.topicControls.forEach(tc => {
+                const div = document.createElement('div');
+                div.style.display = 'flex';
+                div.style.flexDirection = 'column';
+                div.style.gap = '0.2rem';
+                div.innerHTML = `
+                    <span style="font-size:0.7rem; color:var(--text-dim);">${tc.label}</span>
+                    <input type="text" id="topic-${tc.id}" value="${data.labels[tc.id]}" style="background: var(--surface); color: var(--text-main); border: 1px solid var(--border); padding: 0.3rem 0.5rem; border-radius: 4px; font-family: var(--font-mono); font-size: 0.75rem; width: 100%;">
+                `;
+                topicContainer.appendChild(div);
+
+                document.getElementById(`topic-${tc.id}`).addEventListener('input', (e) => {
+                    db[activePillar].labels[tc.id] = e.target.value;
+                    updateChart(false);
+                });
+            });
+
+            // Render Controls Engine (Sliders)
+            const controlsMount = document.getElementById('controls-mount');
+            controlsMount.innerHTML = '';
+            data.controls.forEach(c => {
+                const group = document.createElement('div');
+                group.className = 'input-group';
+                group.innerHTML = `
+                    <div class="input-label">
+                        <span>${c.label}</span>
+                        <span class="input-val" id="val-${c.id}">${data.state[c.id]}</span>
+                    </div>
+                    <input type="range" id="range-${c.id}" min="${c.min}" max="${c.max}" step="${c.step}" value="${data.state[c.id]}">
+                `;
+                controlsMount.appendChild(group);
+
+                document.getElementById(`range-${c.id}`).addEventListener('input', (e) => {
+                    const val = parseFloat(e.target.value);
+                    db[activePillar].state[c.id] = val;
+                    document.getElementById(`val-${c.id}`).innerText = val;
+                    updateChart(true);
+                });
+            });
+
+            updateChart(false);
+
+            mainView.classList.add('hidden');
+            setTimeout(() => {
+                mainView.style.display = 'none';
+                workspace.style.display = 'block';
+                setTimeout(() => workspace.classList.add('active'), 50);
+            }, 600);
+        }
+
+        // --- TASK MANAGEMENT & ULTRA-ANIMATIVE TICK BOX ENGINE ---
+        function renderTasks() {
+            const taskContainer = document.getElementById('ws-tasks');
+            taskContainer.innerHTML = '';
+            const tasks = db[activePillar].tasks;
+
+            tasks.forEach((task, idx) => {
+                const li = document.createElement('li');
+                li.className = `task-item ${task.completed ? 'completed' : ''}`;
+                li.style.animationDelay = `${idx * 0.05}s`;
+                
+                li.innerHTML = `
+                    <div class="task-main-content" onclick="toggleTask(${idx})">
+                        <div class="checkbox-wrapper">
+                            <div class="checkbox">
+                                <div class="checkbox-ripple"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="task-title">${escapeHtml(task.title)}</div>
+                            <div class="task-desc">${escapeHtml(task.desc)}</div>
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        <button class="task-action-btn" onclick="editTask(${idx})" title="Customize / Edit Task">✏️</button>
+                        <button class="task-action-btn delete" onclick="deleteTask(${idx})" title="Delete Task">🗑️</button>
+                    </div>
+                `;
+                taskContainer.appendChild(li);
+            });
+
+            // Append Add Task Form at the bottom
+            const addContainer = document.createElement('div');
+            addContainer.className = 'add-task-container';
+            addContainer.innerHTML = `
+                <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--highlight); margin-bottom: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em;">+ Add New Task to Pipeline</div>
+                <div class="add-task-inputs">
+                    <input type="text" id="new-task-title" class="add-task-input" placeholder="Task Title (e.g. Master React Hooks)">
+                    <input type="text" id="new-task-desc" class="add-task-input" placeholder="Task Description / Details">
+                    <button class="btn-add-task" onclick="addNewTask()">+ INJECT TASK INTO BUILD</button>
+                </div>
+            `;
+            taskContainer.appendChild(addContainer);
+        }
+
+        function toggleTask(idx) {
+            db[activePillar].tasks[idx].completed = !db[activePillar].tasks[idx].completed;
+            renderTasks();
+        }
+
+        function addNewTask() {
+            const titleInput = document.getElementById('new-task-title');
+            const descInput = document.getElementById('new-task-desc');
+            const title = titleInput.value.trim();
+            const desc = descInput.value.trim();
+
+            if (!title) {
+                titleInput.style.borderColor = '#ef4444';
+                setTimeout(() => titleInput.style.borderColor = 'var(--border)', 1000);
+                return;
+            }
+
+            db[activePillar].tasks.push({ title, desc: desc || 'Custom active build objective.', completed: false });
+            renderTasks();
+        }
+
+        function deleteTask(idx) {
+            const items = document.querySelectorAll('.task-item');
+            if (items[idx]) {
+                items[idx].classList.add('deleting');
+                setTimeout(() => {
+                    db[activePillar].tasks.splice(idx, 1);
+                    renderTasks();
+                }, 350);
+            } else {
+                db[activePillar].tasks.splice(idx, 1);
+                renderTasks();
+            }
+        }
+
+        function editTask(idx) {
+            const task = db[activePillar].tasks[idx];
+            const newTitle = prompt("Customize Task Title:", task.title);
+            if (newTitle === null) return;
+            const newDesc = prompt("Customize Task Description:", task.desc);
+            if (newDesc === null) return;
+
+            if (newTitle.trim()) {
+                task.title = newTitle.trim();
+                task.desc = newDesc.trim();
+                renderTasks();
+            }
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        function updateChart(pulse = false) {
+            const container = document.getElementById('svg-chart-mount');
+            container.innerHTML = db[activePillar].render(db[activePillar].state, db[activePillar].labels);
+            if (pulse) {
+                container.classList.remove('pulse');
+                void container.offsetWidth;
+                container.classList.add('pulse');
+            }
+        }
+
+        function updateChartColor(newColor) {
+            if (!activePillar) return;
+            db[activePillar].color = newColor;
+            document.getElementById('color-dot').style.background = newColor;
+            updateChart(true);
+        }
+
+        function toggleSettings() {
+            const drawer = document.getElementById('settings-drawer');
+            drawer.classList.toggle('active');
+        }
+
+        function updateSettings() {
+            if (!activePillar) return;
+            const gridVal = document.getElementById('setting-grid').value;
+            db[activePillar].settings.grid = gridVal;
+            updateChart(true);
+        }
+
+        function closePillar() {
+            workspace.classList.remove('active');
+            activePillar = null;
+            setTimeout(() => {
+                workspace.style.display = 'none';
+                mainView.style.display = 'block';
+                setTimeout(() => mainView.classList.remove('hidden'), 50);
+            }, 600);
+        }
+    </script>
+</body>
+</html>
