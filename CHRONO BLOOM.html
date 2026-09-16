@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chrono Bloom — Living Garden of Time</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================================================
+       COLOR PALETTE & NOTION DARK BASE INTEGRATION
+       ========================================================================== */
+    :root {
+      --bg-notion: #191919;
+      
+      /* Exact Palette Inputs */
+      --color-rapt: #46323A;
+      --color-exclusively: #6A5161;
+      --color-dianthus: #8D6CB5;
+      --color-plum: #B38DAB;
+      --color-lovely-pink: #D9C0D5;
+      
+      /* Dynamic Glows & Glass Colors */
+      --glow-pink: rgba(217, 192, 213, 0.55);
+      --glow-dianthus: rgba(141, 108, 181, 0.45);
+      --glow-plum: rgba(179, 141, 171, 0.3);
+      --card-glass: rgba(70, 50, 58, 0.45);
+      --card-border: rgba(179, 141, 171, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-notion);
+      color: var(--color-lovely-pink);
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+      overflow: hidden;
+      perspective: 1200px;
+    }
+
+    /* Glass Specimen Panel */
+    .cb-panel {
+      position: relative;
+      width: 100%;
+      max-width: 400px;
+      background: linear-gradient(165deg, rgba(70, 50, 58, 0.7) 0%, rgba(25, 25, 25, 0.92) 100%);
+      border: 1px solid var(--card-border);
+      border-radius: 36px;
+      padding: 24px;
+      backdrop-filter: blur(25px);
+      box-shadow: 0 35px 70px rgba(0, 0, 0, 0.75),
+                  inset 0 1px 1px rgba(217, 192, 213, 0.2),
+                  0 0 30px rgba(141, 108, 181, 0.15);
+      transform-style: preserve-3d;
+      transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+      overflow: hidden;
+    }
+
+    /* Hyper-Animative Shimmer Border */
+    .cb-panel::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%; width: 200%; height: 200%;
+      background: conic-gradient(from 0deg, transparent 0deg, var(--glow-pink) 60deg, transparent 120deg);
+      animation: rotateBorder 12s linear infinite;
+      pointer-events: none;
+      opacity: 0.25;
+      z-index: 0;
+    }
+
+    @keyframes rotateBorder {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Ambient Particle Canvas */
+    #cbCanvas {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .cb-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* 1. Top Header */
+    .cb-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      transition: opacity 0.5s ease;
+    }
+
+    .cb-title {
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-lovely-pink);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-shadow: 0 0 10px var(--glow-pink);
+    }
+
+    .cb-live-tag {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      color: var(--color-plum);
+    }
+
+    .cb-live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--color-lovely-pink);
+      box-shadow: 0 0 12px var(--color-lovely-pink);
+      animation: hyperPulse 1.8s ease-in-out infinite alternate;
+    }
+
+    @keyframes hyperPulse {
+      0% { transform: scale(0.7); opacity: 0.3; box-shadow: 0 0 4px var(--color-lovely-pink); }
+      100% { transform: scale(1.4); opacity: 1; box-shadow: 0 0 18px var(--color-lovely-pink), 0 0 30px var(--color-dianthus); }
+    }
+
+    /* 2. Weather & Phase Banner */
+    .cb-weather-badge {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--color-lovely-pink);
+      background: linear-gradient(90deg, rgba(106, 81, 97, 0.4), rgba(141, 108, 181, 0.4));
+      padding: 5px 16px;
+      border-radius: 20px;
+      border: 1px solid rgba(217, 192, 213, 0.3);
+      margin-bottom: 16px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 0 15px var(--glow-plum);
+      animation: badgeGlow 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes badgeGlow {
+      0% { border-color: rgba(217, 192, 213, 0.2); box-shadow: 0 0 10px var(--glow-plum); }
+      100% { border-color: rgba(217, 192, 213, 0.5); box-shadow: 0 0 22px var(--glow-dianthus); }
+    }
+
+    /* 3. Central Chrono Bloom SVG Container */
+    .cb-bloom-wrapper {
+      position: relative;
+      width: 250px;
+      height: 250px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 16px;
+      cursor: pointer;
+    }
+
+    .cb-bloom-svg {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0; left: 0;
+      filter: drop-shadow(0 0 20px var(--glow-dianthus));
+    }
+
+    /* Organic Multi-Layered Oscillations */
+    .cb-outer-petals-group {
+      transform-origin: center;
+      animation: outerBloomOscillate 8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite alternate;
+    }
+
+    @keyframes outerBloomOscillate {
+      0% { transform: scale(0.94) rotate(-3deg); }
+      50% { transform: scale(1.03) rotate(3deg); }
+      100% { transform: scale(0.97) rotate(-1deg); }
+    }
+
+    .cb-inner-petals-group {
+      transform-origin: center;
+      animation: innerCounterSpin 25s linear infinite;
+    }
+
+    @keyframes innerCounterSpin {
+      0% { transform: rotate(360deg); }
+      100% { transform: rotate(0deg); }
+    }
+
+    .cb-core-pulse-ring {
+      transform-origin: center;
+      animation: coreRingExpand 3.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes coreRingExpand {
+      0% { transform: scale(0.92); opacity: 0.5; }
+      100% { transform: scale(1.12); opacity: 0.95; }
+    }
+
+    /* Central Clock Telemetry */
+    .cb-clock-core {
+      position: relative;
+      z-index: 5;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .cb-clock-time {
+      font-family: 'Cinzel', serif;
+      font-size: 2.3rem;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.02em;
+      text-shadow: 0 0 20px var(--glow-pink), 0 0 35px var(--glow-dianthus);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .cb-clock-phase {
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.22em;
+      color: var(--color-lovely-pink);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+
+    .cb-clock-sub {
+      font-size: 0.56rem;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      color: var(--color-plum);
+      opacity: 0.9;
+    }
+
+    /* Dynamic Planted Petal Nodes */
+    .cb-orbit-petals {
+      position: absolute;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 6;
+    }
+
+    .cb-petal-node {
+      position: absolute;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ffffff 0%, var(--color-lovely-pink) 60%, var(--color-dianthus) 100%);
+      box-shadow: 0 0 15px var(--color-lovely-pink), 0 0 30px var(--glow-dianthus);
+      transform: translate(-50%, -50%);
+      pointer-events: auto;
+      cursor: pointer;
+      animation: petalFloatNode 4s ease-in-out infinite alternate;
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes petalFloatNode {
+      0% { transform: translate(-50%, -50%) scale(0.95) translateY(-2px); }
+      100% { transform: translate(-50%, -50%) scale(1.1) translateY(2px); }
+    }
+
+    .cb-petal-node:hover {
+      transform: translate(-50%, -50%) scale(1.7) !important;
+      box-shadow: 0 0 25px #ffffff, 0 0 40px var(--color-lovely-pink);
+    }
+
+    .cb-petal-label {
+      position: absolute;
+      top: 22px; left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+      color: #ffffff;
+      background: rgba(35, 24, 29, 0.92);
+      padding: 3px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--color-plum);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .cb-petal-node:hover .cb-petal-label {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-2px);
+    }
+
+    /* 4. Plant Action Button */
+    .cb-plant-btn {
+      background: linear-gradient(135deg, rgba(141, 108, 181, 0.4), rgba(106, 81, 97, 0.5));
+      border: 1px solid var(--color-lovely-pink);
+      color: #ffffff;
+      padding: 10px 24px;
+      border-radius: 22px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4), 0 0 15px var(--glow-dianthus);
+      transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+      animation: btnPulseGlow 3s infinite alternate;
+    }
+
+    @keyframes btnPulseGlow {
+      0% { box-shadow: 0 8px 20px rgba(0,0,0,0.4), 0 0 12px var(--glow-dianthus); }
+      100% { box-shadow: 0 10px 30px rgba(0,0,0,0.6), 0 0 25px var(--glow-pink); }
+    }
+
+    .cb-plant-btn:hover {
+      background: linear-gradient(135deg, var(--color-dianthus), var(--color-exclusively));
+      box-shadow: 0 12px 35px var(--glow-pink);
+      transform: translateY(-3px) scale(1.03);
+    }
+
+    /* 5. Bottom Ritual Controls */
+    .cb-nav-bar {
+      width: 100%;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding-top: 14px;
+      border-top: 1px solid var(--card-border);
+    }
+
+    .cb-nav-btn {
+      background: none;
+      border: none;
+      color: var(--color-plum);
+      font-size: 0.64rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.3s ease;
+    }
+
+    .cb-nav-btn:hover, .cb-nav-btn.active {
+      color: var(--color-lovely-pink);
+      text-shadow: 0 0 12px var(--glow-pink);
+    }
+
+    /* ==========================================================================
+       6. HYPER-DETAILED & ANIMATED PLANT STUDIO POPOVER
+       ========================================================================== */
+    .cb-popover {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(170deg, rgba(35, 24, 29, 0.96) 0%, rgba(20, 15, 18, 0.98) 100%);
+      border-radius: 36px;
+      z-index: 20;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      backdrop-filter: blur(25px);
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.88) translateY(20px);
+      transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      overflow-y: auto;
+    }
+
+    .cb-popover.open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1) translateY(0);
+    }
+
+    .cb-popover-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.12em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-shadow: 0 0 15px var(--glow-pink);
+    }
+
+    .cb-close-btn {
+      background: rgba(106, 81, 97, 0.3);
+      border: 1px solid var(--card-border);
+      color: var(--color-lovely-pink);
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex; justify-content: center; align-items: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .cb-close-btn:hover {
+      background: var(--color-dianthus);
+      color: #fff;
+      transform: rotate(90deg);
+    }
+
+    /* Studio Interactive Bloom Live Preview */
+    .cb-preview-box {
+      width: 100%;
+      height: 70px;
+      background: rgba(70, 50, 58, 0.3);
+      border: 1px dashed var(--card-border);
+      border-radius: 18px;
+      margin: 10px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cb-preview-petal-svg {
+      width: 50px; height: 50px;
+      transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .cb-preview-text {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--color-plum);
+      letter-spacing: 0.08em;
+    }
+
+    .cb-field {
+      margin-bottom: 12px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.4s ease;
+    }
+
+    .cb-popover.open .cb-field {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .cb-popover.open .cb-field:nth-child(1) { transition-delay: 0.1s; }
+    .cb-popover.open .cb-field:nth-child(2) { transition-delay: 0.15s; }
+    .cb-popover.open .cb-field:nth-child(3) { transition-delay: 0.2s; }
+    .cb-popover.open .cb-field:nth-child(4) { transition-delay: 0.25s; }
+
+    .cb-field label {
+      display: block;
+      font-size: 0.6rem;
+      font-weight: 800;
+      color: var(--color-lovely-pink);
+      letter-spacing: 0.12em;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+    }
+
+    .cb-field input[type="text"] {
+      width: 100%;
+      background: rgba(70, 50, 58, 0.4);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 10px 14px;
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 0.82rem;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    .cb-field input[type="text"]:focus {
+      border-color: var(--color-lovely-pink);
+      box-shadow: 0 0 15px var(--glow-dianthus);
+      background: rgba(70, 50, 58, 0.7);
+    }
+
+    /* Duration Quick Preset Chips */
+    .cb-chips-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .cb-chip {
+      background: rgba(106, 81, 97, 0.3);
+      border: 1px solid var(--card-border);
+      color: var(--color-plum);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.6rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .cb-chip:hover, .cb-chip.active {
+      background: var(--color-dianthus);
+      color: #ffffff;
+      border-color: var(--color-lovely-pink);
+      box-shadow: 0 0 10px var(--glow-dianthus);
+    }
+
+    /* Intention / Energy Tags */
+    .cb-tags-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .cb-tag-btn {
+      flex: 1;
+      background: rgba(70, 50, 58, 0.3);
+      border: 1px solid var(--card-border);
+      color: var(--color-plum);
+      padding: 8px;
+      border-radius: 12px;
+      font-size: 0.6rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .cb-tag-btn.selected {
+      background: linear-gradient(135deg, var(--color-exclusively), var(--color-dianthus));
+      color: #fff;
+      border-color: var(--color-lovely-pink);
+      box-shadow: 0 0 12px var(--glow-dianthus);
+    }
+
+    /* Action Buttons inside Popovers */
+    .cb-action-submit {
+      width: 100%;
+      background: linear-gradient(135deg, var(--color-dianthus), var(--color-exclusively));
+      border: 1px solid var(--color-lovely-pink);
+      color: #fff;
+      padding: 12px;
+      border-radius: 16px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      cursor: pointer;
+      box-shadow: 0 8px 25px var(--glow-dianthus);
+      transition: all 0.3s ease;
+    }
+
+    .cb-action-submit:hover {
+      box-shadow: 0 10px 35px var(--glow-pink);
+      transform: translateY(-2px);
+    }
+
+    /* Target Removal Action Button */
+    .cb-btn-remove {
+      background: linear-gradient(135deg, rgba(160, 50, 70, 0.4), rgba(70, 50, 58, 0.6));
+      border: 1px solid rgba(220, 90, 110, 0.4);
+      color: #ffb3c1;
+      padding: 10px;
+      border-radius: 14px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.3s ease;
+      margin-top: 4px;
+    }
+
+    .cb-btn-remove:hover {
+      background: linear-gradient(135deg, rgba(200, 50, 70, 0.8), rgba(120, 30, 45, 0.9));
+      color: #ffffff;
+      box-shadow: 0 0 20px rgba(220, 90, 110, 0.5);
+      transform: translateY(-2px);
+    }
+
+    /* Museum Mode State */
+    .cb-panel.museum-mode .cb-header,
+    .cb-panel.museum-mode .cb-weather-badge,
+    .cb-panel.museum-mode .cb-plant-btn,
+    .cb-panel.museum-mode .cb-nav-bar {
+      opacity: 0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Specimen Container -->
+  <div class="cb-panel" id="cbPanel">
+    
+    <!-- Multi-layered Physics Particles Canvas -->
+    <canvas id="cbCanvas"></canvas>
+
+    <div class="cb-content">
+      <!-- 1. Top Header -->
+      <div class="cb-header">
+        <div class="cb-title">✦ CHRONO BLOOM</div>
+        <div class="cb-live-tag">
+          <div class="cb-live-dot"></div>
+          LIVE
+        </div>
+      </div>
+
+      <!-- 2. Weather & Atmospheric Badge -->
+      <div class="cb-weather-badge" id="cbWeatherBadge">TODAY FEELS • UNHURRIED</div>
+
+      <!-- 3. Central Living Chrono Bloom -->
+      <div class="cb-bloom-wrapper" id="cbBloomWrapper">
+        <svg class="cb-bloom-svg" viewBox="0 0 300 300">
+          <defs>
+            <radialGradient id="bloomCoreGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#D9C0D5" stop-opacity="0.8"/>
+              <stop offset="50%" stop-color="#8D6CB5" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#46323A" stop-opacity="0"/>
+            </radialGradient>
+
+            <linearGradient id="petalGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#D9C0D5" stop-opacity="0.9"/>
+              <stop offset="100%" stop-color="#8D6CB5" stop-opacity="0.4"/>
+            </linearGradient>
+
+            <linearGradient id="petalGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#B38DAB" stop-opacity="0.75"/>
+              <stop offset="100%" stop-color="#6A5161" stop-opacity="0.25"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Outer 24-Hour Track Orbit -->
+          <circle cx="150" cy="150" r="130" stroke="rgba(179, 141, 171, 0.2)" stroke-width="1.5" fill="none" stroke-dasharray="5 7"/>
+          <!-- Progress Arc Track -->
+          <circle id="cbOrbitProgress" cx="150" cy="150" r="130" stroke="url(#petalGrad1)" stroke-width="2.8" fill="none" stroke-dasharray="816.8" stroke-dashoffset="400" stroke-linecap="round"/>
+          
+          <!-- Moving Time Indicator Node -->
+          <circle id="cbTimeMarkerNode" cx="150" cy="20" r="6" fill="#ffffff" filter="drop-shadow(0 0 10px #D9C0D5)"/>
+
+          <!-- Organic Breathing Petals -->
+          <g class="cb-outer-petals-group" id="cbPetalGroup">
+            <!-- Outer Layer -->
+            <g fill="url(#petalGrad2)" stroke="rgba(217, 192, 213, 0.25)" stroke-width="1">
+              <path d="M150,50 C170,90 210,90 250,150 C210,210 170,210 150,250 C130,210 90,210 50,150 C90,90 130,90 150,50 Z" />
+              <path d="M150,50 C170,90 210,90 250,150 C210,210 170,210 150,250 C130,210 90,210 50,150 C90,90 130,90 150,50 Z" transform="rotate(45, 150, 150)" />
+            </g>
+
+            <!-- Inner Glowing Petals -->
+            <g class="cb-inner-petals-group" fill="url(#petalGrad1)">
+              <circle class="cb-core-pulse-ring" cx="150" cy="150" r="75" fill="url(#bloomCoreGlow)"/>
+              <path d="M150,85 C162,115 185,115 215,150 C185,185 162,185 150,215 C138,185 115,185 85,150 C115,115 138,115 150,85 Z" opacity="0.9"/>
+              <path d="M150,85 C162,115 185,115 215,150 C185,185 162,185 150,215 C138,185 115,185 85,150 C115,115 138,115 150,85 Z" transform="rotate(60, 150, 150)" opacity="0.9"/>
+              <path d="M150,85 C162,115 185,115 215,150 C185,185 162,185 150,215 C138,185 115,185 85,150 C115,115 138,115 150,85 Z" transform="rotate(120, 150, 150)" opacity="0.9"/>
+            </g>
+          </g>
+        </svg>
+
+        <!-- Dynamic Target Nodes Render Here -->
+        <div class="cb-orbit-petals" id="cbOrbitPetals"></div>
+
+        <!-- Central Telemetry Clock -->
+        <div class="cb-clock-core">
+          <div class="cb-clock-time" id="cbClockTime">23:51</div>
+          <div class="cb-clock-phase" id="cbClockPhase">NIGHT</div>
+          <div class="cb-clock-sub" id="cbClockSub">OPEN TIME • 2h 40m</div>
+        </div>
+      </div>
+
+      <!-- 4. Plant Action Button -->
+      <button class="cb-plant-btn" id="cbOpenPlantBtn">
+        <span>+</span> PLANT TIME PETAL
+      </button>
+
+      <!-- 5. Bottom Navigation Controls -->
+      <div class="cb-nav-bar">
+        <button class="cb-nav-btn active" id="cbBtnToday">○ TODAY</button>
+        <button class="cb-nav-btn" id="cbBtnMoment">✦ ONE MOMENT</button>
+        <button class="cb-nav-btn" id="cbBtnCarry">◌ CARRY</button>
+        <button class="cb-nav-btn" id="cbBtnMuseum">◌ MUSEUM</button>
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+       6. HYPER-DETAILED PLANT PETAL STUDIO POPOVER
+       ========================================================================== -->
+    <div class="cb-popover" id="cbPlantPopover">
+      <div>
+        <div class="cb-popover-title">
+          <span>PLANT A TIME PETAL</span>
+          <button class="cb-close-btn" id="cbClosePlantBtn">✕</button>
+        </div>
+
+        <!-- Dynamic Blooming Preview Glass Box -->
+        <div class="cb-preview-box">
+          <svg class="cb-preview-petal-svg" id="cbPreviewSvg" viewBox="0 0 100 100">
+            <path d="M50,10 C60,35 80,35 90,50 C80,65 60,65 50,90 C40,65 20,65 10,50 C20,35 40,35 50,10 Z" fill="#D9C0D5" opacity="0.85"/>
+          </svg>
+          <div class="cb-preview-text" id="cbPreviewText">Intention: 30m • Calm</div>
+        </div>
+
+        <div class="cb-field">
+          <label>Target Intention</label>
+          <input type="text" id="cbInputTitle" placeholder="e.g. Read, Walk, Sketch, Rest">
+        </div>
+
+        <div class="cb-field">
+          <label>Duration & Scale</label>
+          <div class="cb-chips-row">
+            <div class="cb-chip" data-min="15">15m</div>
+            <div class="cb-chip active" data-min="30">30m</div>
+            <div class="cb-chip" data-min="45">45m</div>
+            <div class="cb-chip" data-min="60">60m</div>
+          </div>
+        </div>
+
+        <div class="cb-field">
+          <label>Energy & Vibe</label>
+          <div class="cb-tags-row">
+            <div class="cb-tag-btn selected" data-vibe="Calm">🌿 Calm</div>
+            <div class="cb-tag-btn" data-vibe="Focus">⚡ Focus</div>
+            <div class="cb-tag-btn" data-vibe="Flow">🌸 Flow</div>
+          </div>
+        </div>
+      </div>
+      
+      <button class="cb-action-submit" id="cbSubmitPlantBtn">PLANT PETAL INTO BLOOM</button>
+    </div>
+
+    <!-- 7. Target Petal Detail & REMOVE Popover -->
+    <div class="cb-popover" id="cbDetailPopover">
+      <div>
+        <div class="cb-popover-title">
+          <span id="cbDetailTitle">READING</span>
+          <button class="cb-close-btn" id="cbCloseDetailBtn">✕</button>
+        </div>
+        <div style="font-size: 0.75rem; color: var(--color-lovely-pink); margin-top: 6px;" id="cbDetailSub">
+          Target Duration: 30 minutes
+        </div>
+      </div>
+      
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <button class="cb-action-submit" id="cbCompletePetalBtn">✦ BLOOM & COMPLETE</button>
+        <button class="cb-plant-btn" id="cbCarryPetalBtn" style="width:100%; justify-content:center; margin-bottom:0;">◌ CARRY TO TOMORROW</button>
+        <!-- Dedicated Target Removal Button -->
+        <button class="cb-btn-remove" id="cbDeletePetalBtn">✂ PRUNE & REMOVE TARGET</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==========================================================================
+       JAVASCRIPT ANIMATION & TARGET MANAGEMENT ENGINE
+       ========================================================================== -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Database State for Petals (Persisted)
+      let petals = JSON.parse(localStorage.getItem('cb_petals')) || [
+        { id: 1, title: 'Read', duration: 30, hourOffset: 21, vibe: 'Calm', completed: false },
+        { id: 2, title: 'Night Walk', duration: 20, hourOffset: 22.5, vibe: 'Flow', completed: false }
+      ];
+
+      let selectedPetalId = null;
+      let museumMode = false;
+      let selectedDuration = 30;
+      let selectedVibe = 'Calm';
+
+      // DOM Elements
+      const panel = document.getElementById('cbPanel');
+      const clockTime = document.getElementById('cbClockTime');
+      const clockPhase = document.getElementById('cbClockPhase');
+      const weatherBadge = document.getElementById('cbWeatherBadge');
+      const orbitProgress = document.getElementById('cbOrbitProgress');
+      const timeMarkerNode = document.getElementById('cbTimeMarkerNode');
+      const orbitPetalsContainer = document.getElementById('cbOrbitPetals');
+
+      // Popover Elements
+      const plantPopover = document.getElementById('cbPlantPopover');
+      const detailPopover = document.getElementById('cbDetailPopover');
+      const openPlantBtn = document.getElementById('cbOpenPlantBtn');
+      const closePlantBtn = document.getElementById('cbClosePlantBtn');
+      const submitPlantBtn = document.getElementById('cbSubmitPlantBtn');
+      const closeDetailBtn = document.getElementById('cbCloseDetailBtn');
+      const completePetalBtn = document.getElementById('cbCompletePetalBtn');
+      const carryPetalBtn = document.getElementById('cbCarryPetalBtn');
+      const deletePetalBtn = document.getElementById('cbDeletePetalBtn');
+      const btnMuseum = document.getElementById('cbBtnMuseum');
+      const btnMoment = document.getElementById('cbBtnMoment');
+
+      // Preview Elements
+      const previewSvg = document.getElementById('cbPreviewSvg');
+      const previewText = document.getElementById('cbPreviewText');
+
+      // 2. 3D Dynamic Parallax Tilt Interaction
+      panel.addEventListener('mousemove', (e) => {
+        if (museumMode) return;
+        const rect = panel.getBoundingClientRect();
+        const x = e.clientX - rect.left - (rect.width / 2);
+        const y = e.clientY - rect.top - (rect.height / 2);
+        panel.style.transform = `rotateY(${x * 0.05}deg) rotateX(${-y * 0.05}deg)`;
+      });
+
+      panel.addEventListener('mouseleave', () => {
+        panel.style.transform = `rotateY(0deg) rotateX(0deg)`;
+      });
+
+      // 3. Multi-Layered Particle Physics & Shockwave Canvas Engine
+      const canvas = document.getElementById('cbCanvas');
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      let shockwaves = [];
+
+      function resizeCanvas() {
+        canvas.width = panel.offsetWidth;
+        canvas.height = panel.offsetHeight;
+      }
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      // Create initial ambient pollen floating upward
+      for (let i = 0; i < 45; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          radius: Math.random() * 2 + 0.5,
+          dx: (Math.random() - 0.5) * 0.3,
+          dy: -Math.random() * 0.4 - 0.1,
+          alpha: Math.random() * 0.7 + 0.2
+        });
+      }
+
+      function createBurst(x, y) {
+        for (let i = 0; i < 30; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = Math.random() * 3 + 1;
+          particles.push({
+            x, y,
+            radius: Math.random() * 2.5 + 1,
+            dx: Math.cos(angle) * speed,
+            dy: Math.sin(angle) * speed,
+            alpha: 1,
+            decay: Math.random() * 0.02 + 0.015
+          });
+        }
+        shockwaves.push({ x, y, radius: 5, alpha: 1 });
+      }
+
+      function drawCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw & Update Particles
+        particles.forEach((p, index) => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(217, 192, 213, ${p.alpha})`;
+          ctx.fill();
+
+          p.x += p.dx;
+          p.y += p.dy;
+
+          if (p.decay) {
+            p.alpha -= p.decay;
+            if (p.alpha <= 0) particles.splice(index, 1);
+          } else {
+            if (p.y < 0) p.y = canvas.height;
+            if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
+          }
+        });
+
+        // Draw & Update Shockwaves
+        shockwaves.forEach((sw, index) => {
+          ctx.beginPath();
+          ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(217, 192, 213, ${sw.alpha})`;
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          sw.radius += 2.5;
+          sw.alpha -= 0.03;
+          if (sw.alpha <= 0) shockwaves.splice(index, 1);
+        });
+
+        requestAnimationFrame(drawCanvas);
+      }
+      drawCanvas();
+
+      // 4. Real-time Clock & Dynamic Day Phase Engine
+      const circumferentialLength = 2 * Math.PI * 130;
+
+      function updateClockEngine() {
+        const now = new Date();
+        const hrs = String(now.getHours()).padStart(2, '0');
+        const mins = String(now.getMinutes()).padStart(2, '0');
+        clockTime.textContent = `${hrs}:${mins}`;
+
+        const totalSecs = (now.getHours() * 3600) + (now.getMinutes() * 60) + now.getSeconds();
+        const dayRatio = totalSecs / 86400;
+
+        orbitProgress.style.strokeDashoffset = circumferentialLength * (1 - dayRatio);
+        const angle = (dayRatio * 2 * Math.PI) - (Math.PI / 2);
+        timeMarkerNode.setAttribute('cx', 150 + 130 * Math.cos(angle));
+        timeMarkerNode.setAttribute('cy', 150 + 130 * Math.sin(angle));
+
+        const hour = now.getHours();
+        let phase = 'NIGHT';
+        let weather = 'UNHURRIED';
+
+        if (hour >= 5 && hour < 12) { phase = 'DAWN'; weather = 'SPACIOUS'; }
+        else if (hour >= 12 && hour < 18) { phase = 'DAY'; weather = 'LAYERED'; }
+        else if (hour >= 18 && hour < 22) { phase = 'DUSK'; weather = 'BALANCED'; }
+        else { phase = 'NIGHT'; weather = 'UNHURRIED'; }
+
+        clockPhase.textContent = phase;
+        if (petals.filter(p => !p.completed).length >= 5) weather = 'DENSE';
+        weatherBadge.textContent = `TODAY FEELS • ${weather}`;
+      }
+
+      setInterval(updateClockEngine, 1000);
+      updateClockEngine();
+
+      // 5. Render Orbit Petal Targets
+      function renderPetals() {
+        orbitPetalsContainer.innerHTML = '';
+        petals.forEach(petal => {
+          if (petal.completed) return;
+
+          const hourAngle = ((petal.hourOffset / 24) * 2 * Math.PI) - (Math.PI / 2);
+          const x = 125 + 108 * Math.cos(hourAngle);
+          const y = 125 + 108 * Math.sin(hourAngle);
+
+          const node = document.createElement('div');
+          node.className = 'cb-petal-node';
+          node.style.left = `${x}px`;
+          node.style.top = `${y}px`;
+
+          node.innerHTML = `<div class="cb-petal-label">${petal.title} • ${petal.duration}m (${petal.vibe})</div>`;
+
+          node.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectedPetalId = petal.id;
+            document.getElementById('cbDetailTitle').textContent = petal.title.toUpperCase();
+            document.getElementById('cbDetailSub').textContent = `Target Duration: ${petal.duration} minutes • Vibe: ${petal.vibe}`;
+            detailPopover.classList.add('open');
+            createBurst(x + 75, y + 75);
+          });
+
+          orbitPetalsContainer.appendChild(node);
+        });
+
+        localStorage.setItem('cb_petals', JSON.stringify(petals));
+      }
+      renderPetals();
+
+      // 6. Interactive Studio Live Blooming Preview Logic
+      function updateStudioPreview() {
+        const scale = 0.7 + (selectedDuration / 60) * 0.5;
+        previewSvg.style.transform = `scale(${scale})`;
+        const titleInput = document.getElementById('cbInputTitle').value.trim() || 'Moment';
+        previewText.textContent = `${titleInput} • ${selectedDuration}m (${selectedVibe})`;
+      }
+
+      document.getElementById('cbInputTitle').addEventListener('input', updateStudioPreview);
+
+      document.querySelectorAll('.cb-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          document.querySelectorAll('.cb-chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          selectedDuration = parseInt(chip.getAttribute('data-min'));
+          updateStudioPreview();
+        });
+      });
+
+      document.querySelectorAll('.cb-tag-btn').forEach(tag => {
+        tag.addEventListener('click', () => {
+          document.querySelectorAll('.cb-tag-btn').forEach(t => t.classList.remove('selected'));
+          tag.classList.add('selected');
+          selectedVibe = tag.getAttribute('data-vibe');
+          updateStudioPreview();
+        });
+      });
+
+      // 7. Popover Control Handlers
+      openPlantBtn.addEventListener('click', () => {
+        updateStudioPreview();
+        plantPopover.classList.add('open');
+      });
+      closePlantBtn.addEventListener('click', () => plantPopover.classList.remove('open'));
+      closeDetailBtn.addEventListener('click', () => detailPopover.classList.remove('open'));
+
+      // Plant New Target Petal
+      submitPlantBtn.addEventListener('click', () => {
+        const title = document.getElementById('cbInputTitle').value.trim() || 'Moment';
+        const hourOffset = (new Date().getHours() + 1) % 24;
+
+        petals.push({
+          id: Date.now(),
+          title,
+          duration: selectedDuration,
+          hourOffset,
+          vibe: selectedVibe,
+          completed: false
+        });
+
+        renderPetals();
+        createBurst(200, 200);
+        document.getElementById('cbInputTitle').value = '';
+        plantPopover.classList.remove('open');
+      });
+
+      // Target Completion Ritual
+      completePetalBtn.addEventListener('click', () => {
+        petals = petals.map(p => p.id === selectedPetalId ? { ...p, completed: true } : p);
+        renderPetals();
+        createBurst(200, 200);
+        detailPopover.classList.remove('open');
+      });
+
+      // Carry Forward Ritual
+      carryPetalBtn.addEventListener('click', () => {
+        detailPopover.classList.remove('open');
+      });
+
+      // 8. DEDICATED TARGET REMOVAL / PRUNE ACTION
+      deletePetalBtn.addEventListener('click', () => {
+        petals = petals.filter(p => p.id !== selectedPetalId);
+        renderPetals();
+        createBurst(200, 200);
+        detailPopover.classList.remove('open');
+      });
+
+      // Quick Moment Action
+      btnMoment.addEventListener('click', () => {
+        const moment = prompt("What single target moment deserves space today?", "Read outside for 20 mins");
+        if (moment) {
+          petals.push({
+            id: Date.now(),
+            title: moment,
+            duration: 20,
+            hourOffset: (new Date().getHours() + 1) % 24,
+            vibe: 'Calm',
+            completed: false
+          });
+          renderPetals();
+          createBurst(200, 200);
+        }
+      });
+
+      // Museum Mode Toggle
+      btnMuseum.addEventListener('click', () => {
+        museumMode = !museumMode;
+        panel.classList.toggle('museum-mode', museumMode);
+        btnMuseum.classList.toggle('active', museumMode);
+      });
+    });
+  </script>
+</body>
+</html>
