@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Keep Going — The Living Quote Cabinet</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      /* Palette from Image */
+      --dusted-lavender: #9C86B9;
+      --orchid-smoke: #C6B6DD;
+      --moon-pearl: #F1EDF7;
+      --notion-bg: #191919;
+      
+      --card-bg: rgba(28, 24, 38, 0.72);
+      --card-border: rgba(198, 182, 221, 0.22);
+      --card-border-glow: rgba(156, 134, 185, 0.45);
+      --text-muted: rgba(241, 237, 247, 0.65);
+      --accent-glow: rgba(156, 134, 185, 0.35);
+      --transition-spring: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+      --transition-fast: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--notion-bg);
+      color: var(--moon-pearl);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+      overflow-x: hidden;
+    }
+
+    /* Ambient Dynamic Canvas */
+    #ambient-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.9;
+    }
+
+    /* Main Container with 3D Physics */
+    .widget-container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 740px;
+      perspective: 1200px;
+    }
+
+    .quote-widget {
+      position: relative;
+      background: var(--card-bg);
+      backdrop-filter: blur(40px) saturate(130%);
+      -webkit-backdrop-filter: blur(40px) saturate(130%);
+      border: 1px solid var(--card-border);
+      border-radius: 28px;
+      padding: 3rem 3.5rem;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6),
+                  0 0 40px rgba(156, 134, 185, 0.1),
+                  inset 0 1px 0 rgba(241, 237, 247, 0.2);
+      transition: transform 0.15s ease-out, border-color 0.5s ease, box-shadow 0.5s ease;
+      transform-style: preserve-3d;
+      overflow: hidden;
+    }
+
+    .quote-widget:hover {
+      border-color: var(--card-border-glow);
+      box-shadow: 0 35px 90px rgba(0, 0, 0, 0.7),
+                  0 0 50px rgba(198, 182, 221, 0.2);
+    }
+
+    /* Dynamic Light Sweep */
+    .quote-widget::after {
+      content: '';
+      position: absolute;
+      top: -100%;
+      left: -100%;
+      width: 300%;
+      height: 300%;
+      background: linear-gradient(
+        115deg,
+        transparent 40%,
+        rgba(241, 237, 247, 0.04) 48%,
+        rgba(198, 182, 221, 0.08) 50%,
+        rgba(241, 237, 247, 0.04) 52%,
+        transparent 60%
+      );
+      transform: rotate(20deg);
+      animation: lightSweep 10s infinite cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+    }
+
+    @keyframes lightSweep {
+      0% { transform: translateY(-40%) rotate(20deg); }
+      50% { transform: translateY(40%) rotate(20deg); }
+      100% { transform: translateY(-40%) rotate(20deg); }
+    }
+
+    /* Header Styling */
+    .widget-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .brand-title {
+      font-size: 0.85rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      font-weight: 500;
+      color: var(--orchid-smoke);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: var(--transition-fast);
+    }
+
+    .brand-title:hover {
+      color: var(--moon-pearl);
+      text-shadow: 0 0 12px var(--orchid-smoke);
+      transform: translateY(-1px);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .mood-pill {
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: rgba(156, 134, 185, 0.18);
+      border: 1px solid rgba(198, 182, 221, 0.3);
+      color: var(--orchid-smoke);
+      transition: var(--transition-fast);
+    }
+
+    .entry-badge {
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      color: var(--dusted-lavender);
+      font-weight: 400;
+    }
+
+    /* Hero Quote Area with Ink Blur Transition */
+    .quote-viewport {
+      min-height: 190px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      margin-bottom: 2.5rem;
+      transition: filter 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .quote-viewport.ink-out {
+      filter: blur(16px);
+      opacity: 0;
+      transform: scale(0.97) translateY(8px);
+    }
+
+    .hero-quote {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.35rem;
+      line-height: 1.35;
+      font-weight: 300;
+      color: var(--moon-pearl);
+      margin-bottom: 1.25rem;
+      text-wrap: balance;
+      letter-spacing: -0.01em;
+      text-shadow: 0 0 25px rgba(198, 182, 221, 0.2);
+    }
+
+    .quote-author {
+      font-size: 0.95rem;
+      font-style: italic;
+      color: var(--orchid-smoke);
+      font-family: 'Cormorant Garamond', serif;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .origin-tag {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-style: normal;
+      font-size: 0.6rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: rgba(156, 134, 185, 0.15);
+      border: 1px solid rgba(198, 182, 221, 0.25);
+      color: var(--dusted-lavender);
+    }
+
+    /* Divider */
+    .editorial-divider {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--card-border), transparent);
+      margin: 2rem 0;
+    }
+
+    /* 3 Non-Productivity Anchors */
+    .anchors-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+      transition: filter 0.5s ease, opacity 0.5s ease;
+    }
+
+    .anchor-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .anchor-label {
+      font-size: 0.62rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--dusted-lavender);
+      font-weight: 600;
+    }
+
+    .anchor-value {
+      font-size: 0.85rem;
+      line-height: 1.55;
+      color: var(--text-muted);
+      font-weight: 300;
+    }
+
+    /* Navigation Controls */
+    .controls-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 0.5rem;
+    }
+
+    .btn-action {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.72rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 10px 18px;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-action:hover {
+      color: var(--moon-pearl);
+      background: rgba(198, 182, 221, 0.12);
+      border-color: var(--card-border);
+      box-shadow: 0 0 20px var(--accent-glow);
+      transform: translateY(-2px);
+    }
+
+    .btn-primary-ghost {
+      border-color: var(--card-border);
+      color: var(--orchid-smoke);
+    }
+
+    /* Cabinet, Constellation & Editor Overlay Drawers */
+    .drawer-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(22, 18, 30, 0.94);
+      backdrop-filter: blur(35px);
+      z-index: 30;
+      padding: 2.5rem 3rem;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(20px) scale(0.98);
+      transition: var(--transition-spring);
+      overflow-y: auto;
+      border-radius: 28px;
+    }
+
+    .drawer-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+    }
+
+    .view-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    /* Collection Cards Grid */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .editorial-card {
+      background: rgba(32, 26, 44, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 1.5rem;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 150px;
+      position: relative;
+    }
+
+    .editorial-card:hover {
+      transform: translateY(-4px) scale(1.01);
+      border-color: var(--orchid-smoke);
+      background: rgba(42, 34, 58, 0.8);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.4), 0 0 20px var(--accent-glow);
+    }
+
+    .card-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      color: var(--dusted-lavender);
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+
+    .card-snippet {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem;
+      color: var(--moon-pearl);
+      line-height: 1.35;
+      font-weight: 300;
+    }
+
+    .card-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 1rem;
+    }
+
+    .btn-card-edit {
+      font-size: 0.65rem;
+      padding: 4px 10px;
+      border-radius: 12px;
+      background: rgba(156, 134, 185, 0.2);
+      border: 1px solid var(--card-border);
+      color: var(--orchid-smoke);
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+
+    .btn-card-edit:hover {
+      background: var(--orchid-smoke);
+      color: #120f19;
+    }
+
+    /* Editor Form Inputs */
+    .editor-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .form-group label {
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--dusted-lavender);
+    }
+
+    .form-control {
+      background: rgba(18, 15, 25, 0.7);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      color: var(--moon-pearl);
+      font-family: inherit;
+      font-size: 0.88rem;
+      outline: none;
+      transition: var(--transition-fast);
+    }
+
+    .form-control:focus {
+      border-color: var(--orchid-smoke);
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    /* Constellation Canvas */
+    #constellation-canvas {
+      width: 100%;
+      height: 320px;
+      border-radius: 18px;
+      background: rgba(14, 11, 20, 0.8);
+      border: 1px solid var(--card-border);
+      cursor: crosshair;
+    }
+
+    /* Quiet Reflection Fullscreen Overlay */
+    .reflection-overlay {
+      position: fixed;
+      inset: 0;
+      background: #0d0b14;
+      z-index: 100;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .reflection-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .reflection-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.5rem;
+      font-weight: 300;
+      color: var(--moon-pearl);
+      text-align: center;
+      max-width: 650px;
+      padding: 0 2rem;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 1.2s ease, transform 1.2s ease;
+      text-shadow: 0 0 30px var(--orchid-smoke);
+    }
+
+    .reflection-text.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 10px; }
+
+    @media (max-width: 640px) {
+      .quote-widget { padding: 2rem 1.75rem; }
+      .hero-quote { font-size: 1.75rem; }
+      .anchors-grid { grid-template-columns: 1fr; gap: 1.25rem; }
+      .cards-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Particle Canvas -->
+  <canvas id="ambient-canvas"></canvas>
+
+  <main class="widget-container">
+    <div class="quote-widget" id="quote-widget">
+      <!-- Header -->
+      <header class="widget-header">
+        <div class="brand-title" id="trigger-reflection" title="Click for a moment of quiet pause">
+          ✦ Keep Going
+        </div>
+        <div class="header-actions">
+          <span class="mood-pill" id="mood-pill">PATIENCE</span>
+          <span class="entry-badge" id="entry-badge">ENTRY 01 / 06</span>
+        </div>
+      </header>
+
+      <!-- Main Hero Quote -->
+      <section class="quote-viewport" id="quote-viewport">
+        <blockquote class="hero-quote" id="hero-quote">
+          “Progress is allowed to look quiet.”
+        </blockquote>
+        <div class="quote-author" id="quote-author">
+          — me <span class="origin-tag" id="origin-tag">WRITTEN</span>
+        </div>
+      </section>
+
+      <!-- Editorial Divider -->
+      <div class="editorial-divider"></div>
+
+      <!-- 3 Non-Productivity Anchors -->
+      <section class="anchors-grid" id="anchors-grid">
+        <div class="anchor-item">
+          <span class="anchor-label">What This Reminds Me Of</span>
+          <p class="anchor-value" id="anchor-reminds">The periods when I was improving without noticing.</p>
+        </div>
+        <div class="anchor-item">
+          <span class="anchor-label">Why I Kept It</span>
+          <p class="anchor-value" id="anchor-why">Because I tend to underestimate quiet progress.</p>
+        </div>
+        <div class="anchor-item">
+          <span class="anchor-label">Where I Want To Carry It</span>
+          <p class="anchor-value" id="anchor-where">Whenever I feel behind or tempted to compare.</p>
+        </div>
+      </section>
+
+      <!-- Navigation & Customization Toolbar -->
+      <footer class="controls-bar">
+        <button class="btn-action" id="btn-prev">← Prev</button>
+        <button class="btn-action btn-primary-ghost" id="btn-cabinet">Open Collection</button>
+        <button class="btn-action btn-primary-ghost" id="btn-constellation">Constellation</button>
+        <button class="btn-action" id="btn-next">Next →</button>
+      </footer>
+
+      <!-- Collection Drawer Modal -->
+      <div class="drawer-overlay" id="cabinet-view">
+        <div class="view-header">
+          <span class="brand-title">The Quote Cabinet</span>
+          <div style="display:flex; gap:10px;">
+            <button class="btn-action btn-primary-ghost" id="btn-new-quote">+ Add New Thought</button>
+            <button class="btn-action" id="btn-close-cabinet">Close ✕</button>
+          </div>
+        </div>
+        <div class="cards-grid" id="cards-grid"></div>
+      </div>
+
+      <!-- Database Editor Drawer Modal -->
+      <div class="drawer-overlay" id="editor-view">
+        <div class="view-header">
+          <span class="brand-title" id="editor-title">Edit Thought Entry</span>
+          <button class="btn-action" id="btn-close-editor">Cancel ✕</button>
+        </div>
+        <form class="editor-form" id="editor-form">
+          <div class="form-group">
+            <label>Quote Text</label>
+            <textarea class="form-control" id="edit-quote" required></textarea>
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label>Author</label>
+              <input type="text" class="form-control" id="edit-author" required>
+            </div>
+            <div class="form-group">
+              <label>Mood</label>
+              <input type="text" class="form-control" id="edit-mood" placeholder="e.g. Patience" required>
+            </div>
+            <div class="form-group">
+              <label>Classification</label>
+              <select class="form-control" id="edit-origin">
+                <option value="WRITTEN">WRITTEN</option>
+                <option value="FOUND">FOUND</option>
+                <option value="REMEMBER">REMEMBER</option>
+                <option value="PROMISE">PROMISE</option>
+                <option value="FRAGMENT">FRAGMENT</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>What This Reminds Me Of</label>
+            <input type="text" class="form-control" id="edit-reminds" required>
+          </div>
+          <div class="form-group">
+            <label>Why I Kept It</label>
+            <input type="text" class="form-control" id="edit-why" required>
+          </div>
+          <div class="form-group">
+            <label>Where I Want To Carry It</label>
+            <input type="text" class="form-control" id="edit-where" required>
+          </div>
+          <div style="display:flex; justify-content: space-between; margin-top:0.5rem;">
+            <button type="button" class="btn-action" id="btn-delete-quote" style="color:#e57373;">Delete Entry</button>
+            <button type="submit" class="btn-action btn-primary-ghost" style="background:var(--orchid-smoke); color:#120f19;">Save Changes ✦</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Constellation Drawer Modal -->
+      <div class="drawer-overlay" id="constellation-view">
+        <div class="view-header">
+          <span class="brand-title">Quote Constellation</span>
+          <button class="btn-action" id="btn-close-constellation">Close ✕</button>
+        </div>
+        <canvas id="constellation-canvas"></canvas>
+        <div style="text-align: center; margin-top: 1rem; font-size: 0.72rem; color: var(--dusted-lavender);">
+          Hover over stars to reveal thoughts • Click to open entry
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Quiet Reflection Fullscreen Overlay -->
+  <div class="reflection-overlay" id="reflection-overlay">
+    <p class="reflection-text" id="reflection-text"></p>
+  </div>
+
+  <script>
+    // --- Default Archive Data ---
+    const defaultQuotes = [
+      {
+        id: 1,
+        quote: "Progress is allowed to look quiet.",
+        author: "me",
+        origin: "WRITTEN",
+        mood: "Patience",
+        reminds: "The periods when I was improving without noticing.",
+        why: "Because I tend to underestimate quiet progress.",
+        where: "Whenever I feel behind or tempted to compare."
+      },
+      {
+        id: 2,
+        quote: "The future is not something I find. It is something I build.",
+        author: "Me",
+        origin: "PROMISE",
+        mood: "Ambition",
+        reminds: "Starting my first independent project from scratch.",
+        why: "To remind myself that agency always beats anxiety.",
+        where: "When facing intimidating new goals."
+      },
+      {
+        id: 3,
+        quote: "Some seasons are for becoming, not arriving.",
+        author: "Anonymous",
+        origin: "FOUND",
+        mood: "Becoming",
+        reminds: "Late evenings learning step-by-step without a deadline.",
+        why: "It removes the pressure to have everything solved.",
+        where: "During long transitions and practice phases."
+      },
+      {
+        id: 4,
+        quote: "You do not need to see the whole staircase.",
+        author: "Martin Luther King Jr.",
+        origin: "REMEMBER",
+        mood: "Courage",
+        reminds: "Taking the very first step into unfamiliar territory.",
+        why: "Overthinking usually comes from trying to predict step ten.",
+        where: "When overanalyzing before taking action."
+      },
+      {
+        id: 5,
+        quote: "A slow life can still be an ambitious life.",
+        author: "Journal Fragment",
+        origin: "FRAGMENT",
+        mood: "Quiet",
+        reminds: "Early morning rooftop workouts in total calm.",
+        why: "Speed doesn't equal depth or true magnitude.",
+        where: "When the fast pace of the world feels overwhelming."
+      },
+      {
+        id: 6,
+        quote: "Build something your future self can point to.",
+        author: "me",
+        origin: "WRITTEN",
+        mood: "Wonder",
+        reminds: "Looking back at work completed months ago.",
+        why: "Because consistency compounds into quiet proof.",
+        where: "When motivation drops on ordinary weekdays."
+      }
+    ];
+
+    // LocalStorage Sync
+    let quoteCabinet = JSON.parse(localStorage.getItem('living_quote_cabinet')) || defaultQuotes;
+    let currentIndex = 0;
+    let editingTargetIndex = null;
+
+    function saveCabinet() {
+      localStorage.setItem('living_quote_cabinet', JSON.stringify(quoteCabinet));
+    }
+
+    // --- DOM Elements ---
+    const widget = document.getElementById('quote-widget');
+    const viewport = document.getElementById('quote-viewport');
+    const heroQuote = document.getElementById('hero-quote');
+    const quoteAuthor = document.getElementById('quote-author');
+    const originTag = document.getElementById('origin-tag');
+    const moodPill = document.getElementById('mood-pill');
+    const entryBadge = document.getElementById('entry-badge');
+    const anchorReminds = document.getElementById('anchor-reminds');
+    const anchorWhy = document.getElementById('anchor-why');
+    const anchorWhere = document.getElementById('anchor-where');
+
+    const btnPrev = document.getElementById('btn-prev');
+    const btnNext = document.getElementById('btn-next');
+    const btnCabinet = document.getElementById('btn-cabinet');
+    const btnCloseCabinet = document.getElementById('btn-close-cabinet');
+    const cabinetView = document.getElementById('cabinet-view');
+    const cardsGrid = document.getElementById('cards-grid');
+
+    const editorView = document.getElementById('editor-view');
+    const btnCloseEditor = document.getElementById('btn-close-editor');
+    const btnNewQuote = document.getElementById('btn-new-quote');
+    const editorForm = document.getElementById('editor-form');
+    const btnDeleteQuote = document.getElementById('btn-delete-quote');
+
+    const btnConstellation = document.getElementById('btn-constellation');
+    const btnCloseConstellation = document.getElementById('btn-close-constellation');
+    const constellationView = document.getElementById('constellation-view');
+
+    const triggerReflection = document.getElementById('trigger-reflection');
+    const reflectionOverlay = document.getElementById('reflection-overlay');
+    const reflectionText = document.getElementById('reflection-text');
+
+    // --- 3D Parallax Mouse Physics ---
+    widget.addEventListener('mousemove', (e) => {
+      const rect = widget.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      widget.style.transform = `perspective(1000px) rotateX(${-y / 45}deg) rotateY(${x / 45}deg)`;
+    });
+
+    widget.addEventListener('mouseleave', () => {
+      widget.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg)`;
+    });
+
+    // --- Ink-Blur Quote Update ---
+    function updateQuote(index) {
+      if (quoteCabinet.length === 0) return;
+      viewport.classList.add('ink-out');
+
+      setTimeout(() => {
+        const item = quoteCabinet[index];
+        heroQuote.textContent = `“${item.quote}”`;
+        quoteAuthor.childNodes[0].textContent = `— ${item.author} `;
+        originTag.textContent = item.origin;
+        moodPill.textContent = item.mood.toUpperCase();
+        entryBadge.textContent = `ENTRY 0${index + 1} / 0${quoteCabinet.length}`;
+
+        anchorReminds.textContent = item.reminds;
+        anchorWhy.textContent = item.why;
+        anchorWhere.textContent = item.where;
+
+        viewport.classList.remove('ink-out');
+      }, 450);
+    }
+
+    btnNext.addEventListener('click', () => {
+      currentIndex = (currentIndex + 1) % quoteCabinet.length;
+      updateQuote(currentIndex);
+    });
+
+    btnPrev.addEventListener('click', () => {
+      currentIndex = (currentIndex - 1 + quoteCabinet.length) % quoteCabinet.length;
+      updateQuote(currentIndex);
+    });
+
+    // --- Render Collection & Database Grid ---
+    function renderCabinet() {
+      cardsGrid.innerHTML = '';
+      quoteCabinet.forEach((item, idx) => {
+        const card = document.createElement('div');
+        card.className = 'editorial-card';
+        card.innerHTML = `
+          <div>
+            <div class="card-meta">
+              <span>0${idx + 1}</span>
+              <span>${item.mood}</span>
+            </div>
+            <div class="card-snippet">“${item.quote}”</div>
+          </div>
+          <div class="card-actions">
+            <button class="btn-card-edit" data-edit="${idx}">Customize ✎</button>
+          </div>
+        `;
+
+        card.addEventListener('click', (e) => {
+          if (e.target.tagName === 'BUTTON') return;
+          currentIndex = idx;
+          updateQuote(currentIndex);
+          cabinetView.classList.remove('active');
+        });
+
+        cardsGrid.appendChild(card);
+      });
+
+      // Attach Edit Listeners
+      document.querySelectorAll('[data-edit]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const idx = parseInt(btn.getAttribute('data-edit'));
+          openEditor(idx);
+        });
+      });
+    }
+
+    btnCabinet.addEventListener('click', () => {
+      renderCabinet();
+      cabinetView.classList.add('active');
+    });
+
+    btnCloseCabinet.addEventListener('click', () => {
+      cabinetView.classList.remove('active');
+    });
+
+    // --- Editor Drawer Logic ---
+    function openEditor(index = null) {
+      editingTargetIndex = index;
+      if (index !== null) {
+        const item = quoteCabinet[index];
+        document.getElementById('editor-title').textContent = "Edit Thought Entry";
+        document.getElementById('edit-quote').value = item.quote;
+        document.getElementById('edit-author').value = item.author;
+        document.getElementById('edit-mood').value = item.mood;
+        document.getElementById('edit-origin').value = item.origin;
+        document.getElementById('edit-reminds').value = item.reminds;
+        document.getElementById('edit-why').value = item.why;
+        document.getElementById('edit-where').value = item.where;
+        btnDeleteQuote.style.display = "block";
+      } else {
+        document.getElementById('editor-title').textContent = "New Thought Entry";
+        editorForm.reset();
+        btnDeleteQuote.style.display = "none";
+      }
+      editorView.classList.add('active');
+    }
+
+    btnNewQuote.addEventListener('click', () => openEditor(null));
+    btnCloseEditor.addEventListener('click', () => editorView.classList.remove('active'));
+
+    editorForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const updatedItem = {
+        id: editingTargetIndex !== null ? quoteCabinet[editingTargetIndex].id : Date.now(),
+        quote: document.getElementById('edit-quote').value,
+        author: document.getElementById('edit-author').value,
+        mood: document.getElementById('edit-mood').value,
+        origin: document.getElementById('edit-origin').value,
+        reminds: document.getElementById('edit-reminds').value,
+        why: document.getElementById('edit-why').value,
+        where: document.getElementById('edit-where').value
+      };
+
+      if (editingTargetIndex !== null) {
+        quoteCabinet[editingTargetIndex] = updatedItem;
+      } else {
+        quoteCabinet.push(updatedItem);
+        currentIndex = quoteCabinet.length - 1;
+      }
+
+      saveCabinet();
+      editorView.classList.remove('active');
+      renderCabinet();
+      updateQuote(currentIndex);
+    });
+
+    btnDeleteQuote.addEventListener('click', () => {
+      if (editingTargetIndex !== null) {
+        quoteCabinet.splice(editingTargetIndex, 1);
+        if (currentIndex >= quoteCabinet.length) currentIndex = Math.max(0, quoteCabinet.length - 1);
+        saveCabinet();
+        editorView.classList.remove('active');
+        renderCabinet();
+        updateQuote(currentIndex);
+      }
+    });
+
+    // --- Interactive Constellation View ---
+    const cCanvas = document.getElementById('constellation-canvas');
+    const cCtx = cCanvas.getContext('2d');
+    let nodes = [];
+
+    function initConstellation() {
+      cCanvas.width = cCanvas.offsetWidth;
+      cCanvas.height = cCanvas.offsetHeight;
+      
+      nodes = quoteCabinet.map((item, i) => {
+        const angle = (i / quoteCabinet.length) * Math.PI * 2;
+        const radius = 80 + Math.random() * 35;
+        return {
+          x: cCanvas.width / 2 + Math.cos(angle) * radius,
+          y: cCanvas.height / 2 + Math.sin(angle) * radius,
+          item: item,
+          index: i,
+          radius: 6
+        };
+      });
+    }
+
+    function drawConstellation() {
+      cCtx.clearRect(0, 0, cCanvas.width, cCanvas.height);
+      
+      cCtx.strokeStyle = 'rgba(198, 182, 221, 0.18)';
+      cCtx.lineWidth = 1;
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          cCtx.beginPath();
+          cCtx.moveTo(nodes[i].x, nodes[i].y);
+          cCtx.lineTo(nodes[j].x, nodes[j].y);
+          cCtx.stroke();
+        }
+      }
+
+      nodes.forEach(node => {
+        cCtx.fillStyle = '#C6B6DD';
+        cCtx.shadowBlur = 12;
+        cCtx.shadowColor = '#9C86B9';
+        cCtx.beginPath();
+        cCtx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+        cCtx.fill();
+        cCtx.shadowBlur = 0;
+
+        cCtx.fillStyle = '#F1EDF7';
+        cCtx.font = '10px Plus Jakarta Sans';
+        cCtx.fillText(node.item.mood.toUpperCase(), node.x + 12, node.y + 4);
+      });
+    }
+
+    btnConstellation.addEventListener('click', () => {
+      constellationView.classList.add('active');
+      setTimeout(() => {
+        initConstellation();
+        drawConstellation();
+      }, 120);
+    });
+
+    btnCloseConstellation.addEventListener('click', () => {
+      constellationView.classList.remove('active');
+    });
+
+    cCanvas.addEventListener('click', (e) => {
+      const rect = cCanvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+
+      nodes.forEach(node => {
+        const dist = Math.hypot(node.x - mx, node.y - my);
+        if (dist < 18) {
+          currentIndex = node.index;
+          updateQuote(currentIndex);
+          constellationView.classList.remove('active');
+        }
+      });
+    });
+
+    // --- Quiet Reflection Sequence Overlay ---
+    triggerReflection.addEventListener('click', () => {
+      reflectionOverlay.classList.add('active');
+      
+      setTimeout(() => {
+        reflectionText.textContent = "You don't have to become everything today.";
+        reflectionText.classList.add('visible');
+      }, 700);
+
+      setTimeout(() => { reflectionText.classList.remove('visible'); }, 3200);
+
+      setTimeout(() => {
+        reflectionText.textContent = "Just stay in motion.";
+        reflectionText.classList.add('visible');
+      }, 4200);
+
+      setTimeout(() => { reflectionText.classList.remove('visible'); }, 6800);
+
+      setTimeout(() => { reflectionOverlay.classList.remove('active'); }, 7800);
+    });
+
+    // --- Ambient Particle & Glowing Aura Canvas ---
+    const ambCanvas = document.getElementById('ambient-canvas');
+    const ambCtx = ambCanvas.getContext('2d');
+    let particles = [];
+
+    function resizeAmbCanvas() {
+      ambCanvas.width = window.innerWidth;
+      ambCanvas.height = window.innerHeight;
+    }
+
+    window.addEventListener('resize', resizeAmbCanvas);
+    resizeAmbCanvas();
+
+    class Particle {
+      constructor() { this.reset(); }
+      reset() {
+        this.x = Math.random() * ambCanvas.width;
+        this.y = Math.random() * ambCanvas.height;
+        this.size = Math.random() * 2.2 + 0.4;
+        this.speedX = (Math.random() - 0.5) * 0.25;
+        this.speedY = (Math.random() - 0.5) * 0.25;
+        this.alpha = Math.random() * 0.45 + 0.15;
+      }
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        if (this.x < 0 || this.x > ambCanvas.width || this.y < 0 || this.y > ambCanvas.height) this.reset();
+      }
+      draw() {
+        ambCtx.fillStyle = `rgba(198, 182, 221, ${this.alpha})`;
+        ambCtx.beginPath();
+        ambCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ambCtx.fill();
+      }
+    }
+
+    for (let i = 0; i < 55; i++) particles.push(new Particle());
+
+    function animateParticles() {
+      ambCtx.clearRect(0, 0, ambCanvas.width, ambCanvas.height);
+      
+      const grad = ambCtx.createRadialGradient(
+        ambCanvas.width / 2, ambCanvas.height / 2, 80,
+        ambCanvas.width / 2, ambCanvas.height / 2, ambCanvas.width / 1.1
+      );
+      grad.addColorStop(0, 'rgba(156, 134, 185, 0.14)');
+      grad.addColorStop(0.5, 'rgba(198, 182, 221, 0.03)');
+      grad.addColorStop(1, 'rgba(25, 25, 25, 0)');
+      ambCtx.fillStyle = grad;
+      ambCtx.fillRect(0, 0, ambCanvas.width, ambCanvas.height);
+
+      particles.forEach(p => { p.update(); p.draw(); });
+      requestAnimationFrame(animateParticles);
+    }
+
+    // Initial Load
+    updateQuote(currentIndex);
+    animateParticles();
+  </script>
+</body>
+</html>
