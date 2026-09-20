@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Celestial Atlas</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap');
+
+        :root {
+            --sky-top: #1b1d28;
+            --sky-bottom: #323746;
+            --mist-color: rgba(197, 198, 222, 0.25);
+            --text-main: #f5f2eb;
+            --text-sub: rgba(245, 242, 235, 0.6);
+            --accent-gold: #e6d3a7;
+            --accent-glow: rgba(230, 211, 167, 0.65);
+            --card-bg: rgba(22, 25, 35, 0.55);
+            --border-line: rgba(255, 255, 255, 0.15);
+            --glass-bg: rgba(18, 20, 29, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --glass-shadow: 0 0 55px var(--accent-glow), 0 30px 60px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+        }
+
+        /* ATMOSPHERIC PRESETS */
+        body.preset-dawn {
+            --sky-top: #2c2233;
+            --sky-bottom: #684a5a;
+            --mist-color: rgba(242, 190, 172, 0.25);
+            --accent-gold: #f7d6b5;
+            --accent-glow: rgba(247, 214, 181, 0.65);
+        }
+
+        body.preset-night {
+            --sky-top: #0a0c14;
+            --sky-bottom: #161a29;
+            --mist-color: rgba(120, 135, 175, 0.15);
+            --accent-gold: #9bb5e6;
+            --accent-glow: rgba(155, 181, 230, 0.55);
+            --text-main: #e2e8f5;
+        }
+
+        body.preset-lavender {
+            --sky-top: #211c2e;
+            --sky-bottom: #433957;
+            --mist-color: rgba(200, 180, 225, 0.25);
+            --accent-gold: #edd8f5;
+            --accent-glow: rgba(237, 216, 245, 0.65);
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #191919;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* WIDGET GLASS PANEL ENCLOSURE */
+        .glass-panel-frame {
+            position: relative;
+            width: calc(100vw - 40px);
+            height: calc(100vh - 40px);
+            max-width: 1600px;
+            max-height: 950px;
+            border-radius: 24px;
+            background-color: var(--sky-top);
+            background-image: linear-gradient(0deg, var(--glass-bg), var(--glass-bg));
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(28px) saturate(140%);
+            -webkit-backdrop-filter: blur(28px) saturate(140%);
+            box-shadow: var(--glass-shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            will-change: transform;
+            transition: background-color 2.5s cubic-bezier(0.22, 1, 0.36, 1), 
+                        border-color 1.5s ease, 
+                        box-shadow 2.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        /* CANVAS BACKDROP */
+        #sky-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* WORLD CONTAINER FOR PARALLAX & CAMERA DRIFT */
+        #world-viewport {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 2;
+            transform-style: preserve-3d;
+            will-change: transform;
+        }
+
+        /* FLOATING ISLAND NODES */
+        .island {
+            position: absolute;
+            transform: translate3d(-50%, -50%, 0);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: filter 1.4s cubic-bezier(0.22, 1, 0.36, 1), 
+                        opacity 1.4s cubic-bezier(0.22, 1, 0.36, 1), 
+                        transform 1s cubic-bezier(0.22, 1, 0.36, 1);
+            z-index: 10;
+            will-change: transform, opacity, filter;
+            animation: floatingIsland 8s cubic-bezier(0.4, 0, 0.6, 1) infinite alternate;
+        }
+
+        @keyframes floatingIsland {
+            0% { transform: translate3d(-50%, -50%, 0) translateY(0px); }
+            100% { transform: translate3d(-50%, -50%, 0) translateY(-10px); }
+        }
+
+        .island-structure {
+            position: relative;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 75%);
+            border: 1px solid var(--border-line);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 0 35px rgba(0,0,0,0.4), 0 0 15px var(--accent-glow);
+            transition: all 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+            overflow: hidden;
+        }
+
+        .island-icon {
+            font-size: 1.8rem;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            filter: drop-shadow(0 0 15px var(--accent-glow));
+            transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .island-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .island-title {
+            margin-top: 12px;
+            font-family: 'Cinzel', serif;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-main);
+            text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+            white-space: nowrap;
+            opacity: 0.85;
+            transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .island-subtitle {
+            font-size: 0.68rem;
+            color: var(--text-sub);
+            letter-spacing: 1px;
+            margin-top: 2px;
+            white-space: nowrap;
+        }
+
+        /* FOG OF POSSIBILITY STATE */
+        .island.fogged {
+            filter: blur(6px) grayscale(0.4);
+            opacity: 0.4;
+        }
+
+        .island.fogged:hover {
+            filter: blur(2px) grayscale(0.1);
+            opacity: 0.85;
+        }
+
+        .island:hover .island-structure {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 60px var(--accent-glow), inset 0 0 20px var(--accent-glow);
+            transform: scale(1.18);
+        }
+
+        .island:hover .island-title {
+            opacity: 1;
+            transform: translateY(-2px);
+        }
+
+        /* MEMORY LANTERN ATTACHED TO ISLAND */
+        .lantern-spark {
+            position: absolute;
+            top: -6px; right: -6px;
+            width: 8px; height: 8px;
+            background: var(--accent-gold);
+            border-radius: 50%;
+            box-shadow: 0 0 20px 6px var(--accent-gold);
+            animation: floatGlow 5s cubic-bezier(0.4, 0, 0.6, 1) infinite alternate;
+        }
+
+        @keyframes floatGlow {
+            0% { transform: translateY(0px) scale(0.85); opacity: 0.5; }
+            100% { transform: translateY(-5px) scale(1.25); opacity: 1; }
+        }
+
+        /* UI OVERLAY LAYER */
+        #ui-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 100;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 35px 45px;
+            transition: opacity 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        #ui-overlay.hidden-ui {
+            opacity: 0;
+        }
+
+        .interactive-ui {
+            pointer-events: auto;
+        }
+
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .brand-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--text-main);
+            margin: 0;
+        }
+
+        .brand-sub {
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            letter-spacing: 1.5px;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .top-controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-ui {
+            background: var(--card-bg);
+            border: 1px solid var(--border-line);
+            color: var(--text-main);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .btn-ui:hover {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 25px var(--accent-glow);
+            color: var(--accent-gold);
+            transform: translateY(-1px);
+        }
+
+        .btn-ui.active {
+            background: var(--accent-gold);
+            color: #111;
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 25px var(--accent-glow);
+        }
+
+        .btn-danger:hover {
+            border-color: #f8a5a5 !important;
+            box-shadow: 0 0 25px rgba(248, 165, 165, 0.4) !important;
+            color: #f8a5a5 !important;
+        }
+
+        .bottom-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .mode-toggles {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* DESTINATIONS INSPECTION CARD */
+        #detail-card {
+            position: absolute;
+            bottom: 45px; right: 45px;
+            width: 325px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-line);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            padding: 25px;
+            border-radius: 16px;
+            z-index: 110;
+            pointer-events: auto;
+            transform: translate3d(0, 25px, 0);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            will-change: transform, opacity;
+        }
+
+        #detail-card.active {
+            transform: translate3d(0, 0, 0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .card-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            margin: 0;
+            color: var(--accent-gold);
+            letter-spacing: 1px;
+        }
+
+        .card-meta {
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            margin-top: 4px;
+        }
+
+        .card-quote {
+            font-size: 0.82rem;
+            line-height: 1.5;
+            color: var(--text-main);
+            margin: 18px 0;
+            font-style: italic;
+            border-left: 2px solid var(--accent-gold);
+            padding-left: 12px;
+        }
+
+        .card-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 6px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-line);
+        }
+
+        .mood-tag {
+            font-size: 0.65rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.06);
+            color: var(--text-sub);
+        }
+
+        /* MODAL FOR ADDING DESTINATIONS */
+        #add-modal {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate3d(-50%, -45%, 0) scale(0.95);
+            width: 380px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-line);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            padding: 30px;
+            border-radius: 20px;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+            will-change: transform, opacity;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        #add-modal.open {
+            transform: translate3d(-50%, -50%, 0) scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            margin: 0 0 20px 0;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.68rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--text-sub);
+            margin-bottom: 6px;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border-line);
+            border-radius: 8px;
+            padding: 10px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.82rem;
+            outline: none;
+            transition: border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .form-group input[type="file"] {
+            padding: 7px;
+            cursor: pointer;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: var(--accent-gold);
+        }
+
+        .icon-type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .icon-type-btn {
+            flex: 1;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border-line);
+            padding: 6px;
+            border-radius: 6px;
+            color: var(--text-sub);
+            font-size: 0.65rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .icon-type-btn.active {
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
+            background: rgba(230, 211, 167, 0.1);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- GLASS PANEL WIDGET ENCLOSURE -->
+    <div class="glass-panel-frame">
+
+        <!-- SKY CANVAS FOR ATMOSPHERE, STARS, BRIDGES & FOG -->
+        <canvas id="sky-canvas"></canvas>
+
+        <!-- WORLD VIEWPORT FOR PARALLAX & CAMERA MOVEMENT -->
+        <div id="world-viewport">
+            <div id="islands-container"></div>
+        </div>
+
+        <!-- HUD OVERLAY -->
+        <div id="ui-overlay">
+            <div class="top-header">
+                <div>
+                    <h1 class="brand-title">✦ The Celestial Atlas</h1>
+                    <div class="brand-sub">places I might one day call mine</div>
+                </div>
+                <div class="top-controls interactive-ui">
+                    <button class="btn-ui" onclick="togglePreset()">☁ Atmosphere</button>
+                    <button class="btn-ui" onclick="openAddModal()">+ Add Destination</button>
+                </div>
+            </div>
+
+            <div class="bottom-bar">
+                <div class="mode-toggles interactive-ui">
+                    <button class="btn-ui" id="btn-wander" onclick="toggleWander()">◌ Wander</button>
+                    <button class="btn-ui" id="btn-stillness" onclick="toggleStillness()">○ Stillness</button>
+                    <button class="btn-ui" id="btn-memory" onclick="toggleMemoryMode()">✦ Memory Mode</button>
+                </div>
+                <div class="interactive-ui" style="font-size: 0.7rem; color: var(--text-sub); letter-spacing: 1.5px;">
+                    <span id="destination-count">0 DESTINATIONS</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- DETAIL CARD -->
+        <div id="detail-card">
+            <div class="card-header">
+                <div>
+                    <h3 class="card-title" id="card-name">University Name</h3>
+                    <div class="card-meta" id="card-location">City, Country</div>
+                </div>
+                <span class="mood-tag" id="card-mood">Peaceful</span>
+            </div>
+            <div class="card-quote" id="card-thought">"I can imagine walking these streets."</div>
+            <div class="card-actions">
+                <button class="btn-ui" id="btn-reveal" onclick="toggleRevealCurrent()">Reveal</button>
+                <button class="btn-ui btn-danger" onclick="removeCurrentDestination()">Dissolve</button>
+                <button class="btn-ui" onclick="closeCard()">Return</button>
+            </div>
+        </div>
+
+        <!-- ADD DESTINATION MODAL -->
+        <div id="add-modal">
+            <h3 class="modal-title">New Sky Destination</h3>
+            <div class="form-group">
+                <label>Destination / Place Name</label>
+                <input type="text" id="input-name" placeholder="e.g. University of Toronto">
+            </div>
+            <div class="form-group">
+                <label>Location / Program</label>
+                <input type="text" id="input-location" placeholder="e.g. Toronto, Canada · Computer Science">
+            </div>
+            <div class="form-group">
+                <label>Island Icon Customization</label>
+                <div class="icon-type-selector">
+                    <div class="icon-type-btn active" id="btn-type-emoji" onclick="switchIconInput('emoji')">Custom Emoji</div>
+                    <div class="icon-type-btn" id="btn-type-image" onclick="switchIconInput('image')">Personal Image</div>
+                </div>
+                <div id="icon-input-emoji-container">
+                    <input type="text" id="input-custom-icon" placeholder="e.g. 🚀, 💻, ⚡ (Blank for mood default)">
+                </div>
+                <div id="icon-input-image-container" style="display: none;">
+                    <input type="file" id="input-custom-image" accept="image/*">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Atmospheric Mood</label>
+                <select id="input-mood">
+                    <option value="peaceful">Peaceful (Misty / Calm)</option>
+                    <option value="ambitious">Ambitious (Bright Architecture)</option>
+                    <option value="mysterious">Mysterious (Deep Fog)</option>
+                    <option value="inspiring">Inspiring (Sunbeams)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Remember This (Future Thought)</label>
+                <textarea id="input-thought" rows="2" placeholder="e.g. Look into undergraduate research opportunities."></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-ui" onclick="closeAddModal()">Cancel</button>
+                <button class="btn-ui active" onclick="saveNewDestination()">Create Island</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. DATA STATE
+        // ==========================================
+        let destinations = [
+            {
+                id: 'dest-1',
+                name: 'University of Toronto',
+                location: 'Toronto, Canada',
+                program: 'Computer Science',
+                thought: 'A city I could imagine becoming part of.',
+                mood: 'ambitious',
+                icon: null,
+                revealed: true,
+                x: 0.3, y: 0.35 
+            },
+            {
+                id: 'dest-2',
+                name: 'University of Tokyo',
+                location: 'Tokyo, Japan',
+                program: 'Information Science',
+                thought: 'Lantern-filled mountain streets and quiet autumn nights.',
+                mood: 'peaceful',
+                icon: null,
+                revealed: false,
+                x: 0.7, y: 0.28
+            },
+            {
+                id: 'dest-3',
+                name: 'UCL',
+                location: 'London, UK',
+                program: 'Data & Architecture',
+                thought: 'An old stone citadel suspended above the clouds.',
+                mood: 'mysterious',
+                icon: null,
+                revealed: true,
+                x: 0.5, y: 0.65
+            }
+        ];
+
+        // System Mode States
+        let isWander = false;
+        let isStillness = false;
+        let isMemoryMode = false;
+        let activeSelectedId = null;
+        let currentPresetIdx = 0;
+        const presets = ['preset-default', 'preset-dawn', 'preset-night', 'preset-lavender'];
+
+        // Cached Styling Variables
+        let currentMistColor = 'rgba(197, 198, 222, 0.25)';
+        let currentAccentGold = '#e6d3a7';
+
+        function updateCachedColors() {
+            const styles = getComputedStyle(document.body);
+            currentMistColor = styles.getPropertyValue('--mist-color').trim() || 'rgba(197, 198, 222, 0.25)';
+            currentAccentGold = styles.getPropertyValue('--accent-gold').trim() || '#e6d3a7';
+        }
+
+        // Camera Engine Variables
+        let camX = 0, camY = 0;
+        let targetCamX = 0, targetCamY = 0;
+        let wanderAngle = 0;
+
+        // Canvas Particles & Clouds
+        const canvas = document.getElementById('sky-canvas');
+        const ctx = canvas.getContext('2d');
+        const glassFrame = document.querySelector('.glass-panel-frame');
+        let clouds = [];
+        let stars = [];
+        let lanterns = [];
+
+        // ==========================================
+        // 2. CANVAS ENGINE
+        // ==========================================
+        function resizeCanvas() {
+            canvas.width = glassFrame.clientWidth;
+            canvas.height = glassFrame.clientHeight;
+            initBackgroundParticles();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function initBackgroundParticles() {
+            clouds = [];
+            stars = [];
+            lanterns = [];
+
+            for (let i = 0; i < 22; i++) {
+                clouds.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: 90 + Math.random() * 200,
+                    speed: 0.12 + Math.random() * 0.25,
+                    depth: 0.2 + Math.random() * 0.8,
+                    opacity: 0.1 + Math.random() * 0.22
+                });
+            }
+
+            for (let i = 0; i < 70; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 1.8,
+                    alpha: Math.random(),
+                    speed: 0.008 + Math.random() * 0.015
+                });
+            }
+
+            for (let i = 0; i < 9; i++) {
+                lanterns.push({
+                    x: Math.random() * canvas.width,
+                    y: canvas.height + Math.random() * 120,
+                    speedY: 0.25 + Math.random() * 0.45,
+                    speedX: (Math.random() - 0.5) * 0.18,
+                    size: 3 + Math.random() * 3
+                });
+            }
+        }
+
+        function renderCanvasLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (document.body.classList.contains('preset-night')) {
+                stars.forEach(s => {
+                    s.alpha += s.speed;
+                    if (s.alpha > 1 || s.alpha < 0) s.speed = -s.speed;
+                    ctx.fillStyle = `rgba(255, 255, 255, ${Math.abs(s.alpha)})`;
+                    ctx.beginPath();
+                    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+
+            renderBridges();
+
+            if (!isStillness) {
+                clouds.forEach(c => {
+                    c.x += c.speed;
+                    if (c.x - c.radius > canvas.width) c.x = -c.radius;
+
+                    const parallaxX = c.x + camX * c.depth * 25;
+                    const parallaxY = c.y + camY * c.depth * 25;
+
+                    const grad = ctx.createRadialGradient(
+                        parallaxX, parallaxY, 0,
+                        parallaxX, parallaxY, c.radius
+                    );
+                    grad.addColorStop(0, currentMistColor);
+                    grad.addColorStop(1, 'transparent');
+
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(parallaxX, parallaxY, c.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                lanterns.forEach(l => {
+                    l.y -= l.speedY;
+                    l.x += l.speedX;
+                    if (l.y < -20) {
+                        l.y = canvas.height + 20;
+                        l.x = Math.random() * canvas.width;
+                    }
+
+                    ctx.fillStyle = currentAccentGold;
+                    ctx.shadowBlur = 25; 
+                    ctx.shadowColor = currentAccentGold;
+                    ctx.beginPath();
+                    ctx.arc(l.x + camX * 12, l.y + camY * 12, l.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                });
+            }
+
+            if (isWander && !isStillness) {
+                wanderAngle += 0.0008; 
+                targetCamX = Math.sin(wanderAngle) * 0.08;
+                targetCamY = Math.cos(wanderAngle * 0.7) * 0.05;
+            }
+
+            camX += (targetCamX - camX) * 0.012; 
+            camY += (targetCamY - camY) * 0.012;
+
+            const viewport = document.getElementById('world-viewport');
+            viewport.style.transform = `translate3d(${camX * 100}px, ${camY * 100}px, 0)`;
+
+            requestAnimationFrame(renderCanvasLoop);
+        }
+
+        function renderBridges() {
+            for (let i = 0; i < destinations.length; i++) {
+                for (let j = i + 1; j < destinations.length; j++) {
+                    const d1 = destinations[i];
+                    const d2 = destinations[j];
+
+                    const x1 = d1.x * canvas.width + camX * 30;
+                    const y1 = d1.y * canvas.height + camY * 30;
+                    const x2 = d2.x * canvas.width + camX * 30;
+                    const y2 = d2.y * canvas.height + camY * 30;
+
+                    const cx = (x1 + x2) / 2;
+                    const cy = (y1 + y2) / 2 - 40;
+
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.quadraticCurveTo(cx, cy, x2, y2);
+                    
+                    if (d1.revealed && d2.revealed) {
+                        ctx.strokeStyle = currentAccentGold; 
+                        ctx.globalAlpha = 0.6;
+                        ctx.shadowBlur = 18; 
+                        ctx.shadowColor = currentAccentGold;
+                    } else {
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.globalAlpha = 0.15;
+                        ctx.shadowBlur = 4;
+                        ctx.shadowColor = '#ffffff';
+                    }
+                    
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([4, 6]);
+                    ctx.stroke();
+                    ctx.globalAlpha = 1.0;
+                    ctx.setLineDash([]);
+                    ctx.shadowBlur = 0; 
+                }
+            }
+        }
+
+        // ==========================================
+        // 3. DOM ISLAND RENDERER & INTERACTIONS
+        // ==========================================
+        function renderIslands() {
+            const container = document.getElementById('islands-container');
+            container.innerHTML = '';
+
+            destinations.forEach((dest, index) => {
+                const el = document.createElement('div');
+                el.className = `island ${dest.revealed ? '' : 'fogged'}`;
+                el.id = dest.id;
+                el.style.left = `${dest.x * 100}%`;
+                el.style.top = `${dest.y * 100}%`;
+                el.style.animationDelay = `${index * 0.7}s`;
+
+                let iconContent = dest.icon;
+                if (!iconContent) {
+                    iconContent = '🏯';
+                    if (dest.mood === 'ambitious') iconContent = '🏛️';
+                    if (dest.mood === 'peaceful') iconContent = '⛩️';
+                    if (dest.mood === 'inspiring') iconContent = '🏰';
+                }
+
+                let iconHTML = '';
+                if (iconContent.startsWith('data:image') || iconContent.startsWith('http')) {
+                    iconHTML = `<img src="${iconContent}" alt="icon">`;
+                } else {
+                    iconHTML = iconContent;
+                }
+
+                el.innerHTML = `
+                    <div class="island-structure">
+                        <span class="island-icon">${iconHTML}</span>
+                        ${dest.thought ? '<div class="lantern-spark"></div>' : ''}
+                    </div>
+                    <div class="island-title">${dest.name}</div>
+                    <div class="island-subtitle">${dest.location}</div>
+                `;
+
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    selectDestination(dest);
+                });
+
+                container.appendChild(el);
+            });
+
+            document.getElementById('destination-count').innerText = `${destinations.length} DESTINATIONS`;
+        }
+
+        function selectDestination(dest) {
+            activeSelectedId = dest.id;
+
+            targetCamX = (0.5 - dest.x) * 0.3;
+            targetCamY = (0.5 - dest.y) * 0.3;
+
+            document.getElementById('card-name').innerText = dest.name;
+            document.getElementById('card-location').innerText = `${dest.location} · ${dest.program}`;
+            document.getElementById('card-thought').innerText = dest.thought ? `"${dest.thought}"` : '"No notes attached."';
+            document.getElementById('card-mood').innerText = dest.mood;
+            document.getElementById('btn-reveal').innerText = dest.revealed ? 'Conceal' : 'Reveal';
+
+            document.getElementById('detail-card').classList.add('active');
+        }
+
+        function closeCard() {
+            document.getElementById('detail-card').classList.remove('active');
+            activeSelectedId = null;
+            if (!isWander) {
+                targetCamX = 0;
+                targetCamY = 0;
+            }
+        }
+
+        function toggleRevealCurrent() {
+            if (!activeSelectedId) return;
+            const dest = destinations.find(d => d.id === activeSelectedId);
+            if (dest) {
+                dest.revealed = !dest.revealed;
+                renderIslands();
+                selectDestination(dest);
+            }
+        }
+
+        function removeCurrentDestination() {
+            if (!activeSelectedId) return;
+            destinations = destinations.filter(d => d.id !== activeSelectedId);
+            closeCard();
+            renderIslands();
+        }
+
+        // ==========================================
+        // 4. MODES & PRESET CONTROLS
+        // ==========================================
+        function toggleWander() {
+            isWander = !isWander;
+            isStillness = false;
+            document.getElementById('btn-wander').classList.toggle('active', isWander);
+            document.getElementById('btn-stillness').classList.remove('active');
+
+            const ui = document.getElementById('ui-overlay');
+            if (isWander) {
+                ui.classList.add('hidden-ui');
+                const revealHandler = () => {
+                    ui.classList.remove('hidden-ui');
+                    isWander = false;
+                    document.getElementById('btn-wander').classList.remove('active');
+                    window.removeEventListener('click', revealHandler);
+                };
+                setTimeout(() => window.addEventListener('click', revealHandler), 100);
+            }
+        }
+
+        function toggleStillness() {
+            isStillness = !isStillness;
+            isWander = false;
+            document.getElementById('btn-stillness').classList.toggle('active', isStillness);
+            document.getElementById('btn-wander').classList.remove('active');
+            if (isStillness) {
+                targetCamX = 0;
+                targetCamY = 0;
+            }
+        }
+
+        function toggleMemoryMode() {
+            isMemoryMode = !isMemoryMode;
+            document.getElementById('btn-memory').classList.toggle('active', isMemoryMode);
+
+            destinations.forEach(dest => {
+                const el = document.getElementById(dest.id);
+                if (el) {
+                    if (isMemoryMode) {
+                        el.style.opacity = dest.thought ? '1' : '0.15';
+                        el.style.filter = dest.thought ? 'drop-shadow(0 0 15px var(--accent-gold))' : 'grayscale(1)';
+                    } else {
+                        el.style.opacity = '';
+                        el.style.filter = '';
+                    }
+                }
+            });
+        }
+
+        function togglePreset() {
+            document.body.classList.remove(presets[currentPresetIdx]);
+            currentPresetIdx = (currentPresetIdx + 1) % presets.length;
+            if (presets[currentPresetIdx] !== 'preset-default') {
+                document.body.classList.add(presets[currentPresetIdx]);
+            }
+            setTimeout(updateCachedColors, 50);
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isWander && !isStillness) {
+                const rect = glassFrame.getBoundingClientRect();
+                const relX = (e.clientX - rect.left) / rect.width - 0.5;
+                const relY = (e.clientY - rect.top) / rect.height - 0.5;
+                targetCamX = relX * 0.08;
+                targetCamY = relY * 0.08;
+            }
+        });
+
+        // ==========================================
+        // 5. CREATION MODAL & ICON SWITCHING
+        // ==========================================
+        function switchIconInput(type) {
+            const emojiBtn = document.getElementById('btn-type-emoji');
+            const imageBtn = document.getElementById('btn-type-image');
+            const emojiContainer = document.getElementById('icon-input-emoji-container');
+            const imageContainer = document.getElementById('icon-input-image-container');
+
+            if (type === 'emoji') {
+                emojiBtn.classList.add('active');
+                imageBtn.classList.remove('active');
+                emojiContainer.style.display = 'block';
+                imageContainer.style.display = 'none';
+            } else {
+                imageBtn.classList.add('active');
+                emojiBtn.classList.remove('active');
+                emojiContainer.style.display = 'none';
+                imageContainer.style.display = 'block';
+            }
+        }
+
+        function openAddModal() {
+            document.getElementById('add-modal').classList.add('open');
+        }
+
+        function closeAddModal() {
+            document.getElementById('add-modal').classList.remove('open');
+        }
+
+        function saveNewDestination() {
+            const name = document.getElementById('input-name').value.trim();
+            const location = document.getElementById('input-location').value.trim();
+            const mood = document.getElementById('input-mood').value;
+            const thought = document.getElementById('input-thought').value.trim();
+            const customIconText = document.getElementById('input-custom-icon').value.trim();
+            const imageFile = document.getElementById('input-custom-image').files[0];
+
+            if (!name) return;
+
+            if (imageFile) {
+                const reader = new FileReader();
+                reader.onload = function(uploadEvent) {
+                    const base64Image = uploadEvent.target.result;
+                    commitNewDestination(name, location, mood, thought, base64Image);
+                };
+                reader.readAsDataURL(imageFile);
+            } else {
+                commitNewDestination(name, location, mood, thought, customIconText || null);
+            }
+        }
+
+        function commitNewDestination(name, location, mood, thought, icon) {
+            const angle = (destinations.length / 6) * Math.PI * 2;
+            const radius = 0.25 + Math.random() * 0.15;
+            const x = Math.max(0.2, Math.min(0.8, 0.5 + Math.cos(angle) * radius));
+            const y = Math.max(0.2, Math.min(0.8, 0.5 + Math.sin(angle) * radius));
+
+            const newDest = {
+                id: `dest-${Date.now()}`,
+                name,
+                location: location || 'Global',
+                program: 'General Application',
+                thought,
+                mood,
+                icon,
+                revealed: true,
+                x, y
+            };
+
+            destinations.push(newDest);
+            renderIslands();
+            closeAddModal();
+
+            // Reset inputs
+            document.getElementById('input-name').value = '';
+            document.getElementById('input-location').value = '';
+            document.getElementById('input-thought').value = '';
+            document.getElementById('input-custom-icon').value = '';
+            document.getElementById('input-custom-image').value = '';
+            switchIconInput('emoji');
+        }
+
+        // INITIALIZE
+        window.addEventListener('DOMContentLoaded', updateCachedColors);
+        resizeCanvas();
+        renderIslands();
+        renderCanvasLoop();
+    </script>
+</body>
+</html>
