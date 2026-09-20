@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Misty Mountain Sanctuary - Ultra Smooth</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --notion-bg: #191919;
+            --mist-glow: #c8d3ce;
+            --pine-deep: #8fa39a;
+            --card-bg: #1e2220;
+            --border-glow: rgba(200, 211, 206, 0.25);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--notion-bg);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #d4d4d4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 12px;
+            overflow: hidden;
+        }
+
+        @keyframes containerFloat {
+            0%, 100% { transform: translateY(0px) translateZ(0); box-shadow: 0 0 30px rgba(200, 211, 206, 0.08), inset 0 0 15px rgba(0, 0, 0, 0.7); }
+            50% { transform: translateY(-5px) translateZ(0); box-shadow: 0 0 55px rgba(200, 211, 206, 0.2), inset 0 0 20px rgba(0, 0, 0, 0.8); }
+        }
+
+        @keyframes borderPulse {
+            0%, 100% { border-color: rgba(200, 211, 206, 0.2); }
+            50% { border-color: rgba(200, 211, 206, 0.6); }
+        }
+
+        /* Vertical Widget Container */
+        .widget-container {
+            width: 280px;
+            height: 680px;
+            background-color: var(--notion-bg);
+            border: 1px solid var(--border-glow);
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            will-change: transform, box-shadow;
+            animation: containerFloat 7s cubic-bezier(0.44, 0, 0.56, 1) infinite, borderPulse 4.5s ease-in-out infinite;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease;
+        }
+
+        .widget-container:hover {
+            transform: scale(1.015) translateY(-3px) translateZ(0);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(200, 211, 206, 0.15);
+        }
+
+        /* Top Atmospheric Canvas Section with Image Upload */
+        .canvas-section {
+            position: relative;
+            width: 100%;
+            height: 260px;
+            overflow: hidden;
+            border-bottom: 1px solid rgba(200, 211, 206, 0.15);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .canvas-header-overlay {
+            position: absolute;
+            top: 12px;
+            left: 14px;
+            right: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        @keyframes titleGlow {
+            0%, 100% { text-shadow: 0 0 8px rgba(200, 211, 206, 0.4); }
+            50% { text-shadow: 0 0 18px rgba(200, 211, 206, 0.95), 0 0 30px rgba(143, 163, 154, 0.6); }
+        }
+
+        .canvas-overlay-title {
+            font-family: 'Cinzel', serif;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: var(--mist-glow);
+            text-transform: uppercase;
+            animation: titleGlow 3.5s ease-in-out infinite;
+        }
+
+        .upload-btn-label {
+            pointer-events: auto;
+            background: rgba(30, 34, 32, 0.8);
+            border: 1px solid rgba(200, 211, 206, 0.35);
+            color: var(--mist-glow);
+            font-size: 10px;
+            padding: 4px 9px;
+            border-radius: 6px;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            will-change: transform, background, color;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .upload-btn-label:hover {
+            background: var(--mist-glow);
+            color: #191919;
+            transform: scale(1.1) translateY(-1px) translateZ(0);
+            box-shadow: 0 0 18px rgba(200, 211, 206, 0.7);
+        }
+
+        #bgImageInput {
+            display: none;
+        }
+
+        /* Minigame Overlay panel inside canvas section when active */
+        .minigame-overlay {
+            position: absolute;
+            bottom: 8px;
+            left: 14px;
+            right: 14px;
+            background: rgba(25, 27, 26, 0.9);
+            border: 1px solid var(--mist-glow);
+            border-radius: 8px;
+            padding: 6px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            z-index: 3;
+            will-change: transform, opacity;
+            animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 6px 25px rgba(0,0,0,0.6);
+        }
+
+        .minigame-instruction {
+            font-size: 10px;
+            color: var(--mist-glow);
+            letter-spacing: 0.5px;
+            animation: pulseText 2.5s ease-in-out infinite;
+        }
+
+        @keyframes pulseText {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .minigame-close {
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            will-change: transform, background, color;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .minigame-close:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.12);
+            transform: scale(1.15) translateZ(0);
+        }
+
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(16px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Bottom Productivity & Reset Section */
+        .content-section {
+            flex: 1;
+            background: linear-gradient(180deg, rgba(25,25,25,0.98) 0%, rgba(18,20,19,1) 100%);
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+        }
+
+        .content-section::-webkit-scrollbar {
+            width: 4px;
+        }
+        .content-section::-webkit-scrollbar-thumb {
+            background: rgba(200, 211, 206, 0.3);
+            border-radius: 4px;
+        }
+
+        .section-title {
+            font-family: 'Cinzel', serif;
+            font-size: 9.5px;
+            letter-spacing: 1.5px;
+            color: var(--pine-deep);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            transition: color 0.3s ease;
+        }
+        .section-title:hover {
+            color: var(--mist-glow);
+        }
+
+        /* Mindful Pause (Breathing Box) */
+        @keyframes breathPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(0,0,0,0.3), inset 0 0 0px rgba(200,211,206,0); transform: scale(1) translateZ(0); }
+            50% { box-shadow: 0 0 30px rgba(200, 211, 206, 0.3), inset 0 0 16px rgba(200, 211, 206, 0.2); transform: scale(1.025) translateZ(0); }
+        }
+
+        .breath-box {
+            background: var(--card-bg);
+            border: 1px solid rgba(200, 211, 206, 0.2);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            will-change: transform, box-shadow, background, border-color;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .breath-box.active-breathing {
+            animation: breathPulse 4s cubic-bezier(0.44, 0, 0.56, 1) infinite;
+            border-color: var(--mist-glow);
+            background: linear-gradient(135deg, #1e2220 0%, #272e2b 100%);
+        }
+
+        .breath-box:hover {
+            border-color: var(--mist-glow);
+            box-shadow: 0 0 22px rgba(200, 211, 206, 0.35);
+            transform: translateY(-2px) translateZ(0);
+        }
+
+        .breath-text {
+            font-size: 11px;
+            color: #dcdcdc;
+            letter-spacing: 0.5px;
+            transition: color 0.3s ease;
+        }
+
+        /* Focus Vibe Mode Selector */
+        .vibe-container {
+            display: flex;
+            gap: 5px;
+        }
+
+        .vibe-btn {
+            flex: 1;
+            background: var(--card-bg);
+            border: 1px solid rgba(200, 211, 206, 0.15);
+            border-radius: 8px;
+            padding: 7px 2px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 9.5px;
+            color: #aaa;
+            will-change: transform, background, border-color, color, box-shadow;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vibe-btn:hover {
+            border-color: rgba(200, 211, 206, 0.55);
+            color: #fff;
+            transform: translateY(-2.5px) translateZ(0);
+            background: rgba(200, 211, 206, 0.08);
+        }
+
+        .vibe-btn.active {
+            background: rgba(200, 211, 206, 0.15);
+            border-color: var(--mist-glow);
+            color: var(--mist-glow);
+            box-shadow: 0 0 15px rgba(200, 211, 206, 0.3);
+            font-weight: 500;
+            transform: scale(1.04) translateZ(0);
+        }
+
+        .vibe-btn.game-tab {
+            border-color: rgba(143, 163, 154, 0.4);
+            color: #a8bcB5;
+        }
+        .vibe-btn.game-tab.active {
+            background: rgba(143, 163, 154, 0.25);
+            border-color: var(--pine-deep);
+            color: #c8d3ce;
+            box-shadow: 0 0 15px rgba(143, 163, 154, 0.35);
+        }
+
+        /* Daily Anchors Section */
+        .anchor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .anchor-input-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .anchor-add-input {
+            flex: 1;
+            background: var(--card-bg);
+            border: 1px solid rgba(200, 211, 206, 0.2);
+            border-radius: 6px;
+            padding: 5px 8px;
+            color: #f0f0f0;
+            font-size: 11px;
+            outline: none;
+            will-change: border-color, box-shadow, background;
+            transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .anchor-add-input:focus {
+            border-color: var(--mist-glow);
+            box-shadow: 0 0 12px rgba(200, 211, 206, 0.25);
+            background: #242926;
+        }
+
+        .anchor-add-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--mist-glow);
+            color: var(--mist-glow);
+            border-radius: 6px;
+            padding: 0 10px;
+            font-size: 11px;
+            cursor: pointer;
+            will-change: transform, background, color, box-shadow;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .anchor-add-btn:hover {
+            background: var(--mist-glow);
+            color: #191919;
+            transform: scale(1.1) translateZ(0);
+            box-shadow: 0 0 15px rgba(200, 211, 206, 0.6);
+        }
+
+        .anchor-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 110px;
+            overflow-y: auto;
+            padding-right: 2px;
+        }
+
+        @keyframes anchorAppear {
+            from { opacity: 0; transform: translateY(-12px) scale(0.92) translateZ(0); }
+            to { opacity: 1; transform: translateY(0) scale(1) translateZ(0); }
+        }
+
+        .anchor-item {
+            background: var(--card-bg);
+            border: 1px solid rgba(200, 211, 206, 0.15);
+            border-radius: 6px;
+            padding: 6px 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            will-change: transform, opacity, border-color, box-shadow;
+            animation: anchorAppear 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .anchor-item:hover {
+            border-color: rgba(200, 211, 206, 0.45);
+            transform: translateX(3px) translateZ(0);
+            box-shadow: 0 3px 12px rgba(0,0,0,0.35);
+        }
+
+        .anchor-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .custom-checkbox {
+            width: 13px;
+            height: 13px;
+            border: 1px solid var(--mist-glow);
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            will-change: transform, background, box-shadow;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .anchor-item.checked .custom-checkbox {
+            background-color: var(--mist-glow);
+            box-shadow: 0 0 12px var(--mist-glow);
+            transform: scale(1.15) rotate(360deg) translateZ(0);
+        }
+
+        .anchor-item.checked .custom-checkbox::after {
+            content: '✓';
+            font-size: 9px;
+            color: #191919;
+            font-weight: bold;
+        }
+
+        .anchor-text {
+            font-size: 11px;
+            color: #cccccc;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: all 0.3s ease;
+        }
+
+        .anchor-item.checked .anchor-text {
+            color: #666;
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .anchor-remove-btn {
+            background: none;
+            border: none;
+            color: #777;
+            font-size: 13px;
+            cursor: pointer;
+            padding: 2px 5px;
+            border-radius: 4px;
+            will-change: transform, color, background;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .anchor-remove-btn:hover {
+            color: #ff8080;
+            background: rgba(255, 128, 128, 0.12);
+            transform: scale(1.2) translateZ(0);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="widget-container">
+        <!-- Top Atmospheric Misty Mountain Canvas with Image Upload & Minigame -->
+        <div class="canvas-section" id="canvasSection">
+            <div class="canvas-header-overlay">
+                <div class="canvas-overlay-title" id="canvasTitle">Misty Sanctuary</div>
+                <label class="upload-btn-label" for="bgImageInput">📷 Upload</label>
+                <input type="file" id="bgImageInput" accept="image/*">
+            </div>
+            <canvas id="mistCanvas"></canvas>
+            
+            <div id="minigameOverlay" class="minigame-overlay" style="display: none;">
+                <span class="minigame-instruction">✨ Click canvas to create calm ripples</span>
+                <button class="minigame-close" onclick="exitMinigame()">✕</button>
+            </div>
+        </div>
+
+        <!-- Bottom Productivity & Reset Zone -->
+        <div class="content-section">
+            <div>
+                <div class="section-title">Mindful Pause</div>
+                <div class="breath-box" id="breathBtn">
+                    <span class="breath-text" id="breathLabel">Click to Inhale (60s Reset)</span>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-title">Focus Vibe Mode</div>
+                <div class="vibe-container">
+                    <div class="vibe-btn active" onclick="setVibe(this, 'focus')">⚡ Deep</div>
+                    <div class="vibe-btn" onclick="setVibe(this, 'creative')">🎨 Creative</div>
+                    <div class="vibe-btn" onclick="setVibe(this, 'calm')">🌿 Calm</div>
+                    <div class="vibe-btn game-tab" onclick="setVibe(this, 'game')">🌊 Zen Ripple</div>
+                </div>
+            </div>
+
+            <div>
+                <div class="anchor-header">
+                    <div class="section-title" style="margin-bottom:0;">Daily Anchors</div>
+                </div>
+                <div class="anchor-input-row" style="margin-top: 6px;">
+                    <input type="text" class="anchor-add-input" id="newAnchorInput" placeholder="Add new focus...">
+                    <button class="anchor-add-btn" id="addAnchorBtn">+ Add</button>
+                </div>
+                <div class="anchor-list" id="anchorList">
+                    <!-- Default item -->
+                    <div class="anchor-item">
+                        <div class="anchor-left" onclick="toggleAnchor(this)">
+                            <div class="custom-checkbox"></div>
+                            <span class="anchor-text">Review biology key notes</span>
+                        </div>
+                        <button class="anchor-remove-btn" onclick="removeAnchor(this)">×</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- ULTRA-SMOOTH LERP & CANVAS ANIMATION ENGINE ---
+        const canvas = document.getElementById('mistCanvas');
+        const ctx = canvas.getContext('2d');
+        const canvasTitle = document.getElementById('canvasTitle');
+        const minigameOverlay = document.getElementById('minigameOverlay');
+        
+        let customBgImage = null;
+        let isMinigameActive = false;
+        const ripples = [];
+        const fireflies = [];
+        
+        // Inertial Mouse Tracking Variables
+        let targetMouseX = 0, targetMouseY = 0;
+        let mouseX = 0, mouseY = 0;
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Smooth target mouse updates
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            targetMouseX = e.clientX - rect.left;
+            targetMouseY = e.clientY - rect.top;
+        });
+
+        // Handle Image Upload
+        const bgImageInput = document.getElementById('bgImageInput');
+        bgImageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    customBgImage = img;
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Floating mist particles with butter-smooth drift
+        const mistParticles = [];
+        for (let i = 0; i < 45; i++) {
+            mistParticles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 40 + 15,
+                speedX: Math.random() * 0.18 + 0.06,
+                alpha: Math.random() * 0.2 + 0.05
+            });
+        }
+
+        // Floating fireflies / stardust particles
+        for (let i = 0; i < 24; i++) {
+            fireflies.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 2 + 1,
+                speedX: (Math.random() - 0.5) * 0.3,
+                speedY: (Math.random() - 0.5) * 0.3,
+                alpha: Math.random() * 0.8 + 0.2,
+                pulseSpeed: Math.random() * 0.04 + 0.015,
+                angle: Math.random() * Math.PI * 2
+            });
+        }
+
+        // Minigame click interaction for buttery ripples
+        canvas.addEventListener('click', (e) => {
+            if (!isMinigameActive) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            ripples.push({
+                x: x,
+                y: y,
+                radius: 4,
+                maxRadius: Math.random() * 60 + 70,
+                alpha: 0.95
+            });
+        });
+
+        let time = 0;
+        function animate() {
+            // Smooth time increment for silky wave motion
+            time += 0.015;
+
+            // Silky LERP damping for cursor attraction
+            mouseX += (targetMouseX - mouseX) * 0.08;
+            mouseY += (targetMouseY - mouseY) * 0.08;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (customBgImage) {
+                ctx.drawImage(customBgImage, 0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'rgba(15, 18, 17, 0.4)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else {
+                let skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                skyGrad.addColorStop(0, '#111614');
+                skyGrad.addColorStop(0.5, '#19201e');
+                skyGrad.addColorStop(1, '#121615');
+                ctx.fillStyle = skyGrad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Silky smooth breathing mountain waves
+                ctx.fillStyle = '#161b19';
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height * 0.6);
+                let waveOffset1 = Math.sin(time * 0.7) * 5;
+                let waveOffset2 = Math.cos(time * 0.5) * 3;
+                ctx.lineTo(canvas.width * 0.25, canvas.height * 0.45 + waveOffset1);
+                ctx.lineTo(canvas.width * 0.55, canvas.height * 0.55 - waveOffset1);
+                ctx.lineTo(canvas.width * 0.8, canvas.height * 0.4 + waveOffset2);
+                ctx.lineTo(canvas.width, canvas.height * 0.5);
+                ctx.lineTo(canvas.width, canvas.height);
+                ctx.lineTo(0, canvas.height);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = '#0e1211';
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height * 0.75);
+                ctx.lineTo(canvas.width * 0.3, canvas.height * 0.6 - waveOffset2);
+                ctx.lineTo(canvas.width * 0.65, canvas.height * 0.7 + waveOffset1);
+                ctx.lineTo(canvas.width, canvas.height * 0.58);
+                ctx.lineTo(canvas.width, canvas.height);
+                ctx.lineTo(0, canvas.height);
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            // Draw Zen Ripples with exponential smoothing
+            if (isMinigameActive) {
+                ctx.fillStyle = 'rgba(15, 22, 20, 0.72)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                for (let i = ripples.length - 1; i >= 0; i--) {
+                    let r = ripples[i];
+                    // Exponential easing expansion for ultra-smooth feel
+                    let speedFactor = (r.maxRadius - r.radius) * 0.05 + 0.8;
+                    r.radius += speedFactor;
+                    r.alpha -= 0.012;
+
+                    if (r.alpha <= 0 || r.radius >= r.maxRadius - 1) {
+                        ripples.splice(i, 1);
+                        continue;
+                    }
+
+                    ctx.beginPath();
+                    ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(200, 211, 206, ${r.alpha})`;
+                    ctx.lineWidth = 1.6;
+                    ctx.stroke();
+                }
+            } else {
+                // Silky drifting fog
+                ctx.save();
+                ctx.globalCompositeOperation = 'screen';
+                mistParticles.forEach(p => {
+                    p.x += p.speedX + Math.sin(time * 0.6 + p.y) * 0.08;
+                    if (p.x - p.radius > canvas.width) {
+                        p.x = -p.radius;
+                        p.y = Math.random() * canvas.height;
+                    }
+
+                    let mistGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
+                    mistGrad.addColorStop(0, `rgba(200, 211, 206, ${p.alpha})`);
+                    mistGrad.addColorStop(1, 'rgba(200, 211, 206, 0)');
+                    ctx.fillStyle = mistGrad;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                ctx.restore();
+            }
+
+            // Draw fireflies with inertial mouse gravity attraction
+            fireflies.forEach(f => {
+                f.x += f.speedX + Math.sin(time * 0.4) * 0.15;
+                f.y += f.speedY + Math.cos(time * 0.4) * 0.15;
+                f.angle += f.pulseSpeed;
+
+                if (f.x < 0) f.x = canvas.width;
+                if (f.x > canvas.width) f.x = 0;
+                if (f.y < 0) f.y = canvas.height;
+                if (f.y > canvas.height) f.y = 0;
+
+                let currentAlpha = (Math.sin(f.angle) + 1) / 2 * 0.65 + 0.2;
+
+                // Smooth magnetic pull toward LERP cursor
+                let dx = mouseX - f.x;
+                let dy = mouseY - f.y;
+                let dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 100 && dist > 4) {
+                    f.x += (dx / dist) * 0.55;
+                    f.y += (dy / dist) * 0.55;
+                }
+
+                ctx.beginPath();
+                ctx.arc(f.x, f.y, f.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(225, 245, 235, ${currentAlpha})`;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#c8d3ce';
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            });
+
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // --- INTERACTIVE FEATURES & ANIMATIONS ---
+        const breathBtn = document.getElementById('breathBtn');
+        const breathLabel = document.getElementById('breathLabel');
+        let isBreathing = false;
+
+        breathBtn.addEventListener('click', () => {
+            if (isBreathing) return;
+            isBreathing = true;
+            breathBtn.classList.add('active-breathing');
+            let countdown = 60;
+            breathLabel.style.color = 'var(--mist-glow)';
+            
+            const timer = setInterval(() => {
+                countdown--;
+                if (countdown > 45) {
+                    breathLabel.textContent = `Inhale deeply... (${countdown}s)`;
+                } else if (countdown > 30) {
+                    breathLabel.textContent = `Hold gently... (${countdown}s)`;
+                } else if (countdown > 0) {
+                    breathLabel.textContent = `Exhale slowly... (${countdown}s)`;
+                } else {
+                    clearInterval(timer);
+                    breathLabel.textContent = `Click to Inhale (60s Reset)`;
+                    breathLabel.style.color = '#dcdcdc';
+                    breathBtn.classList.remove('active-breathing');
+                    isBreathing = false;
+                }
+            }, 1000);
+        });
+
+        function setVibe(el, mode) {
+            document.querySelectorAll('.vibe-btn').forEach(btn => btn.classList.remove('active'));
+            el.classList.add('active');
+
+            if (mode === 'game') {
+                isMinigameActive = true;
+                canvasTitle.textContent = 'Zen Ripple Minigame';
+                minigameOverlay.style.display = 'flex';
+            } else {
+                isMinigameActive = false;
+                canvasTitle.textContent = 'Misty Sanctuary';
+                minigameOverlay.style.display = 'none';
+            }
+        }
+
+        function exitMinigame() {
+            isMinigameActive = false;
+            canvasTitle.textContent = 'Misty Sanctuary';
+            minigameOverlay.style.display = 'none';
+            document.querySelectorAll('.vibe-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.vibe-btn').classList.add('active');
+        }
+
+        const addAnchorBtn = document.getElementById('addAnchorBtn');
+        const newAnchorInput = document.getElementById('newAnchorInput');
+        const anchorList = document.getElementById('anchorList');
+
+        function addAnchor() {
+            const text = newAnchorInput.value.trim();
+            if (!text) return;
+
+            const item = document.createElement('div');
+            item.className = 'anchor-item';
+            item.innerHTML = `
+                <div class="anchor-left" onclick="toggleAnchor(this)">
+                    <div class="custom-checkbox"></div>
+                    <span class="anchor-text">${escapeHtml(text)}</span>
+                </div>
+                <button class="anchor-remove-btn" onclick="removeAnchor(this)">×</button>
+            `;
+            anchorList.appendChild(item);
+            newAnchorInput.value = '';
+            anchorList.scrollTop = anchorList.scrollHeight;
+        }
+
+        addAnchorBtn.addEventListener('click', addAnchor);
+        newAnchorInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addAnchor();
+        });
+
+        function toggleAnchor(el) {
+            el.parentElement.classList.toggle('checked');
+        }
+
+        function removeAnchor(btn) {
+            const item = btn.parentElement;
+            item.style.transform = 'scale(0.85) translateX(25px) translateZ(0)';
+            item.style.opacity = '0';
+            setTimeout(() => item.remove(), 280);
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+    </script>
+</body>
+</html>
