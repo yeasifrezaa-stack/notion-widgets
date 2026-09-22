@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Subjects — Golden Glass Widget</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sail&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-page:#191919; /* Notion Native Dark Mode Background */
+    --glass-fill: rgba(22, 20, 17, 0.75);
+    --glass-fill-hover: rgba(30, 27, 22, 0.85);
+    --border-soft: rgba(212,161,92,0.22);
+    --border-strong: rgba(243,200,119,0.55);
+    --gold-dim:#7a5f37;
+    --gold:#d4a15c;
+    --gold-bright:#f3c877;
+    --gold-glow: rgba(243,200,119,0.4);
+    --text:#f5ede0;
+    --text-muted:#ab9d87;
+    --text-faint:#736959;
+    --radius-lg:24px;
+    --radius-md:14px;
+    --radius-sm:9px;
+    --font-display:'Sail', cursive;
+    --font-sans:'Inter', system-ui, -apple-system, sans-serif;
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+
+  body{
+    min-height:100vh;
+    background: transparent; /* Seamless blend with Notion iframe */
+    background-color: var(--bg-page);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px 16px;
+    font-family: var(--font-display);
+    color: var(--text);
+  }
+
+  .sr-only{
+    position:absolute !important;
+    width:1px; height:1px;
+    padding:0; margin:-1px;
+    overflow:hidden;
+    clip:rect(0,0,0,0);
+    white-space:nowrap;
+    border:0;
+  }
+
+  .board{
+    position:relative;
+    width:100%;
+    max-width:960px;
+    border-radius: var(--radius-lg);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.005)),
+      var(--glass-fill);
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    border:1px solid var(--border-soft);
+    box-shadow:
+      0 20px 50px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.08);
+    padding:28px 26px 22px;
+    overflow:hidden;
+  }
+
+  .ambient-glow{
+    position:absolute;
+    width:450px; height:450px;
+    top:-180px; right:-150px;
+    background: radial-gradient(circle, var(--gold-glow), transparent 70%);
+    filter: blur(20px);
+    opacity:.5;
+    animation: floatGlow 10s ease-in-out infinite alternate;
+    pointer-events:none;
+  }
+  @keyframes floatGlow{
+    0%{ transform: translate(0, 0) scale(1); opacity:.4; }
+    100%{ transform: translate(-30px, 40px) scale(1.15); opacity:.65; }
+  }
+
+  /* Header Section */
+  .board-header{
+    position:relative;
+    z-index:2;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:20px;
+    padding-bottom:18px;
+    border-bottom:1px solid var(--border-soft);
+    flex-wrap: wrap;
+  }
+
+  .title-wrap h1{
+    margin:0;
+    font-size:2.2rem;
+    font-weight:400;
+    letter-spacing:.02em;
+    background: linear-gradient(180deg, #fff, var(--gold-bright), var(--gold));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    filter: drop-shadow(0 0 16px rgba(243,200,119,0.3));
+  }
+  .title-wrap .subtitle{
+    margin:4px 0 0;
+    font-size:.95rem;
+    color: var(--text-muted);
+    letter-spacing:.01em;
+  }
+
+  .header-actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  /* Interactive Controls */
+  .search-box-wrap{
+    position:relative;
+    display:flex;
+    align-items:center;
+  }
+  .search-input{
+    width:0;
+    opacity:0;
+    padding:6px 0;
+    border:none;
+    border-bottom:1px solid var(--border-strong);
+    background:transparent;
+    color:var(--text);
+    font-family: var(--font-sans);
+    font-size:0.9rem;
+    transition: all .4s var(--ease-spring);
+    pointer-events:none;
+  }
+  .search-box-wrap.active .search-input{
+    width:160px;
+    opacity:1;
+    padding:6px 10px;
+    pointer-events:auto;
+  }
+  .search-input:focus{ outline:none; }
+
+  .icon-btn{
+    width:36px; height:36px;
+    border-radius:11px;
+    border:1px solid var(--border-soft);
+    background: rgba(255,255,255,0.02);
+    color: var(--text-muted);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition: all .3s var(--ease-spring);
+  }
+  .icon-btn:hover, .icon-btn.active{
+    color: var(--gold-bright);
+    border-color: var(--border-strong);
+    box-shadow: 0 0 16px rgba(243,200,119,0.25);
+    background: rgba(243,200,119,0.08);
+    transform: translateY(-2px);
+  }
+  .icon-btn:active{ transform: scale(0.92); }
+
+  .icon-btn.btn-reset-danger:hover{
+    color: #f47171;
+    border-color: rgba(244,113,113,0.5);
+    box-shadow: 0 0 16px rgba(244,113,113,0.25);
+    background: rgba(244,113,113,0.1);
+  }
+
+  .new-pill{
+    font-family: var(--font-display);
+    font-size:.98rem;
+    padding:7px 20px;
+    border-radius:999px;
+    border:1px solid var(--border-strong);
+    background: linear-gradient(180deg, rgba(243,200,119,0.22), rgba(212,161,92,0.08));
+    color: var(--gold-bright);
+    letter-spacing:.02em;
+    cursor:pointer;
+    transition: all .3s var(--ease-spring);
+  }
+  .new-pill:hover{
+    box-shadow: 0 0 20px rgba(243,200,119,.4);
+    transform: translateY(-2px) scale(1.02);
+    background: linear-gradient(180deg, rgba(243,200,119,0.35), rgba(212,161,92,0.15));
+  }
+  .new-pill:active{ transform: scale(0.96); }
+
+  /* Analytics Panel (Drawer) */
+  .analytics-drawer{
+    max-height:0;
+    opacity:0;
+    overflow:hidden;
+    transition: max-height .5s var(--ease-smooth), opacity .4s ease, margin .4s ease;
+    margin-bottom:0;
+    border-radius: var(--radius-md);
+    background: rgba(0,0,0,0.25);
+    border:0px solid var(--border-soft);
+  }
+  .analytics-drawer.open{
+    max-height:220px;
+    opacity:1;
+    margin-bottom:20px;
+    border-width:1px;
+    padding:16px 20px;
+  }
+  .analytics-grid{
+    display:grid;
+    grid-template-columns: 180px 1fr;
+    gap:24px;
+    align-items:center;
+  }
+  .radial-gauge-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+  }
+  .radial-svg{ transform: rotate(-90deg); width:100px; height:100px; }
+  .radial-bg{ stroke: rgba(255,255,255,0.06); stroke-width:8; fill:none; }
+  .radial-progress{
+    stroke: url(#goldGradient);
+    stroke-width:8;
+    fill:none;
+    stroke-dasharray: 283;
+    stroke-dashoffset: 283;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s var(--ease-smooth);
+    filter: drop-shadow(0 0 6px var(--gold-glow));
+  }
+  .gauge-text{
+    position:absolute;
+    top:38px;
+    font-size:1.1rem;
+    font-weight:600;
+    font-family: var(--font-sans);
+    color: var(--gold-bright);
+  }
+  .gauge-label{
+    font-size:0.8rem;
+    color: var(--text-muted);
+    margin-top:6px;
+  }
+
+  .bar-chart-wrap{
+    display:flex;
+    flex-direction:column;
+    height:100px;
+    justify-content:flex-end;
+  }
+  .chart-title{
+    font-size:.82rem;
+    color: var(--text-faint);
+    font-family: var(--font-sans);
+    margin-bottom:8px;
+  }
+  .chart-bars{
+    display:flex;
+    align-items:flex-end;
+    gap:8px;
+    height:70px;
+    padding-top:10px;
+    border-bottom:1px solid var(--border-soft);
+  }
+  .chart-col{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    height:100%;
+    justify-content:flex-end;
+  }
+  .chart-bar-fill{
+    width:100%;
+    max-width:24px;
+    background: linear-gradient(180deg, var(--gold-bright), var(--gold-dim));
+    border-radius:4px 4px 0 0;
+    height:0%;
+    transition: height 0.8s var(--ease-spring);
+    box-shadow: 0 0 10px rgba(243,200,119,0.2);
+  }
+  .chart-col-label{
+    font-family: var(--font-sans);
+    font-size:0.65rem;
+    color: var(--text-muted);
+  }
+
+  /* Table & Rows */
+  .table{ position:relative; z-index:1; }
+
+  .row-cols{
+    display:grid;
+    grid-template-columns: 1.8fr 0.9fr 0.9fr 1.6fr 0.85fr 0.5fr 0.3fr;
+    gap:10px;
+    align-items:center;
+  }
+
+  .row-head{
+    padding: 0 18px 10px;
+    font-size:.8rem;
+    letter-spacing:.03em;
+    color: var(--text-faint);
+  }
+  .row-head .cell{ text-align:left; }
+  .row-head .cell-tick{ text-align:center; }
+
+  .row{
+    padding:12px 18px;
+    margin-bottom:10px;
+    border-radius: var(--radius-md);
+    border:1px solid var(--border-soft);
+    background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.005));
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+    transition: transform .35s var(--ease-spring), box-shadow .35s var(--ease-spring), border-color .35s ease, opacity .3s ease;
+  }
+  .row:hover{
+    transform: translateY(-3px) scale(1.005);
+    border-color: var(--border-strong);
+    box-shadow: 0 14px 32px rgba(0,0,0,0.5), 0 0 24px rgba(243,200,119,0.15);
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+  }
+  .row.flash{ animation: rowPulse .6s var(--ease-spring); }
+  @keyframes rowPulse{
+    0%{ box-shadow:0 6px 18px rgba(0,0,0,0.35); border-color:var(--border-soft); }
+    40%{ box-shadow:0 0 30px 4px var(--gold-glow); border-color:var(--gold-bright); transform: scale(1.01); }
+    100%{ box-shadow:0 6px 18px rgba(0,0,0,0.35); border-color:var(--border-soft); }
+  }
+
+  .empty-state{
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    letter-spacing: .01em;
+    border: 1px dashed var(--border-soft);
+    border-radius: var(--radius-md);
+    background: rgba(255,255,255,0.01);
+  }
+
+  .subject-badge{
+    width:30px; height:30px;
+    border-radius:10px;
+    display:inline-flex; align-items:center; justify-content:center;
+    background: linear-gradient(160deg, var(--gold-bright), var(--gold-dim));
+    color:#241b0f;
+    font-size:.9rem;
+    font-weight:bold;
+    margin-right:10px;
+    flex-shrink:0;
+    box-shadow: 0 0 10px rgba(243,200,119,0.2);
+    transition: transform .3s var(--ease-spring);
+  }
+  .row:hover .subject-badge{ transform: rotate(-6deg) scale(1.1); }
+
+  .cell-subject{ display:flex; align-items:center; }
+  .subject-name{
+    font-size:1.08rem;
+    letter-spacing:.01em;
+    outline:none;
+    border-radius:4px;
+    padding:2px 6px;
+    transition: background .2s ease;
+    cursor: pointer;
+  }
+  .subject-name:hover, .subject-name:focus{
+    background: rgba(243,200,119,0.12);
+    box-shadow: 0 0 0 1px var(--border-strong);
+  }
+
+  /* Confidence Pill */
+  .conf-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:5px 11px;
+    border-radius:999px;
+    border:1px solid var(--border-soft);
+    font-size:.88rem;
+    transition: all .4s var(--ease-spring);
+  }
+  .dots{ display:inline-flex; gap:3px; }
+  .dots i{
+    width:5px; height:5px; border-radius:50%;
+    background: rgba(255,255,255,0.08);
+    display:inline-block;
+    transition: background .3s ease;
+  }
+
+  .conf-pill.tier-high{
+    background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+    border-color: var(--border-strong);
+    color:#241b0f;
+    box-shadow: 0 0 14px var(--gold-glow);
+  }
+  .conf-pill.tier-high .dots i{ background:#2a2013; }
+
+  .conf-pill.tier-medium{
+    background: rgba(212,161,92,0.12);
+    border-color: rgba(212,161,92,0.45);
+    color: var(--gold-bright);
+  }
+  .conf-pill.tier-medium .dots i:nth-child(1),
+  .conf-pill.tier-medium .dots i:nth-child(2){ background: var(--gold-bright); }
+
+  .conf-pill.tier-low{
+    background: rgba(122,95,55,0.08);
+    border-color: rgba(122,95,55,0.35);
+    color: var(--text-muted);
+  }
+  .conf-pill.tier-low .dots i:nth-child(1){ background: var(--gold-dim); }
+
+  /* Dropdown selects */
+  .select-wrap{ position:relative; display:inline-flex; align-items:center; width:100%; }
+  .grade-select, .target-select{
+    width:100%;
+    appearance:none;
+    -webkit-appearance:none;
+    font-family: var(--font-display);
+    font-size:1rem;
+    color: var(--gold-bright);
+    background: rgba(255,255,255,0.02);
+    border:1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    padding:5px 24px 5px 10px;
+    cursor:pointer;
+    transition: all .3s var(--ease-spring);
+  }
+  .target-select{
+    border-radius:999px;
+    background: rgba(243,200,119,0.05);
+    padding:4px 22px 4px 10px;
+    font-size:0.9rem;
+  }
+  .grade-select:hover, .target-select:hover{
+    border-color: var(--border-strong);
+    box-shadow: 0 0 12px rgba(243,200,119,0.18);
+    transform: translateY(-1px);
+  }
+  .grade-select option, .target-select option{ background:#1c1a16; color:var(--text); font-family: var(--font-sans); }
+  .select-wrap .chev{
+    position:absolute; right:8px; pointer-events:none;
+    color: var(--text-faint);
+    transition: transform .3s ease;
+  }
+  .select-wrap:hover .chev{ transform: translateY(1px); color: var(--gold-bright); }
+
+  /* Syllabus Bar */
+  .cell-completion{ display:flex; align-items:center; gap:10px; cursor:pointer; }
+  .bar-track{
+    flex:1;
+    height:7px;
+    border-radius:999px;
+    background: rgba(255,255,255,0.06);
+    overflow:hidden;
+    position:relative;
+  }
+  .bar-fill{
+    height:100%;
+    width:0%;
+    border-radius:999px;
+    background: linear-gradient(90deg, var(--gold-dim), var(--gold-bright));
+    box-shadow: 0 0 12px var(--gold-glow);
+    transition: width 0.7s var(--ease-smooth);
+  }
+  .bar-num{
+    font-family: var(--font-sans);
+    font-size:.85rem;
+    color: var(--text-muted);
+    min-width:38px;
+    text-align:right;
+  }
+
+  /* Tick Box */
+  .cell-tick{ display:flex; justify-content:center; }
+  .tick-box{
+    width:30px; height:30px;
+    border-radius:999px;
+    border:1.5px solid rgba(212,161,92,0.25);
+    background: rgba(255,255,255,0.02);
+    display:flex; align-items:center; justify-content:center;
+    transition: all .4s var(--ease-spring);
+  }
+  .tick-box .tick-icon{
+    width:16px; height:16px;
+    color:#1c150c;
+    opacity:0;
+    transform: scale(.3) rotate(-20deg);
+    transition: all .35s var(--ease-spring);
+  }
+  .tick-box.met{
+    border-color: var(--gold-bright);
+    background: linear-gradient(145deg, var(--gold-bright), var(--gold));
+    box-shadow: 0 0 16px 2px var(--gold-glow);
+    transform: scale(1.05);
+  }
+  .tick-box.met .tick-icon{ opacity:1; transform: scale(1) rotate(0deg); }
+
+  /* Delete Action */
+  .cell-actions{ display:flex; justify-content:flex-end; }
+  .delete-btn{
+    background:none; border:none;
+    color:var(--text-faint);
+    cursor:pointer; padding:5px;
+    border-radius:8px;
+    transition: all .2s ease;
+    opacity:0.3;
+  }
+  .row:hover .delete-btn, .delete-btn:focus-visible{ opacity:1; }
+  .delete-btn:hover{ color:#f47171; background:rgba(244,113,113,0.12); transform: scale(1.1); }
+
+  /* Expanding Add Row Form */
+  .add-row-shell{
+    display:grid;
+    grid-template-rows:0fr;
+    transition: grid-template-rows .4s var(--ease-smooth);
+  }
+  .add-row-shell.open{ grid-template-rows:1fr; }
+  .add-row-inner{ overflow:hidden; min-height:0; }
+  .add-row{
+    padding:14px 18px;
+    border-radius: var(--radius-md);
+    border:1px dashed var(--border-strong);
+    background: rgba(243,200,119,0.03);
+    margin-top:4px;
+    box-shadow: inset 0 0 20px rgba(243,200,119,0.05);
+  }
+  .add-row-actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 18px 4px;
+  }
+  .add-error{
+    flex:1;
+    font-size:.85rem;
+    color:#e0a37a;
+    font-family: var(--font-sans);
+  }
+  .subject-input{
+    width:100%;
+    font-size:1.05rem;
+    color: var(--text);
+    background: rgba(255,255,255,0.03);
+    border:1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    padding:6px 12px;
+    transition: all .3s ease;
+  }
+  .subject-input:focus{ outline:none; border-color: var(--border-strong); box-shadow:0 0 10px var(--gold-glow); }
+
+  .btn-ghost{
+    font-size:.95rem;
+    padding:6px 16px;
+    border-radius:999px;
+    border:1px solid var(--border-soft);
+    background:transparent;
+    color: var(--text-muted);
+    cursor:pointer;
+    transition: all .3s var(--ease-spring);
+  }
+  .btn-ghost:hover{ color: var(--text); border-color: var(--border-strong); }
+
+  .btn-primary{
+    font-size:.95rem;
+    padding:6px 18px;
+    border-radius:999px;
+    border:1px solid var(--border-strong);
+    background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+    color:#241b0f;
+    font-weight:600;
+    cursor:pointer;
+    transition: all .3s var(--ease-spring);
+  }
+  .btn-primary:hover{ box-shadow:0 0 18px rgba(243,200,119,.4); transform:translateY(-1px); }
+
+  @media (max-width:720px){
+    .board{ padding:22px 14px; }
+    .row-head{ display:none; }
+    .row-cols{ grid-template-columns:1fr; gap:10px; }
+    .row .cell{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .row .cell[data-label]::before{
+      content:attr(data-label);
+      font-size:.75rem;
+      color: var(--text-faint);
+      font-family: var(--font-sans);
+    }
+    .cell-subject{ border-bottom:1px dashed var(--border-soft); padding-bottom:8px; }
+    .cell-subject::before{ display:none; }
+    .analytics-grid{ grid-template-columns: 1fr; gap:16px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- SVG Gradient definition for Radial Gauge -->
+  <svg style="width:0;height:0;position:absolute;" aria-hidden="true">
+    <defs>
+      <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#f3c877" />
+        <stop offset="100%" stop-color="#7a5f37" />
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <div class="board">
+    <div class="ambient-glow" aria-hidden="true"></div>
+
+    <header class="board-header">
+      <div class="title-wrap">
+        <h1>Subjects</h1>
+        <p class="subtitle" id="board-subtitle">0 subjects · interactive golden progress board</p>
+      </div>
+      <div class="header-actions">
+        <div class="search-box-wrap" id="search-box-wrap">
+          <input type="text" class="search-input" id="search-input" placeholder="Search subject..." aria-label="Search subjects">
+          <button class="icon-btn" id="btn-search" title="Search subjects" aria-label="Toggle Search">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </button>
+        </div>
+        <button class="icon-btn" id="btn-graph" title="Toggle Analytics Graph" aria-label="Toggle Analytics">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </button>
+        <button class="icon-btn" id="btn-sort" title="Sort subjects" aria-label="Sort subjects">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10l5-5 5 5"/><path d="M7 14l5 5 5-5"/></svg>
+        </button>
+        <button class="icon-btn btn-reset-danger" id="btn-reset" title="Reset and start from scratch" aria-label="Reset all subjects">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+        <button type="button" id="open-add" class="new-pill" aria-expanded="false">+ New</button>
+      </div>
+    </header>
+
+    <!-- Glass Analytics Panel -->
+    <div class="analytics-drawer" id="analytics-drawer">
+      <div class="analytics-grid">
+        <div class="radial-gauge-wrap">
+          <svg class="radial-svg" viewBox="0 0 100 100">
+            <circle class="radial-bg" cx="50" cy="50" r="45" />
+            <circle class="radial-progress" id="radial-progress-bar" cx="50" cy="50" r="45" />
+          </svg>
+          <div class="gauge-text" id="gauge-percentage">0%</div>
+          <div class="gauge-label">Target Progress</div>
+        </div>
+        <div class="bar-chart-wrap">
+          <div class="chart-title">Grade Distribution</div>
+          <div class="chart-bars" id="chart-bars-container">
+            <!-- Dynamic Bars Inserted Here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table" role="table" aria-label="Subjects progress table">
+
+      <div class="row-head row-cols" role="row">
+        <div class="cell cell-subject" role="columnheader">Subject</div>
+        <div class="cell cell-confidence" role="columnheader">Confidence</div>
+        <div class="cell cell-grade" role="columnheader">Current grade</div>
+        <div class="cell cell-completion" role="columnheader">Target Progress</div>
+        <div class="cell cell-target" role="columnheader">Target</div>
+        <div class="cell cell-tick" role="columnheader">Met</div>
+        <div class="cell cell-actions" role="columnheader"></div>
+      </div>
+
+      <div id="rows-container" role="rowgroup"></div>
+
+      <!-- Add Row Drawer -->
+      <div class="add-row-shell" id="add-row-shell" inert>
+        <div class="add-row-inner">
+          <form id="add-form" class="add-row row-cols" novalidate>
+            <div class="cell cell-subject" data-label="Subject">
+              <input type="text" id="new-subject-name" class="subject-input" placeholder="e.g. Economics" maxlength="40">
+            </div>
+            <div class="cell cell-confidence" data-label="Confidence">
+              <span class="conf-pill"><span class="dots"><i></i><i></i><i></i></span><span class="conf-label">—</span></span>
+            </div>
+            <div class="cell cell-grade" data-label="Current grade">
+              <div class="select-wrap">
+                <select id="new-current-grade" class="grade-select"></select>
+                <svg class="chev" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
+            </div>
+            <div class="cell cell-completion" data-label="Target Progress">
+              <div class="bar-track"><div class="bar-fill"></div></div><span class="bar-num">—</span>
+            </div>
+            <div class="cell cell-target" data-label="Target">
+              <div class="select-wrap">
+                <select id="new-target-grade" class="target-select"></select>
+                <svg class="chev" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
+            </div>
+            <div class="cell cell-tick" data-label="Met">
+              <div class="tick-box">
+                <svg class="tick-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+              </div>
+            </div>
+          </form>
+          <div class="add-row-actions">
+            <span id="add-error" class="add-error"></span>
+            <button type="button" id="cancel-add" class="btn-ghost">Cancel</button>
+            <button type="submit" form="add-form" class="btn-primary">Save Subject</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="status-live" class="sr-only" aria-live="polite"></div>
+
+  <template id="row-template">
+    <div class="row row-cols" role="row">
+      <div class="cell cell-subject" role="cell" data-label="Subject">
+        <span class="subject-badge"></span>
+        <span class="subject-name" contenteditable="true" title="Click to edit subject name"></span>
+      </div>
+      <div class="cell cell-confidence" role="cell" data-label="Confidence">
+        <span class="conf-pill"><span class="dots"><i></i><i></i><i></i></span><span class="conf-label"></span></span>
+      </div>
+      <div class="cell cell-grade" role="cell" data-label="Current grade">
+        <div class="select-wrap">
+          <select class="grade-select"></select>
+          <svg class="chev" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+      </div>
+      <div class="cell cell-completion" role="cell" data-label="Target Progress" title="Click on progress bar to tune completion">
+        <div class="bar-track"><div class="bar-fill"></div></div><span class="bar-num"></span>
+      </div>
+      <div class="cell cell-target" role="cell" data-label="Target">
+        <div class="select-wrap">
+          <select class="target-select"></select>
+          <svg class="chev" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+      </div>
+      <div class="cell cell-tick" role="cell" data-label="Met">
+        <div class="tick-box">
+          <svg class="tick-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+        </div>
+      </div>
+      <div class="cell cell-actions" role="cell">
+        <button class="delete-btn" title="Delete subject">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+  </template>
+
+<script>
+  var GRADE_SCALE = ['F','D','C-','C','C+','B-','B','B+','A-','A','A*'];
+  var DISPLAY_ORDER = GRADE_SCALE.slice().reverse();
+
+  var DEFAULT_SUBJECTS = [
+    { id:'1', name:'Biology', current:'A', target:'A*', offset:0 },
+    { id:'2', name:'Physics', current:'C+', target:'A', offset:0 },
+    { id:'3', name:'English as a Second Language', current:'A-', target:'A', offset:0 },
+    { id:'4', name:'Computer Science', current:'A', target:'A*', offset:0 },
+    { id:'5', name:'Mathematics', current:'B+', target:'A*', offset:0 },
+    { id:'6', name:'Chemistry', current:'B', target:'A', offset:0 }
+  ];
+
+  var subjectsData = [];
+  var currentSortMode = 0; // 0: Default, 1: Name A-Z, 2: Grade Descending, 3: Target Met First
+
+  function idx(g){ return GRADE_SCALE.indexOf(g); }
+  function tierOf(i){ return i >= 8 ? 'high' : (i >= 5 ? 'medium' : 'low'); }
+  function tierLabel(t){ return t === 'high' ? 'High' : (t === 'medium' ? 'Medium' : 'Low'); }
+  function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+
+  function calculateProgress(currentGrade, targetGrade, offset) {
+    var curI = idx(currentGrade);
+    var tarI = idx(targetGrade);
+    
+    if (curI >= tarI) {
+      return clamp(100 + (offset || 0), 0, 100);
+    }
+    
+    var basePct = tarI > 0 ? Math.round((curI / tarI) * 100) : 100;
+    return clamp(basePct + (offset || 0), 0, 100);
+  }
+
+  function loadData(){
+    var saved = localStorage.getItem('golden_glass_subjects_v2');
+    if (saved) {
+      try { subjectsData = JSON.parse(saved); } catch(e) { subjectsData = DEFAULT_SUBJECTS; }
+    } else {
+      subjectsData = DEFAULT_SUBJECTS;
+    }
+  }
+
+  function saveData(){
+    localStorage.setItem('golden_glass_subjects_v2', JSON.stringify(subjectsData));
+    updateAnalytics();
+  }
+
+  function populateSelectOptions(select, selectedValue){
+    select.innerHTML = '';
+    DISPLAY_ORDER.forEach(function(g){
+      var opt = document.createElement('option');
+      opt.value = g;
+      opt.textContent = (g === 'A*' ? '✦ ' : '') + g;
+      if (g === selectedValue) opt.selected = true;
+      select.appendChild(opt);
+    });
+  }
+
+  function animateNumber(el, targetNum){
+    var currentNum = parseInt(el.textContent) || 0;
+    if(currentNum === targetNum) return;
+    var start = null;
+    function step(timestamp) {
+      if (!start) start = timestamp;
+      var progress = Math.min((timestamp - start) / 400, 1);
+      var val = Math.floor(progress * (targetNum - currentNum) + currentNum);
+      el.textContent = val + '%';
+      if (progress < 1) requestAnimationFrame(step);
+      else el.textContent = targetNum + '%';
+    }
+    requestAnimationFrame(step);
+  }
+
+  function updateAnalytics(){
+    var totalSubjects = subjectsData.length;
+    document.getElementById('board-subtitle').textContent = totalSubjects + ' subjects · interactive golden progress board';
+
+    if (totalSubjects === 0) {
+      document.getElementById('radial-progress-bar').style.strokeDashoffset = '283';
+      document.getElementById('gauge-percentage').textContent = '0%';
+      document.getElementById('chart-bars-container').innerHTML = '';
+      return;
+    }
+
+    var sumCompletion = 0;
+    var gradeCounts = { 'A*':0, 'A/A-':0, 'B':0, 'C':0, 'D/F':0 };
+
+    subjectsData.forEach(function(s){
+      var comp = calculateProgress(s.current, s.target, s.offset);
+      sumCompletion += comp;
+
+      if (s.current === 'A*') gradeCounts['A*']++;
+      else if (s.current === 'A' || s.current === 'A-') gradeCounts['A/A-']++;
+      else if (s.current.startsWith('B')) gradeCounts['B']++;
+      else if (s.current.startsWith('C')) gradeCounts['C']++;
+      else gradeCounts['D/F']++;
+    });
+
+    var avgCompletion = Math.round(sumCompletion / totalSubjects);
+    var offset = 283 - (283 * avgCompletion) / 100;
+    document.getElementById('radial-progress-bar').style.strokeDashoffset = offset;
+    animateNumber(document.getElementById('gauge-percentage'), avgCompletion);
+
+    var chartContainer = document.getElementById('chart-bars-container');
+    chartContainer.innerHTML = '';
+    Object.keys(gradeCounts).forEach(function(label){
+      var count = gradeCounts[label];
+      var pct = totalSubjects > 0 ? (count / totalSubjects) * 100 : 0;
+
+      var col = document.createElement('div');
+      col.className = 'chart-col';
+      col.innerHTML = `
+        <div class="chart-bar-fill" style="height:${pct}%;" title="${label}: ${count}"></div>
+        <div class="chart-col-label">${label}</div>
+      `;
+      chartContainer.appendChild(col);
+    });
+  }
+
+  function createRowElement(sub){
+    var row = document.getElementById('row-template').content.firstElementChild.cloneNode(true);
+    row.setAttribute('data-id', sub.id);
+
+    var badge = row.querySelector('.subject-badge');
+    var nameEl = row.querySelector('.subject-name');
+    badge.textContent = sub.name.trim().charAt(0).toUpperCase() || '?';
+    nameEl.textContent = sub.name;
+
+    var currentSelect = row.querySelector('.grade-select');
+    var targetSelect = row.querySelector('.target-select');
+
+    populateSelectOptions(currentSelect, sub.current);
+    populateSelectOptions(targetSelect, sub.target);
+
+    nameEl.addEventListener('blur', function(){
+      var newName = nameEl.textContent.trim();
+      if(newName){
+        sub.name = newName;
+        badge.textContent = newName.charAt(0).toUpperCase();
+        saveData();
+      } else {
+        nameEl.textContent = sub.name;
+      }
+    });
+
+    var barTrack = row.querySelector('.cell-completion');
+    barTrack.addEventListener('click', function(e){
+      var rect = barTrack.querySelector('.bar-track').getBoundingClientRect();
+      var clickX = e.clientX - rect.left;
+      var newPct = clamp(Math.round((clickX / rect.width) * 100), 0, 100);
+      
+      var curI = idx(sub.current);
+      var tarI = idx(sub.target);
+      var basePct = (curI >= tarI) ? 100 : (tarI > 0 ? Math.round((curI / tarI) * 100) : 100);
+      
+      sub.offset = newPct - basePct;
+      paint(false);
+    });
+
+    function paint(initial){
+      var curI = idx(currentSelect.value);
+      var tarI = idx(targetSelect.value);
+      var tier = tierOf(curI);
+
+      var pill = row.querySelector('.conf-pill');
+      pill.className = 'conf-pill tier-' + tier;
+      pill.querySelector('.conf-label').textContent = tierLabel(tier);
+
+      var completion = calculateProgress(currentSelect.value, targetSelect.value, sub.offset);
+      row.querySelector('.bar-fill').style.width = completion + '%';
+      animateNumber(row.querySelector('.bar-num'), completion);
+
+      var matched = curI >= tarI;
+      var tickBox = row.querySelector('.tick-box');
+      tickBox.classList.toggle('met', matched);
+
+      if(!initial){
+        sub.current = currentSelect.value;
+        sub.target = targetSelect.value;
+        saveData();
+
+        row.classList.remove('flash');
+        void row.offsetWidth;
+        row.classList.add('flash');
+      }
+    }
+
+    currentSelect.addEventListener('change', function(){ paint(false); });
+    targetSelect.addEventListener('change', function(){ paint(false); });
+
+    row.querySelector('.delete-btn').addEventListener('click', function(){
+      row.style.opacity = '0';
+      row.style.transform = 'scale(0.9)';
+      setTimeout(function(){
+        subjectsData = subjectsData.filter(function(item){ return item.id !== sub.id; });
+        saveData();
+        renderTable();
+      }, 300);
+    });
+
+    paint(true);
+    return row;
+  }
+
+  function renderTable(){
+    var container = document.getElementById('rows-container');
+    container.innerHTML = '';
+
+    var query = document.getElementById('search-input').value.toLowerCase();
+    var filtered = subjectsData.filter(function(s){
+      return s.name.toLowerCase().includes(query);
+    });
+
+    if (currentSortMode === 1) {
+      filtered.sort((a,b) => a.name.localeCompare(b.name));
+    } else if (currentSortMode === 2) {
+      filtered.sort((a,b) => idx(b.current) - idx(a.current));
+    } else if (currentSortMode === 3) {
+      filtered.sort((a,b) => (idx(b.current) >= idx(b.target) ? -1 : 1));
+    }
+
+    if (filtered.length === 0) {
+      var emptyState = document.createElement('div');
+      emptyState.className = 'empty-state';
+      emptyState.textContent = query ? 'No matching subjects found 🔍' : 'No subjects added yet. Click "+ New" to add one! ✨';
+      container.appendChild(emptyState);
+    } else {
+      filtered.forEach(function(sub){
+        container.appendChild(createRowElement(sub));
+      });
+    }
+
+    updateAnalytics();
+  }
+
+  // Header Actions
+  document.getElementById('btn-search').addEventListener('click', function(){
+    var wrap = document.getElementById('search-box-wrap');
+    wrap.classList.toggle('active');
+    if (wrap.classList.contains('active')) {
+      document.getElementById('search-input').focus();
+    } else {
+      document.getElementById('search-input').value = '';
+      renderTable();
+    }
+  });
+
+  document.getElementById('search-input').addEventListener('input', renderTable);
+
+  document.getElementById('btn-graph').addEventListener('click', function(){
+    this.classList.toggle('active');
+    document.getElementById('analytics-drawer').classList.toggle('open');
+  });
+
+  document.getElementById('btn-sort').addEventListener('click', function(){
+    currentSortMode = (currentSortMode + 1) % 4;
+    this.classList.toggle('active', currentSortMode !== 0);
+    renderTable();
+  });
+
+  // Reset Button Event Listener
+  document.getElementById('btn-reset').addEventListener('click', function(){
+    if (confirm('Are you sure you want to reset everything and start from scratch? 🧹')) {
+      subjectsData = [];
+      localStorage.removeItem('golden_glass_subjects_v2');
+      saveData();
+      renderTable();
+    }
+  });
+
+  // Add Subject Drawer
+  var openAddBtn = document.getElementById('open-add');
+  var addShell = document.getElementById('add-row-shell');
+  var addForm = document.getElementById('add-form');
+  var cancelAddBtn = document.getElementById('cancel-add');
+
+  populateSelectOptions(document.getElementById('new-current-grade'), 'B');
+  populateSelectOptions(document.getElementById('new-target-grade'), 'A*');
+
+  openAddBtn.addEventListener('click', function(){
+    var isOpen = addShell.classList.contains('open');
+    if(isOpen){
+      addShell.classList.remove('open');
+      addShell.setAttribute('inert', '');
+      openAddBtn.setAttribute('aria-expanded', 'false');
+    } else {
+      addShell.classList.add('open');
+      addShell.removeAttribute('inert');
+      openAddBtn.setAttribute('aria-expanded', 'true');
+      document.getElementById('new-subject-name').focus();
+    }
+  });
+
+  cancelAddBtn.addEventListener('click', function(){
+    addShell.classList.remove('open');
+    addShell.setAttribute('inert', '');
+    openAddBtn.setAttribute('aria-expanded', 'false');
+    addForm.reset();
+  });
+
+  addForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    var nameInput = document.getElementById('new-subject-name');
+    var val = nameInput.value.trim();
+    var errorEl = document.getElementById('add-error');
+
+    if(!val){
+      errorEl.textContent = 'Please enter a valid subject name.';
+      nameInput.focus();
+      return;
+    }
+
+    var newSub = {
+      id: Date.now().toString(),
+      name: val,
+      current: document.getElementById('new-current-grade').value,
+      target: document.getElementById('new-target-grade').value,
+      offset: 0
+    };
+
+    subjectsData.push(newSub);
+    saveData();
+    renderTable();
+
+    nameInput.value = '';
+    errorEl.textContent = '';
+    addShell.classList.remove('open');
+    addShell.setAttribute('inert', '');
+  });
+
+  // Initial Boot
+  loadData();
+  renderTable();
+</script>
+</body>
+</html>
