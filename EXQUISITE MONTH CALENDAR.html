@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exquisite Month Calendar - Animated & Reactive</title>
+    
+    <!-- STRICTLY ONLY SAIL FONT -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sail&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Matched exactly to Notion Dark Mode */
+            --bg-notion: #191919; 
+            --glass-base: rgba(25, 25, 25, 0.6); 
+            --glass-cell: rgba(35, 35, 35, 0.5);
+            --glass-cell-hover: rgba(50, 45, 40, 0.85);
+            
+            --gold-edge: rgba(243, 200, 119, 0.3);
+            --gold-glow: rgba(243, 200, 119, 0.5);
+            --gold-text: #f3c877;
+            
+            --white-shiny: #ffffff;
+            --white-glow: 0 0 12px rgba(255, 255, 255, 0.4);
+            --text-muted: #9e9589;
+            
+            --reset-hover: #e86d6d;
+            
+            --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Sail', cursive !important;
+        }
+
+        body {
+            background-color: var(--bg-notion);
+            color: var(--white-shiny);
+            display: flex;
+            justify-content: center; 
+            align-items: flex-start;
+            padding: 40px; 
+            overflow-x: hidden; 
+            min-height: 100vh;
+        }
+
+        /* Ambient background glow */
+        .ambient-glow {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, var(--gold-glow), transparent 60%);
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            filter: blur(60px);
+            opacity: 0.15;
+            z-index: -1;
+            pointer-events: none;
+            animation: breathe 6s infinite alternate ease-in-out;
+        }
+
+        @keyframes breathe {
+            0% { opacity: 0.1; transform: translateX(-50%) scale(0.9); }
+            100% { opacity: 0.25; transform: translateX(-50%) scale(1.1); }
+        }
+
+        .calendar-container {
+            width: 100%;
+            max-width: 1100px; /* Increased size significantly */
+            background: var(--glass-base);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid var(--gold-edge);
+            border-radius: 16px;
+            padding: 24px 32px; 
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6),
+                        inset 0 1px 10px rgba(243, 200, 119, 0.05);
+            animation: containerPop 0.8s var(--ease-spring);
+        }
+
+        @keyframes containerPop {
+            0% { opacity: 0; transform: translateY(30px) scale(0.95); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Header & Navigation Controls */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(243, 200, 119, 0.15);
+        }
+
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .month-title {
+            font-size: 2.2rem; /* Scaled up */
+            color: var(--gold-text);
+            text-shadow: 0 0 10px var(--gold-glow);
+            letter-spacing: 1.5px;
+            font-weight: normal;
+        }
+
+        /* Reactive Graph/Progress Bar */
+        .progress-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0,0,0,0.3);
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .progress-bar-bg {
+            width: 150px;
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--gold-text);
+            box-shadow: 0 0 10px var(--gold-glow);
+            border-radius: 99px;
+            transition: width 1s var(--ease-spring);
+        }
+
+        .progress-text {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            min-width: 100px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--white-shiny);
+            font-size: 1.1rem; 
+            padding: 6px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.4s var(--ease-spring);
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--gold-text);
+            color: var(--gold-text);
+            box-shadow: 0 0 15px var(--gold-glow);
+            transform: translateY(-2px) scale(1.05);
+        }
+        
+        .nav-btn:active { transform: scale(0.95); }
+
+        .reset-btn:hover {
+            border-color: var(--reset-hover);
+            color: var(--reset-hover);
+            box-shadow: 0 0 15px rgba(232, 109, 109, 0.4);
+        }
+
+        /* Weekday Labels */
+        .weekdays-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr)); 
+            gap: 12px;
+            margin-bottom: 12px;
+            text-align: center;
+            font-size: 1.2rem; 
+            color: var(--gold-text);
+            opacity: 0.9;
+        }
+
+        /* Month Days Grid */
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr)); 
+            gap: 12px; 
+            perspective: 1000px;
+        }
+
+        .day-cell {
+            background: var(--glass-cell);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            min-height: 110px; /* Scaled up for better usability */
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.4s var(--ease-spring);
+            position: relative;
+            overflow: hidden; 
+            animation: gridPop 0.6s var(--ease-spring) backwards;
+        }
+
+        @keyframes gridPop {
+            0% { opacity: 0; transform: scale(0.8) rotateX(-10deg); }
+            100% { opacity: 1; transform: scale(1) rotateX(0); }
+        }
+
+        .day-cell:hover {
+            background: var(--glass-cell-hover);
+            border-color: var(--gold-edge);
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5),
+                        0 0 15px rgba(243, 200, 119, 0.15);
+            z-index: 10;
+        }
+
+        .day-cell.inactive {
+            opacity: 0.35;
+            background: transparent;
+            filter: grayscale(0.5);
+        }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .day-number {
+            font-size: 1.1rem; 
+            color: var(--white-shiny);
+            font-weight: bold;
+        }
+
+        /* Status Mark */
+        .status-dot {
+            width: 14px; 
+            height: 14px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            cursor: pointer;
+            transition: all 0.4s var(--ease-spring);
+            flex-shrink: 0;
+        }
+
+        .status-dot:hover {
+            transform: scale(1.4);
+            background: rgba(243, 200, 119, 0.4);
+            border-color: var(--gold-text);
+        }
+
+        .status-dot.active {
+            background: var(--gold-text);
+            border-color: var(--gold-text);
+            box-shadow: 0 0 12px var(--gold-glow);
+            transform: scale(1.2);
+            animation: pulseGlow 2s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 8px var(--gold-glow); }
+            100% { box-shadow: 0 0 18px rgba(243, 200, 119, 0.8); }
+        }
+
+        /* Daily Notes Textarea */
+        .day-notes {
+            flex-grow: 1;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid transparent;
+            border-radius: 6px;
+            color: var(--white-shiny);
+            font-size: 1rem; 
+            padding: 6px 8px;
+            margin-top: 4px;
+            resize: none; 
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .day-notes::placeholder {
+            color: var(--text-muted);
+            opacity: 0.7;
+        }
+
+        .day-notes:focus {
+            background: rgba(0, 0, 0, 0.5);
+            border-color: var(--gold-text);
+            box-shadow: 0 0 10px rgba(243, 200, 119, 0.2);
+        }
+        
+        .day-notes::-webkit-scrollbar { width: 4px; }
+        .day-notes::-webkit-scrollbar-track { background: transparent; }
+        .day-notes::-webkit-scrollbar-thumb { background: var(--gold-edge); border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-glow"></div>
+
+    <div class="calendar-container">
+        
+        <!-- Header Controls -->
+        <div class="calendar-header">
+            <div class="header-left">
+                <div class="month-title" id="monthYearDisplay">August 2026</div>
+                <div class="progress-wrapper">
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="month-progress"></div>
+                    </div>
+                    <span class="progress-text" id="progress-text">0% Completed</span>
+                </div>
+            </div>
+            
+            <div class="nav-buttons">
+                <button class="nav-btn" type="button" onclick="changeMonth(-1)">Prev</button>
+                <button class="nav-btn" type="button" onclick="goToToday()">Today</button>
+                <button class="nav-btn" type="button" onclick="changeMonth(1)">Next</button>
+                <button class="nav-btn reset-btn" type="button" onclick="resetCalendar()">Reset</button>
+            </div>
+        </div>
+
+        <!-- Days of the Week -->
+        <div class="weekdays-grid">
+            <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+        </div>
+
+        <!-- Month Grid Cells -->
+        <div class="days-grid" id="daysGrid"></div>
+
+    </div>
+
+    <script>
+        let viewDate = new Date();
+        let resetStep = 0;
+        let resetTimer = null;
+        
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+        function updateProgressGraph() {
+            const currentMonth = viewDate.getMonth();
+            const currentYear = viewDate.getFullYear();
+            const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+            let completed = 0;
+            
+            let calendarData = JSON.parse(localStorage.getItem('notion_shiny_calendar_data_v2')) || {};
+            
+            for(let i = 1; i <= totalDays; i++) {
+                const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                if(calendarData[dateKey] && calendarData[dateKey].status) {
+                    completed++;
+                }
+            }
+            
+            const pct = Math.round((completed / totalDays) * 100) || 0;
+            document.getElementById('month-progress').style.width = `${pct}%`;
+            document.getElementById('progress-text').innerText = `${pct}% Task Focus`;
+        }
+
+        function renderCalendar() {
+            const display = document.getElementById('monthYearDisplay');
+            const grid = document.getElementById('daysGrid');
+            if (!display || !grid) return;
+            
+            // Fade out animation for smooth transition
+            grid.style.opacity = '0';
+            
+            setTimeout(() => {
+                grid.innerHTML = '';
+                grid.style.opacity = '1';
+
+                let currentMonth = viewDate.getMonth();
+                let currentYear = viewDate.getFullYear();
+
+                display.innerText = `${monthNames[currentMonth]} ${currentYear}`;
+
+                const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+                const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+                const prevTotalDays = new Date(currentYear, currentMonth, 0).getDate();
+                
+                let cellIndex = 0;
+
+                // Previous Month Days
+                for (let i = firstDayIndex; i > 0; i--) {
+                    const dayNum = prevTotalDays - i + 1;
+                    let prevMonth = currentMonth - 1;
+                    let prevYear = currentYear;
+                    if (prevMonth < 0) { prevMonth = 11; prevYear--; }
+                    grid.appendChild(createCell(dayNum, prevMonth, prevYear, true, cellIndex++));
+                }
+
+                // Current Month Days
+                for (let i = 1; i <= totalDays; i++) {
+                    grid.appendChild(createCell(i, currentMonth, currentYear, false, cellIndex++));
+                }
+
+                // Next Month Days
+                const totalCellsSoFar = firstDayIndex + totalDays;
+                const nextDaysCount = totalCellsSoFar <= 35 ? 35 - totalCellsSoFar : 42 - totalCellsSoFar;
+                for (let i = 1; i <= nextDaysCount; i++) {
+                    let nextMonth = currentMonth + 1;
+                    let nextYear = currentYear;
+                    if (nextMonth > 11) { nextMonth = 0; nextYear++; }
+                    grid.appendChild(createCell(i, nextMonth, nextYear, true, cellIndex++));
+                }
+                
+                updateProgressGraph();
+            }, 150);
+        }
+
+        function createCell(dayNum, month, year, isInactive, cellIndex) {
+            const cell = document.createElement('div');
+            cell.className = `day-cell ${isInactive ? 'inactive' : ''}`;
+            
+            // Staggered animation delay
+            cell.style.animationDelay = `${(cellIndex % 10) * 0.04}s`;
+
+            const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+            
+            let calendarData = JSON.parse(localStorage.getItem('notion_shiny_calendar_data_v2')) || {};
+            let dayData = calendarData[dateKey] || { note: '', status: false };
+
+            cell.innerHTML = `
+                <div class="day-header">
+                    <span class="day-number">${dayNum}</span>
+                    <div class="status-dot ${dayData.status ? 'active' : ''}" onclick="toggleStatus('${dateKey}')" title="Toggle daily status"></div>
+                </div>
+                <textarea class="day-notes" placeholder="Notes..." spellcheck="false" oninput="saveNote('${dateKey}', this.value)">${dayData.note}</textarea>
+            `;
+
+            return cell;
+        }
+
+        function saveNote(dateKey, text) {
+            let calendarData = JSON.parse(localStorage.getItem('notion_shiny_calendar_data_v2')) || {};
+            if (!calendarData[dateKey]) calendarData[dateKey] = { note: '', status: false };
+            calendarData[dateKey].note = text;
+            localStorage.setItem('notion_shiny_calendar_data_v2', JSON.stringify(calendarData));
+        }
+
+        function toggleStatus(dateKey) {
+            let calendarData = JSON.parse(localStorage.getItem('notion_shiny_calendar_data_v2')) || {};
+            if (!calendarData[dateKey]) calendarData[dateKey] = { note: '', status: false };
+            calendarData[dateKey].status = !calendarData[dateKey].status;
+            localStorage.setItem('notion_shiny_calendar_data_v2', JSON.stringify(calendarData));
+            
+            renderCalendar(); // Re-render to trigger graph update and animation
+        }
+
+        function resetCalendar() {
+            const btn = document.querySelector('.reset-btn');
+            if (resetStep === 0) {
+                resetStep = 1;
+                btn.innerText = "Confirm?";
+                btn.style.color = "var(--reset-hover)";
+                btn.style.borderColor = "var(--reset-hover)";
+                resetTimer = setTimeout(() => {
+                    resetStep = 0;
+                    btn.innerText = "Reset";
+                    btn.style.color = "";
+                    btn.style.borderColor = "";
+                }, 3000);
+            } else {
+                clearTimeout(resetTimer);
+                localStorage.removeItem('notion_shiny_calendar_data_v2');
+                resetStep = 0;
+                btn.innerText = "Reset";
+                btn.style.color = "";
+                btn.style.borderColor = "";
+                renderCalendar();
+            }
+        }
+
+        function changeMonth(direction) {
+            viewDate.setMonth(viewDate.getMonth() + direction);
+            renderCalendar();
+        }
+
+        function goToToday() {
+            viewDate = new Date();
+            renderCalendar();
+        }
+
+        renderCalendar();
+    </script>
+</body>
+</html>
