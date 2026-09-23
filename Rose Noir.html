@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aura Melodies - Spotify Widget</title>
+    
+    <!-- STRICTLY ONLY SAIL FONT -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sail&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-notion: #191919;
+            --bg-main: #160F14;
+            --glass-bg: rgba(33, 21, 29, 0.85);
+            --glass-card: #21151D;
+            --text-primary: #FFF7FA;
+            --text-secondary: #C9AAB8;
+            --accent: #D79AB4;
+            --accent-glow: #F0B9D0;
+            --border: #755163;
+            --border-alpha: rgba(117, 81, 99, 0.35);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Sail', cursive !important;
+        }
+
+        body {
+            background-color: var(--bg-notion);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center; 
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px; 
+            overflow: hidden; 
+            position: relative;
+        }
+
+        /* Dynamic Floating Ambient Background Orbs */
+        .ambient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 0;
+            animation: floatOrb 10s infinite alternate ease-in-out;
+        }
+
+        .orb-1 {
+            width: 280px;
+            height: 280px;
+            background: var(--accent-glow);
+            top: 5%;
+            left: 10%;
+        }
+
+        .orb-2 {
+            width: 240px;
+            height: 240px;
+            background: var(--accent);
+            bottom: 5%;
+            right: 10%;
+            animation-delay: -5s;
+        }
+
+        @keyframes floatOrb {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(35px, 45px) scale(1.18); }
+            100% { transform: translate(-25px, 25px) scale(0.85); }
+        }
+
+        /* Pulsing Glow & Smooth Float Animation */
+        @keyframes containerGlow {
+            0% {
+                border-color: rgba(117, 81, 99, 0.4);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 18px rgba(215, 154, 180, 0.15);
+            }
+            50% {
+                border-color: rgba(240, 185, 208, 0.85);
+                box-shadow: 0 15px 45px rgba(0, 0, 0, 0.75), 0 0 32px rgba(240, 185, 208, 0.4);
+            }
+            100% {
+                border-color: rgba(117, 81, 99, 0.4);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 18px rgba(215, 154, 180, 0.15);
+            }
+        }
+
+        @keyframes floatCard {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .spotify-container {
+            width: 100%;
+            max-width: 340px; 
+            background: linear-gradient(145deg, rgba(22, 15, 20, 0.92), rgba(33, 21, 29, 0.88));
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1.5px solid var(--border);
+            border-radius: 24px;
+            padding: 18px; 
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+            animation: 
+                containerGlow 5s infinite ease-in-out,
+                floatCard 6.5s infinite ease-in-out;
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* Shimmering Light Sweep Effect */
+        .spotify-container::before {
+            content: '';
+            position: absolute;
+            top: -100%;
+            left: -100%;
+            width: 300%;
+            height: 300%;
+            background: linear-gradient(
+                135deg,
+                transparent 42%,
+                rgba(240, 185, 208, 0.09) 50%,
+                transparent 58%
+            );
+            transform: rotate(25deg);
+            animation: shineSweep 6.5s infinite cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+
+        @keyframes shineSweep {
+            0% { transform: translateY(-80%) rotate(25deg); }
+            100% { transform: translateY(80%) rotate(25deg); }
+        }
+
+        /* Widget Header */
+        .spotify-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-alpha);
+            z-index: 1;
+        }
+
+        .header-title-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .spotify-title {
+            font-size: 1.55rem; 
+            color: var(--text-primary);
+            text-shadow: 0 0 12px var(--accent-glow);
+            letter-spacing: 0.5px;
+            font-weight: normal;
+        }
+
+        /* Equalizer Animation */
+        .equalizer {
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+            height: 16px;
+        }
+
+        .eq-bar {
+            width: 3px;
+            background: var(--accent);
+            border-radius: 2px;
+            box-shadow: 0 0 6px var(--accent-glow);
+            animation: bounceEq 1.2s infinite ease-in-out alternate;
+        }
+
+        .eq-bar:nth-child(1) { height: 40%; animation-delay: 0.1s; }
+        .eq-bar:nth-child(2) { height: 100%; animation-delay: 0.3s; }
+        .eq-bar:nth-child(3) { height: 60%; animation-delay: 0.5s; }
+
+        @keyframes bounceEq {
+            0% { height: 20%; }
+            100% { height: 100%; }
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .settings-btn {
+            background: rgba(33, 21, 29, 0.6);
+            border: 1px solid var(--border-alpha);
+            color: var(--text-primary);
+            font-size: 1rem;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            outline: none;
+        }
+
+        .settings-btn:hover {
+            background: var(--accent);
+            color: var(--bg-main);
+            border-color: var(--accent-glow);
+            transform: rotate(90deg) scale(1.15);
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        /* Glowing Pulse Dot with Ripple */
+        .pulse-dot-container {
+            position: relative;
+            width: 10px;
+            height: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .spotify-dot {
+            width: 8px; 
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-glow);
+            box-shadow: 0 0 10px var(--accent-glow);
+            z-index: 1;
+        }
+
+        .pulse-ripple {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 1.5px solid var(--accent-glow);
+            animation: ripple 2s infinite cubic-bezier(0, 0.2, 0.8, 1);
+        }
+
+        @keyframes ripple {
+            0% { transform: scale(0.8); opacity: 1; }
+            100% { transform: scale(2.8); opacity: 0; }
+        }
+
+        /* Smooth Settings Panel Dropdown */
+        .settings-panel {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: rgba(33, 21, 29, 0.9);
+            padding: 0 14px;
+            border-radius: 16px;
+            border: 0px solid var(--border-alpha);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translateY(-10px);
+            z-index: 2;
+        }
+
+        .settings-panel.active {
+            max-height: 320px;
+            opacity: 1;
+            padding: 14px;
+            border-width: 1px;
+            transform: translateY(0);
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .preset-label {
+            font-size: 1rem;
+            color: var(--accent);
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 8px rgba(215, 154, 180, 0.25);
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .preset-btn {
+            background: rgba(22, 15, 20, 0.65);
+            border: 1px solid var(--border-alpha);
+            color: var(--text-secondary);
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            text-align: center;
+        }
+
+        .preset-btn:hover {
+            background: var(--glass-card);
+            color: var(--text-primary);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 10px rgba(240, 185, 208, 0.25);
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-alpha), transparent);
+            margin: 2px 0;
+        }
+
+        .settings-panel input {
+            width: 100%;
+            background: rgba(22, 15, 20, 0.75);
+            border: 1px solid var(--border-alpha);
+            border-radius: 8px;
+            color: var(--text-primary);
+            padding: 8px 10px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .settings-panel input:focus {
+            border-color: var(--accent-glow);
+            box-shadow: 0 0 10px rgba(240, 185, 208, 0.3);
+            background: var(--bg-main);
+        }
+
+        .settings-panel input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.6;
+        }
+
+        .apply-btn {
+            background: linear-gradient(135deg, var(--border), var(--accent));
+            border: none;
+            color: var(--bg-main);
+            font-weight: bold;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .apply-btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 15px var(--accent-glow);
+            filter: brightness(1.1);
+        }
+
+        /* Embedded Player Frame Wrapper */
+        .iframe-wrapper {
+            width: 100%;
+            border-radius: 16px;
+            overflow: hidden;
+            background: var(--bg-main);
+            border: 1px solid var(--border-alpha);
+            z-index: 1;
+            transition: all 0.4s ease;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
+        .iframe-wrapper:hover {
+            border-color: var(--border);
+            box-shadow: 0 0 15px rgba(117, 81, 99, 0.3);
+        }
+
+        iframe {
+            width: 100%;
+            height: 640px; 
+            border: none;
+            display: block;
+            filter: contrast(102%);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Dynamic Background Ambient Orbs -->
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+
+    <div class="spotify-container">
+        
+        <!-- Header Section -->
+        <div class="spotify-header">
+            <div class="header-title-group">
+                <div class="spotify-title">Aura Melodies</div>
+                <div class="equalizer">
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                </div>
+            </div>
+            <div class="header-controls">
+                <button class="settings-btn" onclick="toggleSettings()" title="Choose Playlist">⚙</button>
+                <div class="pulse-dot-container">
+                    <div class="pulse-ripple"></div>
+                    <div class="spotify-dot"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Settings Dropdown Panel -->
+        <div class="settings-panel" id="settingsPanel">
+            <div class="preset-label">Quick Vibe Presets:</div>
+            <div class="preset-grid">
+                <button class="preset-btn" onclick="setPreset('37i9dQZF1DXcBWIGoYBM5M')">Today's Top ⚡</button>
+                <button class="preset-btn" onclick="setPreset('37i9dQZF1DWZeKCadgRdKQ')">Lo-Fi Beats ☕</button>
+                <button class="preset-btn" onclick="setPreset('37i9dQZF1DX8Uebhn9wzrS')">Soft Piano 🎹</button>
+                <button class="preset-btn" onclick="setPreset('37i9dQZF1DX4WYTNICININ')">Night Drive 🌙</button>
+            </div>
+            <div class="divider"></div>
+            <div class="preset-label">Or Paste Playlist Link:</div>
+            <input type="text" id="playlistInput" placeholder="Paste Spotify Playlist URL...">
+            <button class="apply-btn" onclick="saveCustomPlaylist()">Apply Custom Link</button>
+        </div>
+
+        <!-- Embedded Spotify Player -->
+        <div class="iframe-wrapper">
+            <iframe id="spotifyIframe" src="" 
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+                    loading="lazy">
+            </iframe>
+        </div>
+
+    </div>
+
+    <script>
+        const defaultPlaylistId = "37i9dQZF1DXcBWIGoYBM5M";
+
+        function getStoredPlaylistId() {
+            return localStorage.getItem('custom_spotify_playlist_id') || defaultPlaylistId;
+        }
+
+        function updateIframeSource() {
+            const playlistId = getStoredPlaylistId();
+            const iframe = document.getElementById('spotifyIframe');
+            iframe.src = `https://open.spotify.com/embed/playlist/${playlistId}?utm_name=generator&theme=0`;
+        }
+
+        function toggleSettings() {
+            const panel = document.getElementById('settingsPanel');
+            panel.classList.toggle('active');
+        }
+
+        function setPreset(playlistId) {
+            localStorage.setItem('custom_spotify_playlist_id', playlistId);
+            updateIframeSource();
+            toggleSettings();
+        }
+
+        function saveCustomPlaylist() {
+            const input = document.getElementById('playlistInput').value.trim();
+            if (!input) return;
+
+            const match = input.match(/playlist\/([a-zA-Z0-9]+)/);
+            let playlistId = match ? match[1] : input;
+
+            localStorage.setItem('custom_spotify_playlist_id', playlistId);
+            updateIframeSource();
+            toggleSettings();
+            document.getElementById('playlistInput').value = '';
+        }
+
+        // Initialize widget on load
+        updateIframeSource();
+    </script>
+</body>
+</html>
